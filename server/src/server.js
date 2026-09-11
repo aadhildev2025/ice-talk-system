@@ -43,33 +43,36 @@ app.use(morgan('dev'));
 
 // Ensure MongoDB connection for API requests
 app.use(async (req, res, next) => {
-  if (req.path.startsWith('/api') && req.path !== '/api/health') {
-    try {
-      await connectDB();
-    } catch (err) {
-      return res.status(503).json({
-        success: false,
-        message: 'Database connection failed. Please ensure MONGODB_URI environment variable is configured in Vercel settings with a valid MongoDB Atlas connection string.',
-        error: err.message,
-      });
-    }
+  if (req.path === '/api/health' || req.path === '/health') {
+    return next();
   }
-  next();
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    console.error('[DB Middleware Error]:', err);
+    return res.status(503).json({
+      success: false,
+      message: 'Database connection failed. Please ensure MONGODB_URI environment variable is configured in Vercel settings with a valid MongoDB Atlas connection string.',
+      error: err.message,
+    });
+  }
 });
 
-// API Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/tables', tableRoutes);
-app.use('/api/menu', menuRoutes);
-app.use('/api/orders', orderRoutes);
-app.use('/api/pos', posRoutes);
-app.use('/api/reports', reportRoutes);
+// API Routes (supports both /api/path and /path in case of serverless rewrite differences)
+app.use(['/api/auth', '/auth'], authRoutes);
+app.use(['/api/tables', '/tables'], tableRoutes);
+app.use(['/api/menu', '/menu'], menuRoutes);
+app.use(['/api/orders', '/orders'], orderRoutes);
+app.use(['/api/pos', '/pos'], posRoutes);
+app.use(['/api/reports', '/reports'], reportRoutes);
 
 // Health check endpoint
-app.get('/api/health', (req, res) => {
+app.get(['/api/health', '/health'], (req, res) => {
   res.json({
     status: 'ok',
     restaurant: 'ICE TALK FAMILY RESTAURANT',
+    database: 'connected',
     time: new Date().toISOString(),
   });
 });
