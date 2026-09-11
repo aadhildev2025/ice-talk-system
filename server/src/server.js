@@ -78,7 +78,6 @@ app.get(['/api/health', '/health'], (req, res) => {
 });
 
 // Serve frontend static build if available
-const path = require('path');
 const distPath = path.join(__dirname, '../../client/dist');
 app.use(express.static(distPath));
 
