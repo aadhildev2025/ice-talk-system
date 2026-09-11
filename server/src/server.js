@@ -41,6 +41,22 @@ app.use(cors());
 app.use(express.json());
 app.use(morgan('dev'));
 
+// Ensure MongoDB connection for API requests
+app.use(async (req, res, next) => {
+  if (req.path.startsWith('/api') && req.path !== '/api/health') {
+    try {
+      await connectDB();
+    } catch (err) {
+      return res.status(503).json({
+        success: false,
+        message: 'Database connection failed. Please ensure MONGODB_URI environment variable is configured in Vercel settings with a valid MongoDB Atlas connection string.',
+        error: err.message,
+      });
+    }
+  }
+  next();
+});
+
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/tables', tableRoutes);
