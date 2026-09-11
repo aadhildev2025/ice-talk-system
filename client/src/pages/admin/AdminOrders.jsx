@@ -49,6 +49,10 @@ const AdminOrders = () => {
   useEffect(() => {
     fetchOrders();
 
+    const pollInterval = setInterval(() => {
+      fetchOrders();
+    }, 5000);
+
     if (socket) {
       socket.on('order:created', () => fetchOrders());
       socket.on('order:approved', () => fetchOrders());
@@ -58,6 +62,7 @@ const AdminOrders = () => {
     }
 
     return () => {
+      clearInterval(pollInterval);
       if (socket) {
         socket.off('order:created');
         socket.off('order:approved');

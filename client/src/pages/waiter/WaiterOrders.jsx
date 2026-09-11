@@ -41,6 +41,10 @@ const WaiterOrders = () => {
   useEffect(() => {
     fetchWaiterOrders();
 
+    const pollInterval = setInterval(() => {
+      fetchWaiterOrders();
+    }, 4000);
+
     if (socket) {
       socket.on('order:created', () => fetchWaiterOrders());
       socket.on('order:approved', () => fetchWaiterOrders());
@@ -51,6 +55,7 @@ const WaiterOrders = () => {
     }
 
     return () => {
+      clearInterval(pollInterval);
       if (socket) {
         socket.off('order:created');
         socket.off('order:approved');

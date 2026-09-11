@@ -55,6 +55,11 @@ const KitchenDisplay = () => {
       setCurrentTime(Date.now());
     }, 1000);
 
+    // Auto-polling interval for cloud sync
+    const pollInterval = setInterval(() => {
+      fetchTasks();
+    }, 4000);
+
     if (socket) {
       socket.on('order:approved', () => fetchTasks());
       socket.on('prep:new_tasks', () => fetchTasks());
@@ -65,6 +70,7 @@ const KitchenDisplay = () => {
 
     return () => {
       clearInterval(timerInterval);
+      clearInterval(pollInterval);
       if (socket) {
         socket.off('order:approved');
         socket.off('prep:new_tasks');

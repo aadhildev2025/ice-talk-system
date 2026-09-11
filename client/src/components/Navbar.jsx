@@ -107,12 +107,12 @@ const Navbar = () => {
           {isConnected ? (
             <>
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span className="text-neutral-300 font-medium text-[11px] sm:text-xs">Live</span>
+              <span className="text-emerald-400 font-medium text-[11px] sm:text-xs">Live (Socket)</span>
             </>
           ) : (
             <>
-              <span className="w-2 h-2 rounded-full bg-rose-500"></span>
-              <span className="text-rose-400 font-medium text-[11px] sm:text-xs">Offline</span>
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span className="text-neutral-300 font-medium text-[11px] sm:text-xs">Live (Cloud)</span>
             </>
           )}
         </div>

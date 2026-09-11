@@ -42,6 +42,11 @@ const OrderReceive = () => {
   useEffect(() => {
     fetchPendingOrders();
 
+    // Auto-polling interval for cloud sync
+    const pollInterval = setInterval(() => {
+      fetchPendingOrders();
+    }, 4000);
+
     if (socket) {
       socket.on('order:created', (order) => {
         setPendingOrders((prev) => [order, ...prev.filter((o) => o._id !== order._id)]);
@@ -61,6 +66,7 @@ const OrderReceive = () => {
     }
 
     return () => {
+      clearInterval(pollInterval);
       if (socket) {
         socket.off('order:created');
         socket.off('order:approved');

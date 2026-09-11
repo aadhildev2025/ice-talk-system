@@ -44,6 +44,10 @@ const AdminLayout = () => {
   useEffect(() => {
     fetchBadgeCounts();
 
+    const pollInterval = setInterval(() => {
+      fetchBadgeCounts();
+    }, 5000);
+
     if (socket) {
       socket.on('order:created', () => fetchBadgeCounts());
       socket.on('order:approved', () => fetchBadgeCounts());
@@ -54,6 +58,7 @@ const AdminLayout = () => {
     }
 
     return () => {
+      clearInterval(pollInterval);
       if (socket) {
         socket.off('order:created');
         socket.off('order:approved');
