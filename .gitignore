@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Production & Build Outputs
+dist/
+**/dist/
+dist-setup/
+build/*.exe
+build/*.zip
+
+# Environment & Sensitive Credentials
+.env
+.env.*
+server/.env
+
+# OS / Editor Files
+.DS_Store
+Thumbs.db
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Electron Builder Cache
+.icon-ico/
+builder-debug.yml

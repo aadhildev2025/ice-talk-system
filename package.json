@@ -1,0 +1,86 @@
+{
+  "name": "ice-talk-pos-system",
+  "version": "1.0.0",
+  "description": "Ice Talk Family Restaurant POS & Order Management System",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "dev": "concurrently \"npm run server:dev\" \"npm run client\"",
+    "desktop": "concurrently \"npm run server:dev\" \"npm run client\" \"electron electron/main.cjs\"",
+    "electron": "electron electron/main.cjs",
+    "server": "node server/src/server.js",
+    "server:dev": "npm run dev --prefix server",
+    "client": "npm run dev --prefix client",
+    "client:build": "npm run build --prefix client",
+    "seed": "node server/src/seed.js",
+    "dist": "npm run client:build && electron-builder --win",
+    "dist:portable": "npm run client:build && electron-builder --win portable",
+    "dist:dir": "npm run client:build && electron-builder --dir"
+  },
+  "build": {
+    "appId": "com.icetalk.pos",
+    "productName": "Ice Talk POS",
+    "copyright": "Copyright © 2026 Ice Talk Family Restaurant",
+    "directories": {
+      "output": "dist-setup"
+    },
+    "files": [
+      "electron/**/*",
+      "server/**/*",
+      "client/dist/**/*",
+      "package.json"
+    ],
+    "asar": true,
+    "asarUnpack": [
+      "server/**/*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "electron/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Ice Talk POS",
+      "artifactName": "Ice-Talk-POS-Setup-${version}.${ext}"
+    }
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.9.5",
+    "morgan": "^1.10.0",
+    "socket.io": "^4.8.1"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.5",
+    "electron": "^44.3.0",
+    "electron-builder": "^25.1.8"
+  },
+  "keywords": [
+    "restaurant",
+    "pos",
+    "order-management",
+    "kitchen-display",
+    "ice-talk"
+  ],
+  "author": "Antigravity",
+  "license": "ISC"
+}
