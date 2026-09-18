@@ -52,3 +52,13 @@ The custom restaurant favicon (`client/src/favicon.png`) is linked across:
 - Web browser tabs (`/favicon.png`)
 - Desktop application title bar & taskbar
 - Windows installer icon (`.exe`)
+
+---
+
+## 6. Silent Receipt Printing (No Printer Selection Dialog)
+When running the **Ice Talk POS** desktop executable (`.exe`):
+- **Zero Dialogs**: Every receipt and kitchen order slip is routed directly to the thermal printer with `silent: true`. No Windows print dialog, no print preview, and no prompt appears.
+- **Default Printer Auto-Detection**: The desktop app automatically detects and prints to your Windows default printer.
+- **Dedicated Off-Screen Thermal Engine**: Prints are formatted specifically for 58mm / 80mm continuous thermal paper roll widths with crisp black & white text and zero unwanted blank pages.
+- **Printer Selection (Optional)**: If you have multiple printers connected, an admin can choose a specific printer in the top Navbar, or leave it set to **"Default Printer (Auto)"**.
+

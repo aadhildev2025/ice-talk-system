@@ -26,13 +26,12 @@
     "files": [
       "electron/**/*",
       "server/**/*",
+      "server/.env",
+      ".env",
       "client/dist/**/*",
       "package.json"
     ],
     "asar": true,
-    "asarUnpack": [
-      "server/**/*"
-    ],
     "win": {
       "target": [
         {

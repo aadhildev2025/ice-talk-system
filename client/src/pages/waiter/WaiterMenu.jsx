@@ -283,56 +283,40 @@ const WaiterMenu = () => {
               return (
                 <div
                   key={item._id}
-                  className={`bg-[#141419] border rounded-2xl overflow-hidden flex flex-col justify-between transition-colors select-none ${
+                  className={`bg-[#141419] border rounded-2xl p-3 sm:p-3.5 flex flex-col justify-between transition-colors select-none ${
                     !item.isAvailable
                       ? 'border-neutral-800 opacity-50 cursor-not-allowed'
                       : inCart
-                      ? 'border-orange-500/80 ring-1 ring-orange-500/50 shadow-lg shadow-orange-500/10'
+                      ? 'border-orange-500/80 ring-1 ring-orange-500/50 shadow-lg shadow-orange-500/10 bg-[#1A1816]'
                       : 'border-[#24242E] hover:border-neutral-600'
                   }`}
                 >
-                  {/* Photo & Dept badge */}
-                  <div className="relative h-24 sm:h-32 bg-neutral-900 overflow-hidden">
-                    {item.image ? (
-                      <img
-                        src={item.image}
-                        alt={item.name}
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-2xl">
-                        🍽
-                      </div>
-                    )}
-
-                    <div className="absolute top-1.5 left-1.5">
-                      <span className="bg-black/80 backdrop-blur-sm text-white px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase">
+                  <div className="space-y-2 mb-3">
+                    {/* Dept badge & Out of stock status */}
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="bg-[#1C1C24] border border-[#2B2B38] text-neutral-300 px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase">
                         {item.department}
                       </span>
-                    </div>
-
-                    {!item.isAvailable && (
-                      <div className="absolute inset-0 bg-black/70 backdrop-blur-[2px] flex items-center justify-center">
-                        <span className="bg-rose-600 text-white text-[10px] font-black uppercase px-2 py-0.5 rounded">
+                      {!item.isAvailable && (
+                        <span className="bg-rose-500/20 text-rose-400 border border-rose-500/40 text-[9px] font-black uppercase px-1.5 py-0.5 rounded">
                           OUT OF STOCK
                         </span>
-                      </div>
-                    )}
-                  </div>
+                      )}
+                    </div>
 
-                  {/* Title & Price */}
-                  <div className="p-2.5 sm:p-3 space-y-0.5 sm:space-y-1">
-                    <h3 className="font-bold text-xs text-white line-clamp-1 leading-snug">
-                      {item.name}
-                    </h3>
-                    <p className="font-black text-sm text-[#FF6B00] font-display">
-                      Rs. {item.price.toLocaleString()}
-                    </p>
+                    {/* Title & Price */}
+                    <div className="space-y-1">
+                      <h3 className="font-bold text-xs text-white line-clamp-2 leading-snug min-h-[32px]">
+                        {item.name}
+                      </h3>
+                      <p className="font-black text-sm sm:text-base text-[#FF6B00] font-display">
+                        Rs. {item.price.toLocaleString()}
+                      </p>
+                    </div>
                   </div>
 
                   {/* Add / Counter Button */}
-                  <div className="p-2 sm:p-2.5 pt-0">
+                  <div>
                     {!item.isAvailable ? (
                       <button
                         disabled

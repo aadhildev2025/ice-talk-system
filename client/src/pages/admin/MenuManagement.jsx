@@ -9,7 +9,6 @@ import {
   Search,
   CheckCircle,
   XCircle,
-  Image as ImageIcon,
   Flame,
   Layers,
   X,
@@ -307,49 +306,34 @@ const MenuManagement = () => {
                   : 'border-[#24242E] hover:border-orange-500/40 hover:shadow-xl'
               }`}
             >
-              <div>
-                {/* Image */}
-                <div className="relative h-36 bg-neutral-900 overflow-hidden">
-                  {item.image ? (
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-neutral-600">
-                      <ImageIcon className="w-8 h-8" />
-                    </div>
-                  )}
-
-                  {/* Badges overlay */}
-                  <div className="absolute top-2 left-2 flex gap-1">
-                    <span className="bg-black/80 backdrop-blur-sm text-white px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
+              <div className="p-4 space-y-3">
+                {/* Badges Row */}
+                <div className="flex items-center justify-between gap-1.5">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="bg-[#1C1C24] border border-[#2B2B38] text-neutral-300 px-2 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wider">
                       {item.department}
                     </span>
                     {item.isPopular && (
-                      <span className="bg-amber-500 text-black font-extrabold px-1.5 py-0.5 rounded text-[10px] flex items-center gap-0.5">
-                        <Flame className="w-3 h-3" /> POPULAR
+                      <span className="bg-amber-500/20 text-amber-400 border border-amber-500/40 font-extrabold px-1.5 py-0.5 rounded text-[10px] flex items-center gap-0.5">
+                        <Flame className="w-3 h-3 text-amber-400" /> POPULAR
                       </span>
                     )}
                   </div>
 
-                  <div className="absolute top-2 right-2">
-                    <span
-                      className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                        item.isAvailable
-                          ? 'bg-emerald-500 text-white'
-                          : 'bg-rose-500 text-white'
-                      }`}
-                    >
-                      {item.isAvailable ? 'In Stock' : 'Out of Stock'}
-                    </span>
-                  </div>
+                  <span
+                    className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                      item.isAvailable
+                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+                        : 'bg-rose-500/10 text-rose-400 border border-rose-500/30'
+                    }`}
+                  >
+                    {item.isAvailable ? 'In Stock' : 'Out of Stock'}
+                  </span>
                 </div>
 
                 {/* Details */}
-                <div className="p-4 space-y-1.5">
-                  <div className="flex justify-between items-start">
+                <div className="space-y-1.5">
+                  <div className="flex justify-between items-start gap-2">
                     <div>
                       <h3 className="font-black text-sm text-white leading-snug">{item.name}</h3>
                       <p className="text-[10px] text-neutral-400 font-semibold">{item.category}</p>
@@ -498,19 +482,6 @@ const MenuManagement = () => {
                     className="w-full bg-[#1C1C24] border border-[#2D2D3B] focus:border-[#FF6B00] rounded-xl px-3 py-2.5 text-white outline-none"
                   />
                 </div>
-              </div>
-
-              <div>
-                <label className="block font-bold text-neutral-300 mb-1 uppercase tracking-wider">
-                  Image URL
-                </label>
-                <input
-                  type="url"
-                  value={formData.image}
-                  onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                  placeholder="https://images.unsplash.com/..."
-                  className="w-full bg-[#1C1C24] border border-[#2D2D3B] focus:border-[#FF6B00] rounded-xl px-3 py-2 text-white placeholder-neutral-500 outline-none"
-                />
               </div>
 
               <div>

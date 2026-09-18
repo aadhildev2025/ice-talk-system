@@ -12,7 +12,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command "Copy-Item 'client\src\fa
 
 echo.
 echo [2/4] Compiling React Frontend Production Build (Vite)...
-call npm run client:build
+call npm.cmd run client:build
 if %ERRORLEVEL% NEQ 0 (
     color 0C
     echo [ERROR] Frontend build failed. Please check client code.
@@ -22,7 +22,7 @@ if %ERRORLEVEL% NEQ 0 (
 
 echo.
 echo [3/4] Packaging Standalone Windows Setup Installer (.exe)...
-call npx electron-builder --win
+call npx.cmd electron-builder --win
 if %ERRORLEVEL% NEQ 0 (
     color 0C
     echo [ERROR] Packaging failed.

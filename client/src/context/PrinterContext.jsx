@@ -14,15 +14,14 @@ export const PrinterProvider = ({ children }) => {
   // Load hardware printers if running in Electron desktop app
   useEffect(() => {
     if (isElectron && window.electronAPI?.getPrinters) {
-      window.electronAPI.getPrinters().then((printers) => {
-        setAvailablePrinters(printers || []);
-        if (!selectedPrinter && printers && printers.length > 0) {
-          const defaultPrinter = printers.find((p) => p.isDefault) || printers[0];
-          setSelectedPrinter(defaultPrinter.name);
-        }
-      }).catch((err) => {
-        console.error('Failed to query native printers:', err);
-      });
+      window.electronAPI
+        .getPrinters()
+        .then((printers) => {
+          setAvailablePrinters(printers || []);
+        })
+        .catch((err) => {
+          console.error('Failed to query native printers:', err);
+        });
     }
   }, [isElectron]);
 
@@ -42,48 +41,74 @@ export const PrinterProvider = ({ children }) => {
     localStorage.setItem('icetalk_autoprint', String(next));
   };
 
-  // Trigger silent print job
+  // Trigger direct silent thermal print job
   const executeSilentPrint = async () => {
-    if (isElectron && window.electronAPI?.printSilent) {
-      try {
-        await window.electronAPI.printSilent({ printerName: selectedPrinter });
-      } catch (err) {
-        console.error('Electron silent print error:', err);
+    // Short pause for React to render printable HTML into DOM
+    await new Promise((resolve) => setTimeout(resolve, 150));
+
+    const receiptEl = document.getElementById('printable-receipt-area');
+    const receiptHtml = receiptEl ? receiptEl.outerHTML : '';
+
+    if (isElectron) {
+      // Preferred: Dedicated offscreen thermal print engine (exact width, no page breaks, no dialog)
+      if (window.electronAPI?.printHtml && receiptHtml) {
+        try {
+          const res = await window.electronAPI.printHtml(receiptHtml, {
+            printerName: selectedPrinter,
+            paperWidth,
+          });
+          if (res?.success) return;
+        } catch (err) {
+          console.warn('[Printer] printHtml failed, attempting printSilent fallback:', err);
+        }
       }
-    } else {
-      try {
-        window.print();
-      } catch (e) {
-        console.error('Browser print error:', e);
+
+      // Fallback 1: Silent print via main window webContents
+      if (window.electronAPI?.printSilent) {
+        try {
+          await window.electronAPI.printSilent({ printerName: selectedPrinter });
+          return;
+        } catch (err) {
+          console.error('[Printer] Electron printSilent error:', err);
+        }
       }
+    }
+
+    // Fallback 2: Browser standard print (for web browser clients)
+    try {
+      window.print();
+    } catch (e) {
+      console.error('[Printer] Browser print error:', e);
     }
   };
 
   // Open preparation slip & trigger direct silent print
-  const printPreparationSlip = (order, autoTrigger = true) => {
+  // isAutoTrigger = true: automated background trigger (checks autoPrintEnabled)
+  // isAutoTrigger = false: manual button click (always prints immediately)
+  const printPreparationSlip = (order, isAutoTrigger = false) => {
     setPrintData({
       type: 'PREPARATION_SLIP',
       data: order,
     });
 
-    if (autoTrigger && autoPrintEnabled) {
+    if (!isAutoTrigger || autoPrintEnabled) {
       setTimeout(() => {
         executeSilentPrint();
-      }, 200);
+      }, 100);
     }
   };
 
   // Open customer receipt & trigger direct silent print
-  const printCustomerReceipt = (sale, autoTrigger = true) => {
+  const printCustomerReceipt = (sale, isAutoTrigger = false) => {
     setPrintData({
       type: 'CUSTOMER_RECEIPT',
       data: sale,
     });
 
-    if (autoTrigger && autoPrintEnabled) {
+    if (!isAutoTrigger || autoPrintEnabled) {
       setTimeout(() => {
         executeSilentPrint();
-      }, 200);
+      }, 100);
     }
   };
 

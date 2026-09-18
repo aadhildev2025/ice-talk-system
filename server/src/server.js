@@ -16,9 +16,17 @@ const posRoutes = require('./routes/posRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 
 const path = require('path');
+const fs = require('fs');
 dotenv.config({ path: path.join(__dirname, '../.env') });
 dotenv.config({ path: path.join(__dirname, '../../.env') });
 dotenv.config();
+
+// Fallback defaults for standalone desktop POS executable
+process.env.PORT = process.env.PORT || '5000';
+process.env.MONGODB_URI =
+  process.env.MONGODB_URI ||
+  'mongodb+srv://mubeeth17_db_user:omDriAeanrm9g1qM@cluster0.hctj1le.mongodb.net/icetalk_restaurant?retryWrites=true&w=majority&appName=Cluster0';
+process.env.JWT_SECRET = process.env.JWT_SECRET || 'icetalk_restaurant_secret_key_2026';
 
 // Connect to MongoDB
 connectDB();
@@ -78,7 +86,15 @@ app.get(['/api/health', '/health'], (req, res) => {
 });
 
 // Serve frontend static build if available
-const distPath = path.join(__dirname, '../../client/dist');
+const distCandidatePaths = [
+  path.join(__dirname, '../../client/dist'),
+  path.join(__dirname, '../client/dist'),
+  path.join(process.resourcesPath || '', 'app/client/dist'),
+  path.join(process.resourcesPath || '', 'app.asar/client/dist'),
+  path.join(process.resourcesPath || '', 'client/dist'),
+];
+const distPath = distCandidatePaths.find((p) => fs.existsSync(path.join(p, 'index.html'))) || distCandidatePaths[0];
+console.log('[Server] Serving client static build from:', distPath);
 app.use(express.static(distPath));
 
 app.get('*', (req, res, next) => {

@@ -81,15 +81,21 @@ const Navbar = () => {
 
         {/* Native Hardware Printer Status & Selector (Admin / Desktop Mode) */}
         {user?.role === 'admin' && isElectron && (
-          <div className="hidden lg:flex items-center gap-1.5 bg-[#1C1C24] px-2.5 py-1 rounded-xl border border-[#2B2B38] text-xs">
+          <div
+            className="hidden lg:flex items-center gap-1.5 bg-[#1C1C24] px-2.5 py-1 rounded-xl border border-[#2B2B38] text-xs"
+            title="Silent Receipt Printing Active: Direct to thermal printer with no dialogs"
+          >
             <Printer className={`w-3.5 h-3.5 ${autoPrintEnabled ? 'text-emerald-400' : 'text-neutral-500'}`} />
             {availablePrinters.length > 0 ? (
               <select
                 value={selectedPrinter}
                 onChange={(e) => setPrinter(e.target.value)}
-                className="bg-transparent text-neutral-300 font-semibold text-xs outline-none cursor-pointer max-w-[130px] truncate"
-                title="Select Silent Thermal Printer"
+                className="bg-transparent text-neutral-300 font-semibold text-xs outline-none cursor-pointer max-w-[140px] truncate"
+                title="Silent Thermal Printer (Select specific or leave as Auto-Default)"
               >
+                <option value="" className="bg-[#1C1C24] text-white">
+                  Default Printer (Auto)
+                </option>
                 {availablePrinters.map((p) => (
                   <option key={p.name} value={p.name} className="bg-[#1C1C24] text-white">
                     {p.name} {p.isDefault ? '(Default)' : ''}
