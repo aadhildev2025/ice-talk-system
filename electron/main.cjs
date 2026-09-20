@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, Menu } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
@@ -51,7 +51,19 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.cjs'),
       contextIsolation: true,
       nodeIntegration: false,
+      spellcheck: false,
     },
+  });
+
+  // Remove default menu to prevent Alt key or hidden menu bar from capturing keyboard focus
+  Menu.setApplicationMenu(null);
+  mainWindow.setMenuBarVisibility(false);
+
+  // Automatically refocus webContents when window is focused
+  mainWindow.on('focus', () => {
+    if (mainWindow && mainWindow.webContents) {
+      mainWindow.webContents.focus();
+    }
   });
 
   const distHtml = path.join(__dirname, '../client/dist/index.html');

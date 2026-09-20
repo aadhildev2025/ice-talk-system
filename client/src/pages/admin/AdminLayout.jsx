@@ -125,19 +125,9 @@ const AdminLayout = () => {
                 <span>LIVE ORDERS</span>
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
               </div>
-              <div className="grid grid-cols-3 gap-1 text-center">
-                <div className="bg-[#141418] p-1.5 rounded-lg border border-[#2B2B38]">
-                  <p className="text-[10px] text-amber-400 font-bold">PENDING</p>
-                  <p className="text-base font-black text-white">{pendingCount}</p>
-                </div>
-                <div className="bg-[#141418] p-1.5 rounded-lg border border-[#2B2B38]">
-                  <p className="text-[10px] text-blue-400 font-bold">PREP</p>
-                  <p className="text-base font-black text-white">{preparingCount}</p>
-                </div>
-                <div className="bg-[#141418] p-1.5 rounded-lg border border-[#2B2B38]">
-                  <p className="text-[10px] text-emerald-400 font-bold">READY</p>
-                  <p className="text-base font-black text-white">{readyCount}</p>
-                </div>
+              <div className="bg-[#141418] p-2.5 rounded-xl border border-[#2B2B38] text-center">
+                <p className="text-xs text-amber-400 font-bold tracking-wider">PENDING</p>
+                <p className="text-2xl font-black text-white mt-0.5 font-display">{pendingCount}</p>
               </div>
             </div>
 

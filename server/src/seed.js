@@ -37,7 +37,6 @@ const defaultMenuItems = [
     isAvailable: true,
     isPopular: true,
     prepTimeMinutes: 12,
-    image: 'https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=600&auto=format&fit=crop&q=80',
   },
   {
     name: 'Cheese Chicken Kottu',
@@ -48,7 +47,6 @@ const defaultMenuItems = [
     isAvailable: true,
     isPopular: true,
     prepTimeMinutes: 15,
-    image: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=600&auto=format&fit=crop&q=80',
   },
   {
     name: 'Beef Kottu',
@@ -59,7 +57,6 @@ const defaultMenuItems = [
     isAvailable: true,
     isPopular: false,
     prepTimeMinutes: 12,
-    image: 'https://images.unsplash.com/photo-1541544741938-0af808871cc0?w=600&auto=format&fit=crop&q=80',
   },
   {
     name: 'Egg Kottu',
@@ -70,7 +67,6 @@ const defaultMenuItems = [
     isAvailable: true,
     isPopular: false,
     prepTimeMinutes: 10,
-    image: 'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=600&auto=format&fit=crop&q=80',
   },
   {
     name: 'Special Mixed Fried Rice',
@@ -81,7 +77,6 @@ const defaultMenuItems = [
     isAvailable: true,
     isPopular: true,
     prepTimeMinutes: 15,
-    image: 'https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=600&auto=format&fit=crop&q=80',
   },
   {
     name: 'Chicken Fried Rice',
@@ -92,7 +87,6 @@ const defaultMenuItems = [
     isAvailable: true,
     isPopular: true,
     prepTimeMinutes: 12,
-    image: 'https://images.unsplash.com/photo-1589302168068-964664d93dc0?w=600&auto=format&fit=crop&q=80',
   },
   {
     name: 'Seafood Nasi Goreng',
@@ -103,7 +97,6 @@ const defaultMenuItems = [
     isAvailable: true,
     isPopular: false,
     prepTimeMinutes: 18,
-    image: 'https://images.unsplash.com/photo-1633964913295-ceb43826e7c9?w=600&auto=format&fit=crop&q=80',
   },
   {
     name: 'Crispy Chicken Burger',
@@ -114,7 +107,6 @@ const defaultMenuItems = [
     isAvailable: true,
     isPopular: true,
     prepTimeMinutes: 10,
-    image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600&auto=format&fit=crop&q=80',
   },
   {
     name: 'Chicken Bun',
@@ -125,7 +117,6 @@ const defaultMenuItems = [
     isAvailable: true,
     isPopular: true,
     prepTimeMinutes: 3,
-    image: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600&auto=format&fit=crop&q=80',
   },
   {
     name: 'Fish Bun',
@@ -136,7 +127,6 @@ const defaultMenuItems = [
     isAvailable: true,
     isPopular: false,
     prepTimeMinutes: 3,
-    image: 'https://images.unsplash.com/photo-1586444248902-2f64eddc13df?w=600&auto=format&fit=crop&q=80',
   },
   {
     name: 'Chicken Roll',
@@ -147,7 +137,6 @@ const defaultMenuItems = [
     isAvailable: true,
     isPopular: true,
     prepTimeMinutes: 2,
-    image: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=600&auto=format&fit=crop&q=80',
   },
   {
     name: 'Vegetable Samosa (3 pcs)',
@@ -158,7 +147,6 @@ const defaultMenuItems = [
     isAvailable: true,
     isPopular: false,
     prepTimeMinutes: 3,
-    image: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=600&auto=format&fit=crop&q=80',
   },
   {
     name: 'Mango Juice',
@@ -169,7 +157,6 @@ const defaultMenuItems = [
     isAvailable: true,
     isPopular: true,
     prepTimeMinutes: 4,
-    image: 'https://images.unsplash.com/photo-1546173159-315724a31696?w=600&auto=format&fit=crop&q=80',
   },
   {
     name: 'Fresh Orange Juice',
@@ -180,7 +167,6 @@ const defaultMenuItems = [
     isAvailable: true,
     isPopular: false,
     prepTimeMinutes: 4,
-    image: 'https://images.unsplash.com/photo-1613478223719-2ab802602423?w=600&auto=format&fit=crop&q=80',
   },
   {
     name: 'Lime Juice with Mint',
@@ -191,7 +177,6 @@ const defaultMenuItems = [
     isAvailable: true,
     isPopular: false,
     prepTimeMinutes: 3,
-    image: 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=600&auto=format&fit=crop&q=80',
   },
   {
     name: 'Avocado Shake',
@@ -202,7 +187,6 @@ const defaultMenuItems = [
     isAvailable: true,
     isPopular: true,
     prepTimeMinutes: 5,
-    image: 'https://images.unsplash.com/photo-1553530666-ba11a7da3888?w=600&auto=format&fit=crop&q=80',
   },
   {
     name: 'Chocolate Milkshake',
@@ -213,7 +197,6 @@ const defaultMenuItems = [
     isAvailable: true,
     isPopular: true,
     prepTimeMinutes: 5,
-    image: 'https://images.unsplash.com/photo-1572490122747-3968b75cc699?w=600&auto=format&fit=crop&q=80',
   },
   {
     name: 'Royal Ice Talk Falooda',
@@ -224,7 +207,6 @@ const defaultMenuItems = [
     isAvailable: true,
     isPopular: true,
     prepTimeMinutes: 6,
-    image: 'https://images.unsplash.com/photo-1587314168485-3236d6710814?w=600&auto=format&fit=crop&q=80',
   },
   {
     name: 'Special Sundae Ice Cream',
@@ -235,7 +217,6 @@ const defaultMenuItems = [
     isAvailable: true,
     isPopular: true,
     prepTimeMinutes: 3,
-    image: 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=600&auto=format&fit=crop&q=80',
   },
   {
     name: 'Chocolate Brownie with Ice Cream',
@@ -246,7 +227,6 @@ const defaultMenuItems = [
     isAvailable: true,
     isPopular: true,
     prepTimeMinutes: 4,
-    image: 'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=600&auto=format&fit=crop&q=80',
   },
   {
     name: 'Mineral Water (1.5L)',
@@ -257,7 +237,6 @@ const defaultMenuItems = [
     isAvailable: true,
     isPopular: false,
     prepTimeMinutes: 1,
-    image: 'https://images.unsplash.com/photo-1548839140-29a749e1bc4e?w=600&auto=format&fit=crop&q=80',
   },
 ];
 
@@ -284,34 +263,12 @@ const defaultUsers = [
     phone: '+94 77 123 4567',
   },
   {
-    name: 'Ahmed',
-    username: 'ahmed',
+    name: 'Waiter',
+    username: 'waiter',
     password: 'waiter123',
     role: 'waiter',
     department: 'ALL',
     phone: '+94 77 234 5678',
-  },
-  {
-    name: 'Fatima',
-    username: 'fatima',
-    password: 'waiter123',
-    role: 'waiter',
-    department: 'ALL',
-    phone: '+94 77 345 6789',
-  },
-  {
-    name: 'Kitchen Chef Kamal',
-    username: 'kitchen',
-    password: 'kitchen123',
-    role: 'kitchen',
-    department: 'KITCHEN',
-  },
-  {
-    name: 'Juice Master Riyaz',
-    username: 'juice',
-    password: 'juice123',
-    role: 'juice',
-    department: 'JUICE',
   },
 ];
 
@@ -324,7 +281,7 @@ const autoSeedIfNeeded = async () => {
       for (const u of defaultUsers) {
         await User.create(u);
       }
-      console.log('[AutoSeed] Default users created (admin/admin123, ahmed/waiter123, kitchen/kitchen123, juice/juice123).');
+      console.log('[AutoSeed] Default users created (admin/admin123, waiter/waiter123).');
     }
 
     const catCount = await Category.countDocuments();

@@ -108,6 +108,32 @@ const AdminOrders = () => {
     }
   };
 
+  const handleCancelOrder = async (ord) => {
+    const reason = window.prompt(
+      `Cancel Order #${ord.orderNumber} (Table: ${ord.tableNameSnapshot})?\n\nEnter reason for cancellation:`,
+      'Cancelled by Admin'
+    );
+    if (reason === null) return;
+
+    try {
+      const res = await axios.post(`/api/orders/${ord._id}/cancel`, {
+        reason: reason.trim() || 'Cancelled by Admin',
+      });
+      if (res.data.success) {
+        fetchOrders();
+        if (selectedOrder?._id === ord._id) {
+          setSelectedOrder((prev) => ({
+            ...prev,
+            status: 'CANCELLED',
+            cancellationReason: reason.trim() || 'Cancelled by Admin',
+          }));
+        }
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to cancel order');
+    }
+  };
+
   const tabs = [
     { id: 'ALL', label: 'All Orders' },
     { id: 'PENDING', label: 'Pending' },
@@ -188,51 +214,65 @@ const AdminOrders = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#24242E]">
-                {filteredOrders.map((ord) => (
-                  <tr key={ord._id} className="hover:bg-[#1A1A22] transition-colors">
-                    <td className="p-4 font-black text-white text-sm">#{ord.orderNumber}</td>
-                    <td className="p-4 font-bold text-neutral-200">{ord.tableNameSnapshot}</td>
-                    <td className="p-4 text-neutral-400">{ord.waiterNameSnapshot}</td>
-                    <td className="p-4">
-                      <div className="space-y-0.5">
-                        {ord.items.slice(0, 2).map((it, idx) => (
-                          <div key={idx} className="text-neutral-300">
-                            {it.name} <span className="text-neutral-500 font-semibold">x{it.quantity}</span>
-                          </div>
-                        ))}
-                        {ord.items.length > 2 && (
-                          <span className="text-[10px] text-orange-400 font-bold">
-                            +{ord.items.length - 2} more item(s)
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="p-4 text-neutral-400">
-                      {new Date(ord.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </td>
-                    <td className="p-4 font-extrabold text-[#FF6B00]">
-                      Rs. {ord.total.toLocaleString()}
-                    </td>
-                    <td className="p-4">{getStatusBadge(ord.status)}</td>
-                    <td className="p-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => printPreparationSlip(ord, false)}
-                          title="Print Short Order Slip"
-                          className="p-1.5 rounded-lg bg-[#1C1C24] hover:bg-[#252532] text-neutral-300 hover:text-white border border-[#2B2B38]"
-                        >
-                          <Printer className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => setSelectedOrder(ord)}
-                          className="px-3 py-1.5 rounded-lg bg-[#1C1C24] hover:bg-[#FF6B00] text-neutral-300 hover:text-white border border-[#2B2B38] font-bold text-[11px] transition-all"
-                        >
-                          View
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                {filteredOrders.map((ord) => {
+                  const canCancel = ['PENDING', 'APPROVED', 'PREPARING', 'READY'].includes(ord.status);
+
+                  return (
+                    <tr key={ord._id} className="hover:bg-[#1A1A22] transition-colors">
+                      <td className="p-4 font-black text-white text-sm">#{ord.orderNumber}</td>
+                      <td className="p-4 font-bold text-neutral-200">{ord.tableNameSnapshot}</td>
+                      <td className="p-4 text-neutral-400">{ord.waiterNameSnapshot}</td>
+                      <td className="p-4">
+                        <div className="space-y-0.5">
+                          {ord.items.slice(0, 2).map((it, idx) => (
+                            <div key={idx} className="text-neutral-300">
+                              {it.name} <span className="text-neutral-500 font-semibold">x{it.quantity}</span>
+                            </div>
+                          ))}
+                          {ord.items.length > 2 && (
+                            <span className="text-[10px] text-orange-400 font-bold">
+                              +{ord.items.length - 2} more item(s)
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="p-4 text-neutral-400">
+                        {new Date(ord.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </td>
+                      <td className="p-4 font-extrabold text-[#FF6B00]">
+                        Rs. {ord.total.toLocaleString()}
+                      </td>
+                      <td className="p-4">{getStatusBadge(ord.status)}</td>
+                      <td className="p-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => printPreparationSlip(ord, false)}
+                            title="Print Short Order Slip"
+                            className="p-1.5 rounded-lg bg-[#1C1C24] hover:bg-[#252532] text-neutral-300 hover:text-white border border-[#2B2B38]"
+                          >
+                            <Printer className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => setSelectedOrder(ord)}
+                            className="px-3 py-1.5 rounded-lg bg-[#1C1C24] hover:bg-[#FF6B00] text-neutral-300 hover:text-white border border-[#2B2B38] font-bold text-[11px] transition-all"
+                          >
+                            View
+                          </button>
+                          {canCancel && (
+                            <button
+                              onClick={() => handleCancelOrder(ord)}
+                              title="Cancel Order"
+                              className="px-2.5 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 hover:text-rose-300 border border-rose-500/30 font-bold text-[11px] transition-all flex items-center gap-1"
+                            >
+                              <XCircle className="w-3 h-3" />
+                              <span>Cancel</span>
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -324,6 +364,13 @@ const AdminOrders = () => {
               </div>
             )}
 
+            {/* Cancellation Note */}
+            {selectedOrder.cancellationReason && (
+              <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-xs text-rose-400">
+                <span className="font-bold">Cancellation Reason:</span> {selectedOrder.cancellationReason}
+              </div>
+            )}
+
             {/* Total */}
             <div className="flex justify-between items-center pt-3 border-t border-[#24242E]">
               <span className="text-xs text-neutral-400 font-semibold">TOTAL:</span>
@@ -334,13 +381,25 @@ const AdminOrders = () => {
 
             {/* Modal Actions */}
             <div className="flex justify-between items-center pt-2">
-              <button
-                onClick={() => printPreparationSlip(selectedOrder, true)}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#1C1C24] hover:bg-[#252532] text-white text-xs font-bold border border-[#2B2B38]"
-              >
-                <Printer className="w-4 h-4 text-orange-400" />
-                Print Slip
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => printPreparationSlip(selectedOrder, true)}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#1C1C24] hover:bg-[#252532] text-white text-xs font-bold border border-[#2B2B38]"
+                >
+                  <Printer className="w-4 h-4 text-orange-400" />
+                  Print Slip
+                </button>
+
+                {['PENDING', 'APPROVED', 'PREPARING', 'READY'].includes(selectedOrder.status) && (
+                  <button
+                    onClick={() => handleCancelOrder(selectedOrder)}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 text-xs font-bold border border-rose-500/40 transition-colors"
+                  >
+                    <XCircle className="w-4 h-4" />
+                    Cancel Order
+                  </button>
+                )}
+              </div>
 
               <button
                 onClick={() => setSelectedOrder(null)}

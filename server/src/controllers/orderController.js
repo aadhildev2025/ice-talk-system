@@ -305,8 +305,15 @@ const cancelOrder = async (req, res) => {
       });
     }
 
+    if (order.status === 'CANCELLED') {
+      return res.status(400).json({
+        success: false,
+        message: 'Order is already cancelled.',
+      });
+    }
+
     order.status = 'CANCELLED';
-    order.cancellationReason = reason || 'Cancelled by staff';
+    order.cancellationReason = reason || `Cancelled by ${req.user?.role === 'admin' ? 'Admin' : 'Waiter'}`;
     order.cancelledAt = new Date();
     await order.save();
 
@@ -316,14 +323,33 @@ const cancelOrder = async (req, res) => {
       { $set: { status: 'CANCELLED' } }
     );
 
+    // If order was associated with a table, check if any other active orders remain on this table
+    if (order.tableId) {
+      const remainingActive = await Order.countDocuments({
+        tableId: order.tableId,
+        _id: { $ne: order._id },
+        status: { $in: ['PENDING', 'APPROVED', 'PREPARING', 'READY'] },
+      });
+
+      if (remainingActive === 0) {
+        const table = await Table.findById(order.tableId);
+        if (table && table.status === 'OCCUPIED') {
+          table.status = 'AVAILABLE';
+          await table.save();
+          emitTableUpdated(table);
+        }
+      }
+    }
+
     emitOrderCancelled(order);
 
     res.json({
       success: true,
-      message: `Order #${order.orderNumber} has been cancelled.`,
+      message: `Order #${order.orderNumber} has been cancelled successfully.`,
       order,
     });
   } catch (error) {
+    console.error('Cancel order error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };

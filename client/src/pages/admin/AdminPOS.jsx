@@ -159,6 +159,29 @@ const AdminPOS = () => {
     }
   };
 
+  const handleCancelOrder = async (orderId, orderNumber) => {
+    const reason = window.prompt(
+      `Cancel Order #${orderNumber}?\n\nEnter reason:`,
+      'Cancelled by Admin'
+    );
+    if (reason === null) return;
+
+    try {
+      const res = await axios.post(`/api/orders/${orderId}/cancel`, {
+        reason: reason.trim() || 'Cancelled by Admin',
+      });
+      if (res.data.success) {
+        if (selectedTable) {
+          fetchTableOrders(selectedTable._id);
+        }
+        fetchChannelOrders();
+        fetchTables();
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to cancel order');
+    }
+  };
+
   useEffect(() => {
     fetchMenuData();
     fetchTables();
@@ -180,6 +203,11 @@ const AdminPOS = () => {
         fetchChannelOrders();
         if (selectedTable) fetchTableOrders(selectedTable._id);
       });
+      socket.on('order:cancelled', () => {
+        fetchTables();
+        fetchChannelOrders();
+        if (selectedTable) fetchTableOrders(selectedTable._id);
+      });
       socket.on('table:updated', () => {
         fetchTables();
       });
@@ -194,6 +222,7 @@ const AdminPOS = () => {
         socket.off('order:created');
         socket.off('order:approved');
         socket.off('order:ready');
+        socket.off('order:cancelled');
         socket.off('table:updated');
         socket.off('sale:completed');
       }
@@ -761,9 +790,21 @@ const AdminPOS = () => {
                         {tableOrdersData.ordersCount} Active Order(s)
                       </span>
                     </div>
-                    <p className="text-[11px] text-neutral-400">
-                      Order #(s): {tableOrdersData.orders.map((o) => `#${o.orderNumber}`).join(', ')}
-                    </p>
+                    <div className="flex items-center gap-2 flex-wrap mt-1">
+                      {tableOrdersData.orders.map((o) => (
+                        <div key={o._id} className="flex items-center gap-1.5 bg-[#141418] px-2 py-0.5 rounded-lg border border-[#2B2B38] text-[11px]">
+                          <span className="font-bold text-white">#{o.orderNumber}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleCancelOrder(o._id, o.orderNumber)}
+                            className="text-rose-400 hover:text-rose-300 hover:bg-rose-500/20 px-1 rounded text-xs font-black transition-colors"
+                            title={`Cancel Order #${o.orderNumber}`}
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
                   </div>
 
                   <div className="text-right">
@@ -1181,14 +1222,24 @@ const AdminPOS = () => {
                       Rs. {ord.total.toLocaleString()}
                     </span>
 
-                    <button
-                      type="button"
-                      onClick={() => openCheckout('CHANNEL_ORDER', ord)}
-                      className="px-4 py-2 bg-gradient-to-r from-[#FF6B00] to-[#FF8A33] hover:from-[#E55A00] hover:to-[#FF6B00] text-white text-xs font-bold rounded-lg shadow flex items-center gap-1.5 transition-all"
-                    >
-                      <Receipt className="w-3.5 h-3.5" />
-                      <span>Settle & Print</span>
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleCancelOrder(ord._id, ord.orderNumber)}
+                        className="px-2.5 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-xs font-bold rounded-lg border border-rose-500/30 transition-all"
+                        title="Cancel Order"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => openCheckout('CHANNEL_ORDER', ord)}
+                        className="px-4 py-2 bg-gradient-to-r from-[#FF6B00] to-[#FF8A33] hover:from-[#E55A00] hover:to-[#FF6B00] text-white text-xs font-bold rounded-lg shadow flex items-center gap-1.5 transition-all"
+                      >
+                        <Receipt className="w-3.5 h-3.5" />
+                        <span>Settle & Print</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}

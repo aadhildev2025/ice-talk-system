@@ -29,10 +29,7 @@ Inside `dist-setup/`, you will find:
   - Default restaurant table configurations (Family, Couple, VIP, Outdoor)
   - Staff & Manager accounts:
     - **Admin / Cashier**: `admin` / `admin123`
-    - **Waiter 1**: `ahmed` / `waiter123`
-    - **Waiter 2**: `fatima` / `waiter123`
-    - **Kitchen Chef**: `kitchen` / `kitchen123`
-    - **Juice Master**: `juice` / `juice123`
+    - **Waiter**: `waiter` / `waiter123`
 - **Restoring Default Menu**:
   In the **Admin Portal** -> **Menu Management**, admins can click the **"Restore Default Menu"** button at any time to re-sync or restore any missing factory default items directly into MongoDB.
 

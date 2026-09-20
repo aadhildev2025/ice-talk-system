@@ -319,14 +319,18 @@ const StaffManagement = () => {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+            <form onSubmit={handleSubmit} autoComplete="off" className="space-y-4 text-xs">
               <div>
                 <label className="block font-bold text-neutral-300 mb-1 uppercase">Full Name</label>
                 <input
+                  id="staff-fullname-input"
                   type="text"
+                  name="staff_full_name"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="e.g. Ahmed Kamal"
+                  autoComplete="off"
+                  autoFocus
                   className="w-full bg-[#1C1C24] border border-[#2D2D3B] focus:border-[#FF6B00] rounded-xl px-3 py-2 text-white outline-none"
                   required
                 />
@@ -335,10 +339,13 @@ const StaffManagement = () => {
               <div>
                 <label className="block font-bold text-neutral-300 mb-1 uppercase">Username</label>
                 <input
+                  id="staff-username-input"
                   type="text"
+                  name="staff_username"
                   value={formData.username}
                   onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                   placeholder="e.g. ahmed"
+                  autoComplete="off"
                   disabled={!!editingUser}
                   className="w-full bg-[#1C1C24] border border-[#2D2D3B] focus:border-[#FF6B00] rounded-xl px-3 py-2 text-white outline-none disabled:opacity-50"
                   required
@@ -350,10 +357,13 @@ const StaffManagement = () => {
                   {editingUser ? 'New Password (leave empty to keep unchanged)' : 'Password'}
                 </label>
                 <input
+                  id="staff-password-input"
                   type="password"
+                  name="staff_new_password"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   placeholder="••••••••"
+                  autoComplete="new-password"
                   className="w-full bg-[#1C1C24] border border-[#2D2D3B] focus:border-[#FF6B00] rounded-xl px-3 py-2 text-white outline-none"
                   required={!editingUser}
                 />
@@ -391,10 +401,13 @@ const StaffManagement = () => {
               <div>
                 <label className="block font-bold text-neutral-300 mb-1 uppercase">Phone Number</label>
                 <input
+                  id="staff-phone-input"
                   type="text"
+                  name="staff_phone"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   placeholder="+94 77 123 4567"
+                  autoComplete="off"
                   className="w-full bg-[#1C1C24] border border-[#2D2D3B] focus:border-[#FF6B00] rounded-xl px-3 py-2 text-white outline-none"
                 />
               </div>

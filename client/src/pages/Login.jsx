@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Lock, User, AlertCircle, ArrowRight, ShieldCheck, UtensilsCrossed } from 'lucide-react';
+import { Lock, User, AlertCircle, ArrowRight } from 'lucide-react';
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -31,13 +31,6 @@ const Login = () => {
     } else {
       setError(result.message || 'Invalid username or password.');
     }
-  };
-
-  // Quick fill helper for demo/testing convenience
-  const fillCredentials = (u, p) => {
-    setUsername(u);
-    setPassword(p);
-    setError('');
   };
 
   return (
@@ -87,7 +80,7 @@ const Login = () => {
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="e.g. admin, ahmed, kitchen"
+                  placeholder="e.g. admin, waiter"
                   className="w-full bg-[#1C1C24] border border-[#2D2D3B] focus:border-[#FF6B00] focus:ring-1 focus:ring-[#FF6B00] rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-neutral-500 transition-all outline-none"
                   autoComplete="username"
                   required
@@ -139,34 +132,6 @@ const Login = () => {
               )}
             </button>
           </form>
-
-          {/* Quick Demo Login Picker */}
-          <div className="mt-8 pt-6 border-t border-[#232330]">
-            <p className="text-[11px] text-center text-neutral-400 font-medium mb-3 uppercase tracking-wider">
-              Quick Demo Staff Access
-            </p>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => fillCredentials('admin', 'admin123')}
-                className="flex flex-col items-center justify-center p-3 rounded-xl bg-[#1C1C24] hover:bg-[#262633] border border-[#2D2D3D] hover:border-orange-500/40 text-neutral-300 hover:text-white transition-all group"
-              >
-                <ShieldCheck className="w-5 h-5 text-orange-400 mb-1 group-hover:scale-110 transition-transform" />
-                <span className="text-xs font-bold">Admin</span>
-                <span className="text-[10px] text-neutral-500">Full Access</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => fillCredentials('ahmed', 'waiter123')}
-                className="flex flex-col items-center justify-center p-3 rounded-xl bg-[#1C1C24] hover:bg-[#262633] border border-[#2D2D3D] hover:border-blue-500/40 text-neutral-300 hover:text-white transition-all group"
-              >
-                <UtensilsCrossed className="w-5 h-5 text-blue-400 mb-1 group-hover:scale-110 transition-transform" />
-                <span className="text-xs font-bold">Waiter</span>
-                <span className="text-[10px] text-neutral-500">Ahmed</span>
-              </button>
-            </div>
-          </div>
         </div>
 
         {/* Footer */}

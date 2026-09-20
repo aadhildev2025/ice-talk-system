@@ -24,6 +24,7 @@ const WaiterOrders = () => {
 
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [cancellingId, setCancellingId] = useState(null);
 
   const fetchWaiterOrders = async () => {
     try {
@@ -35,6 +36,28 @@ const WaiterOrders = () => {
       console.error('Error fetching waiter orders:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCancelOrder = async (ord) => {
+    const reason = window.prompt(
+      `Cancel Order #${ord.orderNumber} (Table: ${ord.tableNameSnapshot})?\n\nEnter reason:`,
+      'Customer requested cancellation'
+    );
+    if (reason === null) return;
+
+    setCancellingId(ord._id);
+    try {
+      const res = await axios.post(`/api/orders/${ord._id}/cancel`, {
+        reason: reason.trim() || 'Cancelled by Waiter',
+      });
+      if (res.data.success) {
+        fetchWaiterOrders();
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to cancel order');
+    } finally {
+      setCancellingId(null);
     }
   };
 
@@ -51,6 +74,7 @@ const WaiterOrders = () => {
       socket.on('order:rejected', () => fetchWaiterOrders());
       socket.on('order:ready', () => fetchWaiterOrders());
       socket.on('order:status_updated', () => fetchWaiterOrders());
+      socket.on('order:cancelled', () => fetchWaiterOrders());
       socket.on('sale:completed', () => fetchWaiterOrders());
     }
 
@@ -62,6 +86,7 @@ const WaiterOrders = () => {
         socket.off('order:rejected');
         socket.off('order:ready');
         socket.off('order:status_updated');
+        socket.off('order:cancelled');
         socket.off('sale:completed');
       }
     };
@@ -78,25 +103,31 @@ const WaiterOrders = () => {
       case 'APPROVED':
         return (
           <span className="px-3 py-1 rounded-full text-xs font-bold bg-blue-500/20 text-blue-400 border border-blue-500/40 flex items-center gap-1">
-            <CheckCircle2 className="w-3.5 h-3.5" /> Approved • Sent to Kitchen
+            <CheckCircle2 className="w-3.5 h-3.5" /> Approved / In Kitchen
           </span>
         );
       case 'PREPARING':
         return (
           <span className="px-3 py-1 rounded-full text-xs font-bold bg-orange-500/20 text-orange-400 border border-orange-500/40 animate-pulse flex items-center gap-1">
-            <Flame className="w-3.5 h-3.5" /> Kitchen Preparing...
+            <Flame className="w-3.5 h-3.5 text-orange-400" /> Cooking in Progress
           </span>
         );
       case 'READY':
         return (
           <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500 text-black border border-emerald-400 flex items-center gap-1 shadow-lg shadow-emerald-500/30 ring-2 ring-emerald-400/50">
-            🔔 READY TO SERVE TABLE!
+            <CheckCircle2 className="w-3.5 h-3.5" /> Ready to Serve!
           </span>
         );
       case 'COMPLETED':
         return (
           <span className="px-3 py-1 rounded-full text-xs font-bold bg-purple-500/20 text-purple-400 border border-purple-500/30">
-            Completed / Paid
+            Completed & Settled
+          </span>
+        );
+      case 'CANCELLED':
+        return (
+          <span className="px-3 py-1 rounded-full text-xs font-bold bg-rose-500/20 text-rose-400 border border-rose-500/40 flex items-center gap-1">
+            <XCircle className="w-3.5 h-3.5" /> Order Cancelled
           </span>
         );
       case 'REJECTED':
@@ -106,44 +137,50 @@ const WaiterOrders = () => {
           </span>
         );
       default:
-        return <span className="px-3 py-1 rounded-full text-xs font-bold bg-neutral-800 text-neutral-400">{status}</span>;
+        return (
+          <span className="px-3 py-1 rounded-full text-xs font-bold bg-neutral-800 text-neutral-300">
+            {status}
+          </span>
+        );
     }
   };
 
   return (
-    <div className="flex-1 flex flex-col pb-20 bg-[#0A0A0D]">
+    <div className="min-h-screen bg-[#0A0A0D] text-white flex flex-col font-sans">
       <Navbar />
 
-      <div className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6 w-full space-y-4 sm:space-y-6">
-        {/* Header */}
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 w-full space-y-6 flex-1">
+        {/* Top Header Card */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-[#141418] p-5 rounded-2xl border border-[#24242E]">
-          <div>
+          <div className="flex items-center gap-3">
             <button
               onClick={() => navigate('/waiter/menu')}
-              className="text-xs text-[#FF6B00] font-bold flex items-center gap-1 mb-1 hover:underline"
+              className="p-2 rounded-xl bg-[#1C1C24] hover:bg-[#252530] text-neutral-300 hover:text-white border border-[#2A2A38] transition-colors"
             >
-              <ArrowLeft className="w-3.5 h-3.5" /> Back to Menu
+              <ArrowLeft className="w-4 h-4" />
             </button>
-            <h1 className="text-xl font-black text-white flex items-center gap-2">
-              <ClipboardList className="w-5 h-5 text-orange-400" />
-              <span>Live Order Tracker</span>
-            </h1>
-            <p className="text-xs text-neutral-400">
-              Orders placed by {user?.name || 'you'} in real-time
-            </p>
+            <div>
+              <h1 className="text-xl font-black text-white font-display flex items-center gap-2">
+                <ClipboardList className="w-5 h-5 text-[#FF6B00]" />
+                <span>Live Order Tracker</span>
+              </h1>
+              <p className="text-xs text-neutral-400 mt-0.5">
+                Orders placed by {user?.name || 'you'} in real-time
+              </p>
+            </div>
           </div>
 
           <div className="flex items-center gap-2">
             <button
               onClick={fetchWaiterOrders}
               className="p-2 rounded-xl bg-[#1C1C24] hover:bg-[#252530] text-neutral-300 hover:text-white border border-[#2A2A38]"
-              title="Refresh"
+              title="Refresh Orders"
             >
               <RefreshCw className="w-4 h-4" />
             </button>
             <button
               onClick={() => navigate('/waiter/menu')}
-              className="px-4 py-2 rounded-xl bg-[#FF6B00] hover:bg-[#E05A00] text-white text-xs font-bold shadow transition-all"
+              className="px-4 py-2 rounded-xl bg-[#FF6B00] hover:bg-[#E55A00] text-white font-bold text-xs shadow-lg shadow-orange-500/20"
             >
               + New Order
             </button>
@@ -157,16 +194,16 @@ const WaiterOrders = () => {
           </div>
         ) : orders.length === 0 ? (
           <div className="bg-[#141418] border border-[#24242E] rounded-3xl p-12 text-center space-y-3">
-            <p className="text-3xl">📝</p>
+            <UtensilsCrossed className="w-12 h-12 text-neutral-600 mx-auto" />
             <h3 className="font-bold text-base text-white">No Orders Placed Yet</h3>
             <p className="text-xs text-neutral-400 max-w-sm mx-auto">
               You haven't submitted any orders during this shift yet. Go to the menu to create your first order.
             </p>
             <button
               onClick={() => navigate('/waiter/menu')}
-              className="px-5 py-2.5 rounded-xl bg-[#FF6B00] text-white font-bold text-xs"
+              className="mt-2 px-5 py-2.5 bg-[#FF6B00] text-white rounded-xl text-xs font-bold shadow-lg shadow-orange-500/20"
             >
-              Open Restaurant Menu
+              Browse Menu & Take Order
             </button>
           </div>
         ) : (
@@ -174,6 +211,8 @@ const WaiterOrders = () => {
             {orders.map((ord) => {
               const isReady = ord.status === 'READY';
               const isRejected = ord.status === 'REJECTED';
+              const isCancelled = ord.status === 'CANCELLED';
+              const canCancel = ['PENDING', 'APPROVED', 'PREPARING', 'READY'].includes(ord.status);
 
               return (
                 <div
@@ -181,7 +220,7 @@ const WaiterOrders = () => {
                   className={`bg-[#141419] border rounded-2xl p-5 shadow-xl transition-colors ${
                     isReady
                       ? 'border-emerald-500/80 bg-gradient-to-br from-[#122417] to-[#141419] ring-2 ring-emerald-500/30'
-                      : isRejected
+                      : isRejected || isCancelled
                       ? 'border-rose-500/50 bg-[#1F1214]'
                       : 'border-[#24242E]'
                   }`}
@@ -214,6 +253,16 @@ const WaiterOrders = () => {
                     </div>
                   )}
 
+                  {/* Cancellation Alert */}
+                  {isCancelled && (
+                    <div className="my-3 p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-xs text-rose-300 flex items-start gap-2">
+                      <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-rose-400" />
+                      <div>
+                        <span className="font-bold">Cancellation Reason:</span> {ord.cancellationReason || 'Cancelled by staff'}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Items summary */}
                   <div className="py-3 space-y-1.5">
                     {ord.items.map((it, idx) => (
@@ -240,11 +289,25 @@ const WaiterOrders = () => {
                     ))}
                   </div>
 
-                  <div className="flex justify-between items-center pt-2 border-t border-[#24242E] text-xs font-black">
-                    <span className="text-neutral-400 uppercase">Total Bill</span>
-                    <span className="text-base text-[#FF6B00] font-display">
-                      Rs. {ord.total.toLocaleString()}
-                    </span>
+                  {/* Footer with Total and Actions */}
+                  <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 pt-3 border-t border-[#24242E]">
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs text-neutral-400 uppercase font-semibold">Total Bill</span>
+                      <span className="text-base font-black text-[#FF6B00] font-display">
+                        Rs. {ord.total.toLocaleString()}
+                      </span>
+                    </div>
+
+                    {canCancel && (
+                      <button
+                        onClick={() => handleCancelOrder(ord)}
+                        disabled={cancellingId === ord._id}
+                        className="self-end sm:self-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 active:bg-rose-500/30 text-rose-400 border border-rose-500/30 font-bold text-xs transition-all disabled:opacity-50"
+                      >
+                        <XCircle className="w-3.5 h-3.5" />
+                        <span>{cancellingId === ord._id ? 'Cancelling...' : 'Cancel Order'}</span>
+                      </button>
+                    )}
                   </div>
                 </div>
               );
