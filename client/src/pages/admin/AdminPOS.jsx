@@ -364,14 +364,10 @@ const AdminPOS = () => {
     setCheckoutTarget(target);
     setDiscount(0);
     setPaymentMethod('CASH');
+    setAmountTendered('');
 
-    if (target === 'CART') {
-      setAmountTendered(String(cartSubtotal));
-    } else if (target === 'TABLE' && tableOrdersData) {
-      setAmountTendered(String(tableOrdersData.total));
-    } else if (target === 'CHANNEL_ORDER' && orderData) {
+    if (target === 'CHANNEL_ORDER' && orderData) {
       setSelectedChannelOrder(orderData);
-      setAmountTendered(String(orderData.total));
     }
     setShowCheckoutModal(true);
   };
@@ -480,10 +476,10 @@ const AdminPOS = () => {
       : selectedChannelOrder?.total || 0;
 
   const checkoutGrandTotal = Math.max(0, checkoutSubtotal - Number(discount));
-  const checkoutChange =
-    paymentMethod === 'CASH'
-      ? Math.max(0, (Number(amountTendered) || 0) - checkoutGrandTotal)
-      : 0;
+  const tenderedNum = Number(amountTendered);
+  const isTenderedEntered = amountTendered !== '' && !isNaN(tenderedNum);
+  const checkoutBalance = isTenderedEntered ? tenderedNum - checkoutGrandTotal : 0;
+  const checkoutChange = paymentMethod === 'CASH' ? Math.max(0, checkoutBalance) : 0;
 
   // Numpad key helper for Touch Screen Mode
   const handleNumpadPress = (val) => {
@@ -1340,9 +1336,9 @@ const AdminPOS = () => {
               </div>
             </div>
 
-            {/* Cash Tendered & Change Calc */}
+            {/* Cash Tendered & Balance Calc */}
             {paymentMethod === 'CASH' && (
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 <div className="grid grid-cols-2 gap-3 bg-[#1C1C24] p-3 rounded-xl border border-[#2B2B38] text-xs">
                   <div>
                     <label className="block text-[10px] font-bold text-neutral-400 uppercase mb-1">
@@ -1350,7 +1346,9 @@ const AdminPOS = () => {
                     </label>
                     <input
                       type="number"
+                      autoFocus
                       value={amountTendered}
+                      onFocus={(e) => e.target.select()}
                       onChange={(e) => setAmountTendered(e.target.value)}
                       placeholder={`e.g. ${checkoutGrandTotal}`}
                       className="w-full bg-[#141418] border border-[#2E2E3E] focus:border-[#FF6B00] rounded-lg px-2.5 py-1.5 text-sm font-bold text-white outline-none"
@@ -1359,12 +1357,55 @@ const AdminPOS = () => {
 
                   <div>
                     <label className="block text-[10px] font-bold text-neutral-400 uppercase mb-1">
-                      Change Due
+                      Balance (Rs.)
                     </label>
-                    <div className="bg-[#141418] border border-[#2E2E3E] rounded-lg px-2.5 py-1.5 text-sm font-black text-emerald-400">
-                      Rs. {checkoutChange.toLocaleString()}
-                    </div>
+                    <input
+                      type="text"
+                      readOnly
+                      value={
+                        !isTenderedEntered
+                          ? `Rs. 0`
+                          : checkoutBalance >= 0
+                          ? `Rs. ${checkoutBalance.toLocaleString()}`
+                          : `- Rs. ${Math.abs(checkoutBalance).toLocaleString()} (Due)`
+                      }
+                      className={`w-full bg-[#141418] border rounded-lg px-2.5 py-1.5 text-sm font-black outline-none cursor-default ${
+                        !isTenderedEntered || checkoutBalance >= 0
+                          ? 'border-[#2E2E3E] text-emerald-400'
+                          : 'border-red-500/50 text-red-400'
+                      }`}
+                    />
                   </div>
+                </div>
+
+                {/* Quick Cash Chips */}
+                <div className="flex flex-wrap items-center gap-1.5 text-xs font-bold">
+                  <button
+                    type="button"
+                    onClick={() => setAmountTendered(String(checkoutGrandTotal))}
+                    className="py-1 px-2.5 bg-[#262634] hover:bg-[#343444] rounded-lg text-emerald-400 font-bold border border-[#2E2E3E] transition-all text-[11px]"
+                  >
+                    Exact (Rs. {checkoutGrandTotal.toLocaleString()})
+                  </button>
+                  {[1000, 2000, 5000].map((amt) => (
+                    <button
+                      key={amt}
+                      type="button"
+                      onClick={() => setAmountTendered(String(amt))}
+                      className="py-1 px-2.5 bg-[#262634] hover:bg-[#343444] rounded-lg text-white border border-[#2E2E3E] transition-all text-[11px]"
+                    >
+                      Rs. {amt.toLocaleString()}
+                    </button>
+                  ))}
+                  {amountTendered !== '' && (
+                    <button
+                      type="button"
+                      onClick={() => setAmountTendered('')}
+                      className="py-1 px-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg border border-red-500/30 transition-all text-[11px]"
+                    >
+                      Clear
+                    </button>
+                  )}
                 </div>
 
                 {/* Touchscreen Numpad */}
