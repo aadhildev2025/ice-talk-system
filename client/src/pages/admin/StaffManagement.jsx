@@ -11,7 +11,6 @@ import {
   Search,
   X,
   KeyRound,
-  Power,
 } from 'lucide-react';
 
 const StaffManagement = () => {
@@ -93,24 +92,6 @@ const StaffManagement = () => {
       alert(err.response?.data?.message || 'Failed to save staff account');
     } finally {
       setFormLoading(false);
-    }
-  };
-
-  const handleToggleStatus = async (user) => {
-    if (user.role === 'superadmin') {
-      alert('Cannot deactivate Super Admin.');
-      return;
-    }
-    if (user.role === 'admin' && user.username === 'admin') {
-      alert('Cannot deactivate primary Admin.');
-      return;
-    }
-    const nextStatus = user.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
-    try {
-      await axios.put(`/api/auth/users/${user._id}`, { status: nextStatus });
-      fetchUsers();
-    } catch (err) {
-      alert(err.response?.data?.message || 'Failed to change status');
     }
   };
 
@@ -212,7 +193,6 @@ const StaffManagement = () => {
                   <th className="p-4">Username</th>
                   <th className="p-4">Role</th>
                   <th className="p-4">Department</th>
-                  <th className="p-4">Status</th>
                   <th className="p-4 text-right">Actions</th>
                 </tr>
               </thead>
@@ -268,28 +248,8 @@ const StaffManagement = () => {
                         {u.department || 'ALL'}
                       </td>
 
-                      <td className="p-4">
-                        <span
-                          className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                            u.status === 'ACTIVE'
-                              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                              : 'bg-neutral-800 text-neutral-500 border border-neutral-700'
-                          }`}
-                        >
-                          {u.status}
-                        </span>
-                      </td>
-
                       <td className="p-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
-                          <button
-                            onClick={() => handleToggleStatus(u)}
-                            disabled={isSuperAdmin}
-                            title={u.status === 'ACTIVE' ? 'Deactivate' : 'Activate'}
-                            className="p-1.5 rounded-lg bg-[#1C1C24] hover:bg-[#252532] text-neutral-400 hover:text-white border border-[#2B2B38] disabled:opacity-20"
-                          >
-                            <Power className="w-3.5 h-3.5" />
-                          </button>
                           <button
                             onClick={() => handleOpenEditModal(u)}
                             title="Edit / Reset Password"

@@ -1,15 +1,13 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
-import { useUI } from '../context/UIContext';
 import { usePrinter } from '../context/PrinterContext';
-import { LogOut, Wifi, WifiOff, User as UserIcon, Monitor, Tablet, Printer } from 'lucide-react';
+import { LogOut, Wifi, WifiOff, User as UserIcon, Printer } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
   const { isConnected } = useSocket();
-  const { uiMode, setMode } = useUI();
   const { isElectron, availablePrinters, selectedPrinter, setPrinter, autoPrintEnabled, toggleAutoPrint } = usePrinter();
   const navigate = useNavigate();
 
@@ -51,38 +49,10 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Center Controls: Live Status & UI Mode Switcher */}
+      {/* Center Controls: Live Status */}
       <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-        {/* Desktop / Touch Screen Mode Toggle - Admin and Super Admin */}
-        {(user?.role === 'admin' || user?.role === 'superadmin') && (
-          <div className="hidden sm:flex items-center bg-[#181820] p-1 rounded-xl border border-[#2B2B38] shadow-inner">
-            <button
-              onClick={() => setMode('desktop')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                uiMode === 'desktop'
-                  ? 'bg-[#282834] text-white shadow-sm border border-neutral-600/40'
-                  : 'text-neutral-400 hover:text-white'
-              }`}
-            >
-              <Monitor className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Desktop</span>
-            </button>
-            <button
-              onClick={() => setMode('touch')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                uiMode === 'touch'
-                  ? 'bg-gradient-to-r from-[#FF6B00] to-[#FF8C2A] text-white shadow-md shadow-orange-500/20'
-                  : 'text-neutral-400 hover:text-white'
-              }`}
-            >
-              <Tablet className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Touch Screen</span>
-            </button>
-          </div>
-        )}
-
         {/* Native Hardware Printer Status & Selector (Admin / Desktop Mode) */}
-        {user?.role === 'admin' && isElectron && (
+        {(user?.role === 'admin' || user?.role === 'superadmin') && isElectron && (
           <div
             className="hidden lg:flex items-center gap-1.5 bg-[#1C1C24] px-2.5 py-1 rounded-xl border border-[#2B2B38] text-xs"
             title="Silent Receipt Printing Active: Direct to thermal printer with no dialogs"
