@@ -134,6 +134,10 @@ const orderSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    round: {
+      type: Number,
+      default: 1,
+    },
     saleId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Sale',

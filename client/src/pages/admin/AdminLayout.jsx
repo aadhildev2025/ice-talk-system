@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
-import PrintModal from '../../components/PrintModal';
 import ToastNotifications from '../../components/ToastNotifications';
 import axios from 'axios';
 import { useSocket } from '../../context/SocketContext';
@@ -183,9 +182,6 @@ const AdminLayout = () => {
           <Outlet />
         </main>
       </div>
-
-      {/* Global Thermal Print Modal */}
-      <PrintModal />
 
       {/* Real-Time Toast Alerts */}
       <ToastNotifications />

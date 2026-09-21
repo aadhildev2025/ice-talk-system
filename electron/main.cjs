@@ -143,8 +143,8 @@ ipcMain.handle('printer:print-html', async (event, { html, options = {} }) => {
         console.warn('Could not query system printers:', pErr);
       }
 
-      const paperWidth = options.paperWidth || '80mm';
-      const cssWidth = paperWidth === '58mm' ? '54mm' : '72mm';
+      const paperWidth = options.paperWidth || '78mm';
+      const cssWidth = paperWidth === '58mm' ? '52mm' : '72mm';
 
       const fullHtml = `
         <!DOCTYPE html>
@@ -155,7 +155,7 @@ ipcMain.handle('printer:print-html', async (event, { html, options = {} }) => {
             <style>
               @page {
                 margin: 0;
-                size: ${paperWidth === '58mm' ? '58mm auto' : '80mm auto'};
+                size: ${paperWidth === '58mm' ? '58mm auto' : '78mm auto'};
               }
               * {
                 box-sizing: border-box;
@@ -164,7 +164,7 @@ ipcMain.handle('printer:print-html', async (event, { html, options = {} }) => {
               }
               body {
                 margin: 0;
-                padding: 4px;
+                padding: 2px 4px;
                 font-family: 'Courier New', Courier, monospace;
                 font-size: 11px;
                 line-height: 1.25;

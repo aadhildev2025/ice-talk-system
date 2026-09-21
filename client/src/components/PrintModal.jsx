@@ -1,207 +1,272 @@
 import React from 'react';
 import { usePrinter } from '../context/PrinterContext';
+import { billingLogo } from '../assets/billingLogo';
+
+const formatReceiptDateTime = (dateVal) => {
+  const d = new Date(dateVal || Date.now());
+  const month = d.getMonth() + 1;
+  const day = d.getDate();
+  const year = d.getFullYear();
+  let hours = d.getHours();
+  const minutes = String(d.getMinutes()).padStart(2, '0');
+  const seconds = String(d.getSeconds()).padStart(2, '0');
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12 || 12;
+  return `${month}/${day}/${year} ${hours}:${minutes}:${seconds} ${ampm}`;
+};
+
+const formatKotDateTime = (dateVal) => {
+  const d = new Date(dateVal || Date.now());
+  const month = d.getMonth() + 1;
+  const day = d.getDate();
+  const year = d.getFullYear();
+  let hours = d.getHours();
+  const minutes = String(d.getMinutes()).padStart(2, '0');
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12 || 12;
+  return `${month}/${day}/${year} ${hours}:${minutes} ${ampm}`;
+};
+
+const formatCurrency = (val) => {
+  return Number(val || 0).toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+};
 
 const PrintModal = () => {
   const { printData, paperWidth } = usePrinter();
 
   if (!printData) return null;
 
-  const { type, data } = printData;
+  const { type, data, department } = printData;
   const isPrepSlip = type === 'PREPARATION_SLIP';
 
-  // Group items by department for preparation slip
-  const groupedItems = {};
-  if (data.items) {
-    data.items.forEach((item) => {
-      const dept = item.department || 'KITCHEN';
-      if (!groupedItems[dept]) groupedItems[dept] = [];
-      groupedItems[dept].push(item);
-    });
+  // Filter items if specific department requested for KOT
+  let kotItems = data.items || [];
+  if (isPrepSlip && department && department !== 'ALL') {
+    const filtered = kotItems.filter(
+      (it) => (it.department || 'KITCHEN').toUpperCase() === department.toUpperCase()
+    );
+    if (filtered.length > 0) {
+      kotItems = filtered;
+    }
   }
 
-  const currentDate = new Date(data.createdAt || Date.now());
-  const formattedDate = currentDate.toLocaleDateString('en-GB');
-  const formattedTime = currentDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  // Calculate items count for final bill
+  const totalItemsCount = (data.items || []).reduce(
+    (acc, it) => acc + (Number(it.quantity) || 1),
+    0
+  );
 
-  // Determine order type / channel label
-  const orderType = data.orderType || (data.tableId ? 'DINE_IN' : 'TAKEAWAY');
-  const channelLabel =
-    orderType === 'UBEREATS'
-      ? 'UBER EATS'
-      : orderType === 'PICKME'
-      ? 'PICKME'
-      : orderType === 'TAKEAWAY'
-      ? 'TAKE AWAY'
-      : `TABLE: ${data.tableNameSnapshot || 'Dine-In'}`;
+  const receiptWidthPx = paperWidth === '58mm' ? '216px' : '285px';
+
+  // User name extraction
+  const kotUserName = (
+    data.waiterNameSnapshot ||
+    data.user?.name ||
+    data.waiterName ||
+    data.cashierNameSnapshot ||
+    'SHAHL'
+  ).toUpperCase();
+
+  const billUserName = (
+    data.cashierNameSnapshot ||
+    data.waiterNameSnapshot ||
+    data.user?.name ||
+    'SHAHL'
+  ).toUpperCase();
+
+  // Table name or order label
+  const tableName = (
+    data.tableNameSnapshot ||
+    (data.tableId?.name ? `TABLE ${data.tableId.name}` : '') ||
+    (data.orderType === 'TAKEAWAY' ? 'TAKEAWAY' : 'TABLE')
+  ).toUpperCase();
+
+  // Order reference for receipt
+  const orderRefText = (
+    data.tableNameSnapshot
+      ? `${data.tableNameSnapshot}`
+      : data.tableId?.name
+      ? `TABLE ${data.tableId.name}`
+      : data.customerName
+      ? `TAKEAWAY (${data.customerName})`
+      : 'DINE-IN'
+  ).toUpperCase();
+
+  const roundNum = data.round || data.roundNumber || 1;
 
   return (
     <div className="fixed -left-[9999px] -top-[9999px] opacity-0 pointer-events-none print:opacity-100 print:pointer-events-auto print:static print:left-0 print:top-0 print:m-0 print:p-0">
       <div
         id="printable-receipt-area"
-        style={{ width: paperWidth === '58mm' ? '240px' : '320px' }}
-        className="bg-white text-black font-mono text-[11px] p-3 leading-tight select-text"
+        style={{ width: receiptWidthPx }}
+        className="bg-white text-black font-mono text-[11px] p-2 leading-tight select-text"
       >
-        {/* Header */}
-        <div className="text-center pb-2 border-b border-dashed border-black">
-          <p className="font-extrabold text-sm tracking-wider">ICE TALK</p>
-          <p className="text-[10px] font-bold">FAMILY RESTAURANT</p>
-          {!isPrepSlip && (
-            <>
-              <p className="text-[9px] text-neutral-600">Delicious Food & Fresh Drinks</p>
-              <p className="text-[9px] text-neutral-600">Tel: +94 77 123 4567</p>
-            </>
-          )}
-        </div>
-
-        {/* Slip / Invoice Meta */}
-        <div className="py-2 text-[10px] border-b border-dashed border-black space-y-0.5">
-          {isPrepSlip ? (
-            <>
-              <p className="font-bold text-[13px] text-center uppercase tracking-wider">
-                *** KITCHEN NOTE ***
-              </p>
-              <p className="font-black text-[12px]">ORDER #{data.orderNumber}</p>
-              <p className="font-black text-[11px] bg-black text-white px-1 py-0.5 inline-block rounded">
-                CHANNEL: {channelLabel}
-              </p>
-              {data.tableNameSnapshot && orderType === 'DINE_IN' && (
-                <p className="font-bold">TABLE: {data.tableNameSnapshot}</p>
-              )}
-              {data.customerName && (
-                <p className="font-bold">CUSTOMER: {data.customerName}</p>
-              )}
-              {data.channelOrderRef && (
-                <p className="font-bold">REF / ORDER ID: {data.channelOrderRef}</p>
-              )}
-              <p>STAFF / CASHIER: {data.waiterNameSnapshot || 'Staff'}</p>
-              <p>TIME: {formattedTime} ({formattedDate})</p>
-              {data.priority && data.priority !== 'NORMAL' && (
-                <p className="font-extrabold text-red-600">PRIORITY: {data.priority}</p>
-              )}
-            </>
-          ) : (
-            <>
-              <p className="font-bold text-[12px] text-center uppercase tracking-wider">
-                TAX INVOICE / RECEIPT
-              </p>
-              <p className="font-bold">RECEIPT #: {data.saleNumber}</p>
-              <p>
-                ORDER(S): #{Array.isArray(data.orderNumbers) ? data.orderNumbers.join(', #') : data.orderNumber || data.orderNumbers}
-              </p>
-              <p className="font-bold">CHANNEL: {channelLabel}</p>
-              {data.customerName && <p>CUSTOMER: {data.customerName}</p>}
-              <p>DATE: {formattedDate} {formattedTime}</p>
-              <p>CASHIER: {data.cashierNameSnapshot || 'Admin'}</p>
-            </>
-          )}
-        </div>
-
-        {/* Preparation Slip: Grouped by Department */}
         {isPrepSlip ? (
-          <div className="py-2 space-y-2">
-            {Object.keys(groupedItems).map((dept) => (
-              <div key={dept} className="border-b border-dotted border-neutral-400 pb-2">
-                <div className="font-extrabold text-[11px] bg-neutral-200 px-1 py-0.5 uppercase tracking-wider mb-1">
-                  {dept}
-                </div>
-                {groupedItems[dept].map((item, idx) => (
-                  <div key={idx} className="py-0.5 flex justify-between items-start">
-                    <div className="pr-1 flex-1">
-                      <span className="font-bold text-[12px]">{item.name}</span>
-                      {item.specialInstructions && (
-                        <p className="text-[10px] italic font-bold text-neutral-800">
-                          * {item.specialInstructions}
-                        </p>
-                      )}
-                    </div>
-                    <span className="font-black text-right text-sm">x{item.quantity}</span>
-                  </div>
-                ))}
-              </div>
-            ))}
-
-            {data.specialInstructions && (
-              <div className="p-1.5 bg-neutral-100 rounded text-[10px] mt-1 border border-neutral-400 font-bold">
-                <span>ORDER NOTE:</span> {data.specialInstructions}
-              </div>
-            )}
-          </div>
-        ) : (
-          /* Final Customer Receipt: Full Line Items & Totals */
-          <div className="py-2">
-            <div className="flex justify-between font-bold border-b border-black pb-1 mb-1 text-[10px]">
-              <span>ITEM</span>
-              <span className="text-center">QTY</span>
-              <span className="text-right">PRICE</span>
+          /* ========================================================= */
+          /*                       KOT RECEIPT                         */
+          /* ========================================================= */
+          <div className="text-left font-mono text-black leading-snug">
+            {/* Top KOT Header */}
+            <div className="font-extrabold text-[14px] tracking-wide mb-1">
+              KOT{department && department !== 'ALL' ? ` - ${department}` : ''}
             </div>
 
-            <div className="space-y-1">
-              {data.items?.map((it, idx) => (
-                <div key={idx} className="flex justify-between items-start text-[10px]">
-                  <span className="w-1/2 pr-1 font-medium">{it.name}</span>
-                  <span className="w-1/6 text-center font-bold">{it.quantity}</span>
-                  <span className="w-1/3 text-right">
-                    Rs. {(it.total || it.price * it.quantity).toLocaleString()}
-                  </span>
+            {/* Meta details */}
+            <div className="text-[11px] space-y-0.5 mb-1.5 font-medium">
+              <div>User: {kotUserName}</div>
+              <div>Table: {tableName}</div>
+              <div>Round: {roundNum}</div>
+              <div>Time: {formatKotDateTime(data.createdAt || Date.now())}</div>
+            </div>
+
+            {/* Dashed line */}
+            <div className="border-b border-dashed border-black my-1.5"></div>
+
+            {/* Items */}
+            <div className="space-y-1.5 my-1.5">
+              {kotItems.map((item, idx) => (
+                <div key={idx} className="text-[12px] font-bold">
+                  <div>
+                    {item.quantity} x {item.name?.toUpperCase()}
+                  </div>
+                  {item.specialInstructions && (
+                    <div className="text-[10px] font-normal pl-3 italic text-neutral-800">
+                      * {item.specialInstructions}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
 
-            {/* Calculation breakdown */}
-            <div className="border-t border-dashed border-black mt-2 pt-1.5 space-y-0.5 text-[10px]">
-              <div className="flex justify-between">
-                <span>SUBTOTAL</span>
-                <span>Rs. {(data.subtotal || data.total).toLocaleString()}</span>
-              </div>
-              {data.discount > 0 && (
-                <div className="flex justify-between text-neutral-700">
-                  <span>DISCOUNT</span>
-                  <span>- Rs. {data.discount.toLocaleString()}</span>
-                </div>
-              )}
-              {data.tax > 0 && (
-                <div className="flex justify-between text-neutral-700">
-                  <span>TAX</span>
-                  <span>Rs. {data.tax.toLocaleString()}</span>
-                </div>
-              )}
-              <div className="flex justify-between font-extrabold text-xs pt-1 border-t border-black">
-                <span>TOTAL</span>
-                <span>Rs. {data.total.toLocaleString()}</span>
-              </div>
+            {/* Dashed line */}
+            <div className="border-b border-dashed border-black my-1.5"></div>
+
+            {/* Bottom KOT Tag */}
+            <div className="font-extrabold text-[13px] tracking-wide mt-1">
+              KOT
+            </div>
+          </div>
+        ) : (
+          /* ========================================================= */
+          /*                 CUSTOMER FINAL BILL / RECEIPT             */
+          /* ========================================================= */
+          <div className="text-black font-mono leading-snug">
+            {/* Top Billing Logo */}
+            <div className="text-center mb-1">
+              <img
+                src={billingLogo}
+                alt="Ice Talk Logo"
+                className="mx-auto h-20 w-auto object-contain block"
+              />
             </div>
 
-            {/* Payment Breakdown */}
-            <div className="border-t border-dashed border-black mt-2 pt-1.5 space-y-0.5 text-[10px]">
-              <div className="flex justify-between">
-                <span>PAYMENT METHOD:</span>
-                <span className="font-bold uppercase">{data.paymentMethod}</span>
+            {/* Restaurant Title & Address */}
+            <div className="text-center font-extrabold text-[13px] uppercase tracking-wide leading-tight">
+              <div>ICE TALK FAMILY</div>
+              <div>RESTAURANT</div>
+            </div>
+            <div className="text-center text-[10px] text-black leading-tight mt-1 mb-2">
+              <div>No. 08, KACHCHERI ROAD, PUTTALAM</div>
+              <div>61300 PUTTALAM</div>
+              <div className="font-bold">0777313285</div>
+            </div>
+
+            {/* Receipt Meta */}
+            <div className="text-left text-[11px] space-y-0.5 my-1.5">
+              <div>Receipt No.: {data.saleNumber || data.receiptNumber || '26-200-049324'}</div>
+              <div>{formatReceiptDateTime(data.createdAt || Date.now())}</div>
+              <div>User: {billUserName}</div>
+              <div>Order No.: {orderRefText}</div>
+            </div>
+
+            {/* Dashed Separator */}
+            <div className="border-b border-dashed border-black my-1.5"></div>
+
+            {/* Item List */}
+            <div className="space-y-1.5 my-1.5">
+              {data.items?.map((it, idx) => {
+                const itemTotal = it.total || it.price * it.quantity;
+                return (
+                  <div key={idx} className="text-[11px]">
+                    <div className="font-bold uppercase leading-tight">
+                      {it.name}
+                    </div>
+                    <div className="flex justify-between items-center text-[11px] mt-0.5">
+                      <span>
+                        {it.quantity} x Rs.{Number(it.price).toFixed(2)}
+                      </span>
+                      <span className="font-bold text-right">
+                        Rs.{formatCurrency(itemTotal)}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Items count */}
+            <div className="text-[11px] my-1">
+              Items count: {totalItemsCount}
+            </div>
+
+            {/* Dashed Separator */}
+            <div className="border-b border-dashed border-black my-1.5"></div>
+
+            {/* Totals Section */}
+            <div className="space-y-0.5 my-1.5 text-[11px]">
+              <div className="flex justify-between items-center text-[13px] font-black">
+                <span>TOTAL:</span>
+                <span>Rs.{formatCurrency(data.total || data.grandTotal)}</span>
               </div>
-              {data.amountTendered > 0 && data.paymentMethod === 'CASH' && (
-                <>
-                  <div className="flex justify-between">
-                    <span>AMOUNT TENDERED:</span>
-                    <span>Rs. {data.amountTendered.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between font-bold">
-                    <span>CHANGE:</span>
-                    <span>Rs. {(data.changeAmount || 0).toLocaleString()}</span>
-                  </div>
-                </>
+
+              {data.discount > 0 && (
+                <div className="flex justify-between items-center text-[11px]">
+                  <span>Discount:</span>
+                  <span>- Rs.{formatCurrency(data.discount)}</span>
+                </div>
               )}
-              <div className="flex justify-between font-bold text-emerald-800">
-                <span>STATUS:</span>
-                <span>PAID</span>
+
+              <div className="flex justify-between items-center text-[11px]">
+                <span>
+                  {data.paymentMethod === 'CARD'
+                    ? 'Card:'
+                    : data.paymentMethod === 'ONLINE'
+                    ? 'Online:'
+                    : 'Cash:'}
+                </span>
+                <span>
+                  Rs.
+                  {formatCurrency(
+                    data.amountTendered || data.total || data.grandTotal
+                  )}
+                </span>
               </div>
+
+              <div className="flex justify-between items-center text-[11px]">
+                <span>Paid amount:</span>
+                <span>Rs.{formatCurrency(data.total || data.grandTotal)}</span>
+              </div>
+
+              {Number(data.changeAmount || data.change || 0) > 0 && (
+                <div className="flex justify-between items-center text-[11px] font-bold">
+                  <span>Change:</span>
+                  <span>
+                    Rs.{formatCurrency(data.changeAmount || data.change)}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="text-center text-[10px] leading-tight mt-3 pt-1 text-black">
+              <div>We'd love to hear your feedback.</div>
+              <div>Thanks for dinning with us!</div>
             </div>
           </div>
         )}
-
-        {/* Footer */}
-        <div className="text-center pt-3 border-t border-dashed border-black space-y-0.5 text-[9px]">
-          <p className="font-bold">THANK YOU! VISIT AGAIN</p>
-          <p className="text-[8px] text-neutral-500">Powered by ICE TALK POS</p>
-        </div>
       </div>
     </div>
   );

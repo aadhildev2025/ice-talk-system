@@ -4,7 +4,7 @@ const PrinterContext = createContext();
 
 export const PrinterProvider = ({ children }) => {
   const [printData, setPrintData] = useState(null); // { type: 'PREPARATION_SLIP' | 'CUSTOMER_RECEIPT', data: object }
-  const [paperWidth, setPaperWidth] = useState(() => localStorage.getItem('icetalk_paper_width') || '80mm'); // '58mm' | '80mm'
+  const [paperWidth, setPaperWidth] = useState(() => localStorage.getItem('icetalk_paper_width') || '78mm'); // '58mm' | '78mm' | '80mm'
   const [autoPrintEnabled, setAutoPrintEnabled] = useState(() => localStorage.getItem('icetalk_autoprint') !== 'false');
   const [availablePrinters, setAvailablePrinters] = useState([]);
   const [selectedPrinter, setSelectedPrinter] = useState(() => localStorage.getItem('icetalk_selected_printer') || '');
@@ -85,10 +85,11 @@ export const PrinterProvider = ({ children }) => {
   // Open preparation slip & trigger direct silent print
   // isAutoTrigger = true: automated background trigger (checks autoPrintEnabled)
   // isAutoTrigger = false: manual button click (always prints immediately)
-  const printPreparationSlip = (order, isAutoTrigger = false) => {
+  const printPreparationSlip = (order, isAutoTrigger = false, department = null) => {
     setPrintData({
       type: 'PREPARATION_SLIP',
       data: order,
+      department,
     });
 
     if (!isAutoTrigger || autoPrintEnabled) {

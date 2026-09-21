@@ -111,7 +111,17 @@ const createOrder = async (req, res) => {
     }
 
     const orderNumber = await getNextOrderNumber();
-    const shouldAutoApprove = autoApprove || req.user.role === 'admin';
+    const shouldAutoApprove = autoApprove !== false;
+
+    let round = 1;
+    if (table) {
+      const activeTableOrdersCount = await Order.countDocuments({
+        tableId: table._id,
+        status: { $in: ['APPROVED', 'PREPARING', 'READY', 'COMPLETED'] },
+        isSettled: false,
+      });
+      round = activeTableOrdersCount + 1;
+    }
 
     const order = await Order.create({
       orderNumber,
@@ -126,6 +136,7 @@ const createOrder = async (req, res) => {
       items: processedItems,
       subtotal,
       total: subtotal,
+      round,
       status: shouldAutoApprove ? 'APPROVED' : 'PENDING',
       approvedAt: shouldAutoApprove ? new Date() : undefined,
       priority: priority || 'NORMAL',

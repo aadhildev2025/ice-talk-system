@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import { useSocket } from '../../context/SocketContext';
+import { usePrinter } from '../../context/PrinterContext';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import ToastNotifications from '../../components/ToastNotifications';
@@ -23,6 +24,7 @@ import {
 const WaiterMenu = () => {
   const { user } = useAuth();
   const { socket } = useSocket();
+  const { printPreparationSlip } = usePrinter();
   const navigate = useNavigate();
 
   const [menuItems, setMenuItems] = useState([]);
@@ -160,6 +162,7 @@ const WaiterMenu = () => {
 
       if (res.data.success) {
         setOrderSuccess(res.data.order);
+        printPreparationSlip(res.data.order, true);
         setCart([]);
         setOrderInstructions('');
         setSelectedTableId('');

@@ -5,6 +5,7 @@ import { SocketProvider } from './context/SocketContext';
 import { PrinterProvider } from './context/PrinterContext';
 import { UIProvider } from './context/UIContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import PrintModal from './components/PrintModal';
 
 // Pages
 import Login from './pages/Login';
@@ -36,6 +37,7 @@ function App() {
       <SocketProvider>
         <UIProvider>
           <PrinterProvider>
+            <PrintModal />
             <Routes>
             {/* Public Login Route */}
             <Route path="/login" element={<Login />} />
