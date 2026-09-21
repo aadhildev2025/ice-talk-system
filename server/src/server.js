@@ -14,6 +14,7 @@ const menuRoutes = require('./routes/menuRoutes');
 const orderRoutes = require('./routes/orderRoutes');
 const posRoutes = require('./routes/posRoutes');
 const reportRoutes = require('./routes/reportRoutes');
+const expenseRoutes = require('./routes/expenseRoutes');
 
 const path = require('path');
 const fs = require('fs');
@@ -74,6 +75,7 @@ app.use(['/api/menu', '/menu'], menuRoutes);
 app.use(['/api/orders', '/orders'], orderRoutes);
 app.use(['/api/pos', '/pos'], posRoutes);
 app.use(['/api/reports', '/reports'], reportRoutes);
+app.use(['/api/expenses', '/expenses'], expenseRoutes);
 
 // Health check endpoint
 app.get(['/api/health', '/health'], (req, res) => {

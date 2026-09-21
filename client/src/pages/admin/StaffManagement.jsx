@@ -97,6 +97,10 @@ const StaffManagement = () => {
   };
 
   const handleToggleStatus = async (user) => {
+    if (user.role === 'superadmin') {
+      alert('Cannot deactivate Super Admin.');
+      return;
+    }
     if (user.role === 'admin' && user.username === 'admin') {
       alert('Cannot deactivate primary Admin.');
       return;
@@ -111,6 +115,10 @@ const StaffManagement = () => {
   };
 
   const handleDelete = async (user) => {
+    if (user.role === 'superadmin') {
+      alert('Cannot delete Super Admin account.');
+      return;
+    }
     if (user.role === 'admin' && user.username === 'admin') {
       alert('Cannot delete primary Admin.');
       return;
@@ -160,7 +168,7 @@ const StaffManagement = () => {
       {/* Filter bar */}
       <div className="bg-[#141418] border border-[#24242E] rounded-2xl p-4 flex flex-col sm:flex-row gap-3 items-center justify-between">
         <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto">
-          {['ALL', 'admin', 'waiter'].map((r) => (
+          {['ALL', 'superadmin', 'admin', 'waiter'].map((r) => (
             <button
               key={r}
               onClick={() => setRoleFilter(r)}
@@ -170,7 +178,7 @@ const StaffManagement = () => {
                   : 'bg-[#1C1C24] text-neutral-400 hover:text-white border border-[#2B2B38]'
               }`}
             >
-              {r === 'ALL' ? 'All Roles' : r}
+              {r === 'ALL' ? 'All Roles' : r === 'superadmin' ? 'Super Admin' : r}
             </button>
           ))}
         </div>
@@ -210,9 +218,9 @@ const StaffManagement = () => {
               </thead>
               <tbody className="divide-y divide-[#24242E]">
                 {filteredUsers.map((u) => {
+                  const isSuperAdmin = u.role === 'superadmin';
                   const isAdmin = u.role === 'admin';
                   const isWaiter = u.role === 'waiter';
-                  const isKitchen = ['kitchen', 'juice', 'bun', 'other'].includes(u.role);
 
                   return (
                     <tr key={u._id} className="hover:bg-[#1A1A22] transition-colors">
@@ -220,7 +228,9 @@ const StaffManagement = () => {
                         <div className="flex items-center gap-3">
                           <div
                             className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${
-                              isAdmin
+                              isSuperAdmin
+                                ? 'bg-purple-500/25 text-purple-300 border border-purple-500/40'
+                                : isAdmin
                                 ? 'bg-orange-500/20 text-orange-400'
                                 : isWaiter
                                 ? 'bg-blue-500/20 text-blue-400'
@@ -241,14 +251,16 @@ const StaffManagement = () => {
                       <td className="p-4">
                         <span
                           className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                            isAdmin
+                            isSuperAdmin
+                              ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40'
+                              : isAdmin
                               ? 'bg-orange-500/20 text-orange-400 border border-orange-500/40'
                               : isWaiter
                               ? 'bg-blue-500/20 text-blue-400 border border-blue-500/40'
                               : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
                           }`}
                         >
-                          {u.role}
+                          {isSuperAdmin ? 'Super Admin' : u.role}
                         </span>
                       </td>
 
@@ -272,8 +284,9 @@ const StaffManagement = () => {
                         <div className="flex items-center justify-end gap-1.5">
                           <button
                             onClick={() => handleToggleStatus(u)}
+                            disabled={isSuperAdmin}
                             title={u.status === 'ACTIVE' ? 'Deactivate' : 'Activate'}
-                            className="p-1.5 rounded-lg bg-[#1C1C24] hover:bg-[#252532] text-neutral-400 hover:text-white border border-[#2B2B38]"
+                            className="p-1.5 rounded-lg bg-[#1C1C24] hover:bg-[#252532] text-neutral-400 hover:text-white border border-[#2B2B38] disabled:opacity-20"
                           >
                             <Power className="w-3.5 h-3.5" />
                           </button>
@@ -286,7 +299,7 @@ const StaffManagement = () => {
                           </button>
                           <button
                             onClick={() => handleDelete(u)}
-                            disabled={u.username === 'admin'}
+                            disabled={u.username === 'admin' || isSuperAdmin}
                             title="Delete User"
                             className="p-1.5 rounded-lg bg-[#1C1C24] hover:bg-rose-500/20 text-neutral-400 hover:text-rose-400 border border-[#2B2B38] disabled:opacity-20"
                           >

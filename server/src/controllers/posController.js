@@ -247,7 +247,9 @@ const settleTable = async (req, res) => {
 
 // @desc    Get Sales History with date & search filters
 // @route   GET /api/pos/sales
-// @access  Private (Admin)
+// @desc    Get Sales History with date & search filters
+// @route   GET /api/pos/sales
+// @access  Private (Admin, SuperAdmin)
 const getSalesHistory = async (req, res) => {
   try {
     const { timeframe, startDate, endDate, paymentMethod, search, limit = 50, page = 1 } = req.query;
@@ -257,22 +259,45 @@ const getSalesHistory = async (req, res) => {
     const now = new Date();
     if (timeframe === 'today') {
       const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      filter.createdAt = { $gte: startOfDay };
+      const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+      filter.createdAt = { $gte: startOfDay, $lte: endOfDay };
     } else if (timeframe === 'yesterday') {
       const startOfYesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
-      const endOfYesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      filter.createdAt = { $gte: startOfYesterday, $lt: endOfYesterday };
-    } else if (timeframe === 'week') {
-      const startOfWeek = new Date(now.setDate(now.getDate() - 7));
+      const endOfYesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 23, 59, 59, 999);
+      filter.createdAt = { $gte: startOfYesterday, $lte: endOfYesterday };
+    } else if (timeframe === 'week' || timeframe === 'thisWeek') {
+      const day = now.getDay();
+      const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+      const startOfWeek = new Date(now.getFullYear(), now.getMonth(), diff, 0, 0, 0);
       filter.createdAt = { $gte: startOfWeek };
-    } else if (timeframe === 'month') {
+    } else if (timeframe === 'month' || timeframe === 'thisMonth') {
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
       filter.createdAt = { $gte: startOfMonth };
-    } else if (startDate && endDate) {
-      filter.createdAt = {
-        $gte: new Date(startDate),
-        $lte: new Date(new Date(endDate).setHours(23, 59, 59, 999)),
-      };
+    } else if (timeframe === 'lastMonth') {
+      const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1, 0, 0, 0);
+      const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+      filter.createdAt = { $gte: startOfLastMonth, $lte: endOfLastMonth };
+    } else if (timeframe === 'year' || timeframe === 'thisYear') {
+      const startOfYear = new Date(now.getFullYear(), 0, 1, 0, 0, 0);
+      filter.createdAt = { $gte: startOfYear };
+    } else if (timeframe === 'lastYear') {
+      const startOfLastYear = new Date(now.getFullYear() - 1, 0, 1, 0, 0, 0);
+      const endOfLastYear = new Date(now.getFullYear() - 1, 11, 31, 23, 59, 59, 999);
+      filter.createdAt = { $gte: startOfLastYear, $lte: endOfLastYear };
+    } else if (timeframe === 'all') {
+      // No date filter - view all transactions from beginning
+    } else if (startDate || endDate) {
+      filter.createdAt = {};
+      if (startDate) {
+        const s = new Date(startDate);
+        s.setHours(0, 0, 0, 0);
+        filter.createdAt.$gte = s;
+      }
+      if (endDate) {
+        const e = new Date(endDate);
+        e.setHours(23, 59, 59, 999);
+        filter.createdAt.$lte = e;
+      }
     }
 
     if (paymentMethod && paymentMethod !== 'ALL') {
@@ -315,7 +340,7 @@ const getSalesHistory = async (req, res) => {
 
 // @desc    Get single sale receipt by ID
 // @route   GET /api/pos/sales/:id
-// @access  Private (Admin)
+// @access  Private (Admin, SuperAdmin)
 const getSaleById = async (req, res) => {
   try {
     const sale = await Sale.findById(req.params.id);
@@ -328,10 +353,58 @@ const getSaleById = async (req, res) => {
   }
 };
 
+// @desc    Delete Sale Transaction (Super Admin Only)
+// @route   DELETE /api/pos/sales/:id
+// @access  Private (SuperAdmin ONLY)
+const deleteSaleTransaction = async (req, res) => {
+  try {
+    if (req.user?.role !== 'superadmin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Permission denied. Only Super Admin can delete transactions.',
+      });
+    }
+
+    const { id } = req.params;
+    const sale = await Sale.findById(id);
+
+    if (!sale) {
+      return res.status(404).json({
+        success: false,
+        message: 'Transaction not found.',
+      });
+    }
+
+    // Clean up associated orders if any
+    if (sale.orderIds && sale.orderIds.length > 0) {
+      await Order.deleteMany({ _id: { $in: sale.orderIds } });
+    }
+    await Order.deleteMany({ saleId: sale._id });
+
+    // Delete the sale record itself
+    await Sale.findByIdAndDelete(id);
+
+    res.json({
+      success: true,
+      message: `Sale transaction ${sale.saleNumber} was permanently deleted.`,
+      deletedSaleId: id,
+      saleNumber: sale.saleNumber,
+    });
+  } catch (error) {
+    console.error('Delete sale transaction error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to delete transaction',
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   getTableActiveOrders,
   getChannelActiveOrders,
   settleTable,
   getSalesHistory,
   getSaleById,
+  deleteSaleTransaction,
 };

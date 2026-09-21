@@ -17,6 +17,7 @@ import AdminPOS from './pages/admin/AdminPOS';
 import TableManagement from './pages/admin/TableManagement';
 import MenuManagement from './pages/admin/MenuManagement';
 import StaffManagement from './pages/admin/StaffManagement';
+import ExpensesManagement from './pages/admin/ExpensesManagement';
 import Reports from './pages/admin/Reports';
 
 import WaiterMenu from './pages/waiter/WaiterMenu';
@@ -60,6 +61,7 @@ function App() {
               <Route path="tables" element={<TableManagement />} />
               <Route path="menu" element={<MenuManagement />} />
               <Route path="staff" element={<StaffManagement />} />
+              <Route path="expenses" element={<ExpensesManagement />} />
               <Route path="reports" element={<Reports />} />
             </Route>
 

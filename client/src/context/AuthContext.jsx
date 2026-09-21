@@ -74,6 +74,7 @@ export const AuthProvider = ({ children }) => {
   // Helper for role path redirection
   const getRoleHomePath = (role) => {
     switch (role) {
+      case 'superadmin':
       case 'admin':
         return '/admin/dashboard';
       case 'waiter':
@@ -92,7 +93,8 @@ export const AuthProvider = ({ children }) => {
         login,
         logout,
         isAuthenticated: !!user && !!token,
-        isAdmin: user?.role === 'admin',
+        isAdmin: user?.role === 'admin' || user?.role === 'superadmin',
+        isSuperAdmin: user?.role === 'superadmin',
         isWaiter: user?.role === 'waiter',
         getRoleHomePath,
       }}

@@ -15,6 +15,7 @@ import {
   BarChart3,
   Flame,
   Receipt,
+  Wallet,
   Menu,
   X,
 } from 'lucide-react';
@@ -93,6 +94,7 @@ const AdminLayout = () => {
     { to: '/admin/tables', label: 'Tables', icon: Grid },
     { to: '/admin/menu', label: 'Menu & Categories', icon: UtensilsCrossed },
     { to: '/admin/staff', label: 'Staff Management', icon: Users },
+    { to: '/admin/expenses', label: 'Expenses & Salaries', icon: Wallet },
     { to: '/admin/reports', label: 'Sales & Reports', icon: BarChart3 },
   ];
 

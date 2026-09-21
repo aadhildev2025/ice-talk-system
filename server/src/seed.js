@@ -255,6 +255,14 @@ const defaultTables = [
 
 const defaultUsers = [
   {
+    name: 'Super Admin (Owner)',
+    username: 'superadmin',
+    password: 'superadmin123',
+    role: 'superadmin',
+    department: 'ALL',
+    phone: '+94 77 000 0001',
+  },
+  {
     name: 'Manager Admin',
     username: 'admin',
     password: 'admin123',

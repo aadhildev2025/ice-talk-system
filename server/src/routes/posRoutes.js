@@ -6,6 +6,7 @@ const {
   settleTable,
   getSalesHistory,
   getSaleById,
+  deleteSaleTransaction,
 } = require('../controllers/posController');
 const { protect, authorize } = require('../middleware/auth');
 
@@ -15,5 +16,6 @@ router.post('/settle-table', protect, authorize('admin'), settleTable);
 router.post('/settle-orders', protect, authorize('admin'), settleTable);
 router.get('/sales', protect, authorize('admin'), getSalesHistory);
 router.get('/sales/:id', protect, authorize('admin'), getSaleById);
+router.delete('/sales/:id', protect, authorize('superadmin'), deleteSaleTransaction);
 
 module.exports = router;

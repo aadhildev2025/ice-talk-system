@@ -38,9 +38,20 @@ const cleanDatabase = async () => {
     const updateMenu = await MenuItem.updateMany({}, { $set: { image: '' } });
     console.log(`Updated ${updateMenu.matchedCount} menu items to have no image.`);
 
-    console.log('\n--- 4. Resetting Users to ONLY Admin and Waiter ---');
+    console.log('\n--- 4. Resetting Users to Super Admin, Admin, and Waiter ---');
     // Remove all users
     await User.deleteMany({});
+
+    // Create Super Admin
+    const superAdminUser = await User.create({
+      name: 'Super Admin (Owner)',
+      username: 'superadmin',
+      password: 'superadmin123',
+      role: 'superadmin',
+      department: 'ALL',
+      phone: '+94 77 000 0001',
+    });
+    console.log(`Created Super Admin user: ${superAdminUser.username} (${superAdminUser.role})`);
 
     // Create Admin
     const adminUser = await User.create({

@@ -22,6 +22,10 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   }
 
   if (allowedRoles && !allowedRoles.includes(user.role)) {
+    // Super Admin inherits all admin access
+    if (user.role === 'superadmin' && allowedRoles.includes('admin')) {
+      return children;
+    }
     // If kitchen role accesses kitchen portal
     if (['kitchen', 'juice', 'bun', 'other'].includes(user.role) && allowedRoles.includes('kitchen')) {
       return children;

@@ -20,6 +20,8 @@ const Navbar = () => {
 
   const getRoleBadge = (role) => {
     switch (role) {
+      case 'superadmin':
+        return <span className="bg-gradient-to-r from-purple-500/25 to-pink-500/25 text-purple-300 border border-purple-500/40 px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider shadow-sm">Super Admin</span>;
       case 'admin':
         return <span className="bg-orange-500/20 text-orange-400 border border-orange-500/40 px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider">Admin</span>;
       case 'waiter':
@@ -51,8 +53,8 @@ const Navbar = () => {
 
       {/* Center Controls: Live Status & UI Mode Switcher */}
       <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-        {/* Desktop / Touch Screen Mode Toggle - Admin only */}
-        {user?.role === 'admin' && (
+        {/* Desktop / Touch Screen Mode Toggle - Admin and Super Admin */}
+        {(user?.role === 'admin' || user?.role === 'superadmin') && (
           <div className="hidden sm:flex items-center bg-[#181820] p-1 rounded-xl border border-[#2B2B38] shadow-inner">
             <button
               onClick={() => setMode('desktop')}
