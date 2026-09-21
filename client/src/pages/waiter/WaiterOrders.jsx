@@ -10,7 +10,6 @@ import {
   UtensilsCrossed,
   Clock,
   CheckCircle2,
-  XCircle,
   Flame,
   AlertCircle,
   RefreshCw,
@@ -24,7 +23,6 @@ const WaiterOrders = () => {
 
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [cancellingId, setCancellingId] = useState(null);
 
   const fetchWaiterOrders = async () => {
     try {
@@ -36,28 +34,6 @@ const WaiterOrders = () => {
       console.error('Error fetching waiter orders:', err);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleCancelOrder = async (ord) => {
-    const reason = window.prompt(
-      `Cancel Order #${ord.orderNumber} (Table: ${ord.tableNameSnapshot})?\n\nEnter reason:`,
-      'Customer requested cancellation'
-    );
-    if (reason === null) return;
-
-    setCancellingId(ord._id);
-    try {
-      const res = await axios.post(`/api/orders/${ord._id}/cancel`, {
-        reason: reason.trim() || 'Cancelled by Waiter',
-      });
-      if (res.data.success) {
-        fetchWaiterOrders();
-      }
-    } catch (err) {
-      alert(err.response?.data?.message || 'Failed to cancel order');
-    } finally {
-      setCancellingId(null);
     }
   };
 
@@ -212,7 +188,6 @@ const WaiterOrders = () => {
               const isReady = ord.status === 'READY';
               const isRejected = ord.status === 'REJECTED';
               const isCancelled = ord.status === 'CANCELLED';
-              const canCancel = ['PENDING', 'APPROVED', 'PREPARING', 'READY'].includes(ord.status);
 
               return (
                 <div
@@ -297,17 +272,6 @@ const WaiterOrders = () => {
                         Rs. {ord.total.toLocaleString()}
                       </span>
                     </div>
-
-                    {canCancel && (
-                      <button
-                        onClick={() => handleCancelOrder(ord)}
-                        disabled={cancellingId === ord._id}
-                        className="self-end sm:self-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 active:bg-rose-500/30 text-rose-400 border border-rose-500/30 font-bold text-xs transition-all disabled:opacity-50"
-                      >
-                        <XCircle className="w-3.5 h-3.5" />
-                        <span>{cancellingId === ord._id ? 'Cancelling...' : 'Cancel Order'}</span>
-                      </button>
-                    )}
                   </div>
                 </div>
               );

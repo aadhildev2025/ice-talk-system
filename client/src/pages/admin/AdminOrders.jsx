@@ -9,7 +9,6 @@ import {
   Printer,
   Clock,
   CheckCircle2,
-  XCircle,
   AlertCircle,
   Flame,
   ChevronRight,
@@ -108,32 +107,6 @@ const AdminOrders = () => {
     }
   };
 
-  const handleCancelOrder = async (ord) => {
-    const reason = window.prompt(
-      `Cancel Order #${ord.orderNumber} (Table: ${ord.tableNameSnapshot})?\n\nEnter reason for cancellation:`,
-      'Cancelled by Admin'
-    );
-    if (reason === null) return;
-
-    try {
-      const res = await axios.post(`/api/orders/${ord._id}/cancel`, {
-        reason: reason.trim() || 'Cancelled by Admin',
-      });
-      if (res.data.success) {
-        fetchOrders();
-        if (selectedOrder?._id === ord._id) {
-          setSelectedOrder((prev) => ({
-            ...prev,
-            status: 'CANCELLED',
-            cancellationReason: reason.trim() || 'Cancelled by Admin',
-          }));
-        }
-      }
-    } catch (err) {
-      alert(err.response?.data?.message || 'Failed to cancel order');
-    }
-  };
-
   const tabs = [
     { id: 'ALL', label: 'All Orders' },
     { id: 'PENDING', label: 'Pending' },
@@ -215,8 +188,6 @@ const AdminOrders = () => {
               </thead>
               <tbody className="divide-y divide-[#24242E]">
                 {filteredOrders.map((ord) => {
-                  const canCancel = ['PENDING', 'APPROVED', 'PREPARING', 'READY'].includes(ord.status);
-
                   return (
                     <tr key={ord._id} className="hover:bg-[#1A1A22] transition-colors">
                       <td className="p-4 font-black text-white text-sm">#{ord.orderNumber}</td>
@@ -258,16 +229,6 @@ const AdminOrders = () => {
                           >
                             View
                           </button>
-                          {canCancel && (
-                            <button
-                              onClick={() => handleCancelOrder(ord)}
-                              title="Cancel Order"
-                              className="px-2.5 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 hover:text-rose-300 border border-rose-500/30 font-bold text-[11px] transition-all flex items-center gap-1"
-                            >
-                              <XCircle className="w-3 h-3" />
-                              <span>Cancel</span>
-                            </button>
-                          )}
                         </div>
                       </td>
                     </tr>
@@ -389,16 +350,6 @@ const AdminOrders = () => {
                   <Printer className="w-4 h-4 text-orange-400" />
                   Print Slip
                 </button>
-
-                {['PENDING', 'APPROVED', 'PREPARING', 'READY'].includes(selectedOrder.status) && (
-                  <button
-                    onClick={() => handleCancelOrder(selectedOrder)}
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 text-xs font-bold border border-rose-500/40 transition-colors"
-                  >
-                    <XCircle className="w-4 h-4" />
-                    Cancel Order
-                  </button>
-                )}
               </div>
 
               <button
