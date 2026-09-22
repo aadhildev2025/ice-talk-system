@@ -1,6 +1,7 @@
 import React from 'react';
 import { usePrinter } from '../context/PrinterContext';
 import { billingLogo } from '../assets/billingLogo';
+import { detectKOTSection, getDeptDisplayName } from '../utils/kotRouting';
 
 const formatReceiptDateTime = (dateVal) => {
   const d = new Date(dateVal || Date.now());
@@ -42,11 +43,11 @@ const PrintModal = () => {
   const { type, data, department } = printData;
   const isPrepSlip = type === 'PREPARATION_SLIP';
 
-  // Filter items if specific department requested for KOT
+  // Filter items if specific station department requested for KOT
   let kotItems = data.items || [];
   if (isPrepSlip && department && department !== 'ALL') {
     const filtered = kotItems.filter(
-      (it) => (it.department || 'KITCHEN').toUpperCase() === department.toUpperCase()
+      (it) => detectKOTSection(it.category, it.department) === department.toUpperCase()
     );
     if (filtered.length > 0) {
       kotItems = filtered;
@@ -97,37 +98,23 @@ const PrintModal = () => {
 
   const roundNum = data.round || data.roundNumber || 1;
 
-  const getDeptDisplayName = (deptCode) => {
-    switch (deptCode?.toUpperCase()) {
-      case 'KITCHEN':
-        return 'RICE & KITCHEN';
-      case 'JUICE':
-        return 'JUICE & DESSERTS';
-      case 'BUN':
-        return 'BUNS & SHORT EATS';
-      default:
-        return deptCode || 'KITCHEN';
-    }
-  };
-
-  // Group KOT items by section
+  // Group KOT items by detected section directly from category
   const groupedSections = {
     KITCHEN: [],
     JUICE: [],
     BUN: [],
-    OTHER: [],
   };
 
   kotItems.forEach((it) => {
-    const dept = (it.department || 'KITCHEN').toUpperCase();
-    if (groupedSections[dept]) {
-      groupedSections[dept].push(it);
+    const sec = detectKOTSection(it.category, it.department);
+    if (groupedSections[sec]) {
+      groupedSections[sec].push(it);
     } else {
-      groupedSections.OTHER.push(it);
+      groupedSections.KITCHEN.push(it);
     }
   });
 
-  const activeSections = ['KITCHEN', 'JUICE', 'BUN', 'OTHER'].filter(
+  const activeSections = ['KITCHEN', 'JUICE', 'BUN'].filter(
     (sec) => groupedSections[sec].length > 0
   );
 
@@ -145,7 +132,7 @@ const PrintModal = () => {
           <div className="text-left font-mono text-black leading-snug">
             {/* Top KOT Header */}
             <div className="font-extrabold text-[15px] tracking-wide mb-1">
-              KOT{department && department !== 'ALL' ? ` - ${getDeptDisplayName(department)}` : ''}
+              KOT{department && department !== 'ALL' ? ` - ${getDeptDisplayName(department)}` : ' - MASTER (ALL)'}
             </div>
 
             {/* Meta details */}
@@ -162,19 +149,29 @@ const PrintModal = () => {
             {/* Items with Section Headers */}
             {department && department !== 'ALL' ? (
               // Specific Department KOT
-              <div className="space-y-1.5 my-1.5">
-                {kotItems.map((item, idx) => (
-                  <div key={idx} className="text-[12px] font-bold">
-                    <div>
-                      {item.quantity} x {item.name?.toUpperCase()}
-                    </div>
-                    {item.specialInstructions && (
-                      <div className="text-[10px] font-normal pl-3 italic text-neutral-800">
-                        * {item.specialInstructions}
+              <div className="space-y-2 my-1.5">
+                {kotItems.map((item, idx) => {
+                  const catTag = item.category || getDeptDisplayName(detectKOTSection(item.category, item.department));
+                  return (
+                    <div key={idx} className="text-[12px] font-bold">
+                      <div className="flex items-start justify-between gap-1">
+                        <span className="leading-tight">
+                          {item.quantity} x {item.name?.toUpperCase()}
+                        </span>
+                        {catTag && (
+                          <span className="text-[9px] font-mono font-extrabold uppercase px-1 py-0.5 border border-black rounded shrink-0 whitespace-nowrap">
+                            [{catTag.toUpperCase()}]
+                          </span>
+                        )}
                       </div>
-                    )}
-                  </div>
-                ))}
+                      {item.specialInstructions && (
+                        <div className="text-[10px] font-normal pl-3 italic text-neutral-800">
+                          * {item.specialInstructions}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             ) : (
               // Combined KOT with distinct sections (Rice/Kitchen, Juice & Desserts, Buns)
@@ -187,19 +184,29 @@ const PrintModal = () => {
                     </div>
 
                     {/* Section Items */}
-                    <div className="space-y-1 pl-1">
-                      {groupedSections[sec].map((item, idx) => (
-                        <div key={idx} className="text-[12px] font-bold">
-                          <div>
-                            {item.quantity} x {item.name?.toUpperCase()}
-                          </div>
-                          {item.specialInstructions && (
-                            <div className="text-[10px] font-normal pl-3 italic text-neutral-800">
-                              * {item.specialInstructions}
+                    <div className="space-y-1.5 pl-1">
+                      {groupedSections[sec].map((item, idx) => {
+                        const catTag = item.category || getDeptDisplayName(sec);
+                        return (
+                          <div key={idx} className="text-[12px] font-bold">
+                            <div className="flex items-start justify-between gap-1">
+                              <span className="leading-tight">
+                                {item.quantity} x {item.name?.toUpperCase()}
+                              </span>
+                              {catTag && (
+                                <span className="text-[9px] font-mono font-extrabold uppercase px-1 py-0.5 border border-black rounded shrink-0 whitespace-nowrap">
+                                  [{catTag.toUpperCase()}]
+                                </span>
+                              )}
                             </div>
-                          )}
-                        </div>
-                      ))}
+                            {item.specialInstructions && (
+                              <div className="text-[10px] font-normal pl-3 italic text-neutral-800">
+                                * {item.specialInstructions}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 ))}

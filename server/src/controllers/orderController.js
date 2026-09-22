@@ -21,6 +21,84 @@ const getNextOrderNumber = async () => {
   return 1001; // Start at 1001
 };
 
+// Helper: Detect KOT preparation section directly from menu item category
+const detectKOTSection = (categoryName, fallbackDept = 'KITCHEN') => {
+  const cat = (categoryName || '').trim().toLowerCase();
+
+  // 1. JUICE & DESSERTS (Beverages, Shakes, Falooda, Ice Cream, Desserts, Sweets, Smoothies, Mojitos)
+  if (
+    cat.includes('juice') ||
+    cat.includes('shake') ||
+    cat.includes('milkshake') ||
+    cat.includes('smoothie') ||
+    cat.includes('mojito') ||
+    cat.includes('falooda') ||
+    cat.includes('ice cream') ||
+    cat.includes('icecream') ||
+    cat.includes('dessert') ||
+    cat.includes('sweet') ||
+    cat.includes('drink') ||
+    cat.includes('beverage') ||
+    cat.includes('tea') ||
+    cat.includes('coffee') ||
+    cat.includes('brownie') ||
+    cat.includes('cake') ||
+    cat.includes('sundae') ||
+    cat.includes('frappe')
+  ) {
+    return 'JUICE';
+  }
+
+  // 2. BUNS & SHORT EATS (Bakery, Buns, Rolls, Pastries, Samosas, Snacks, Sandwiches)
+  if (
+    cat.includes('bun') ||
+    cat.includes('short eat') ||
+    cat.includes('shorteat') ||
+    cat.includes('bakery') ||
+    cat.includes('roll') ||
+    cat.includes('pastry') ||
+    cat.includes('patties') ||
+    cat.includes('patty') ||
+    cat.includes('samosa') ||
+    cat.includes('sandwich') ||
+    cat.includes('snack')
+  ) {
+    return 'BUN';
+  }
+
+  // 3. RICE & KITCHEN (Rice, Kottu, Burgers, Noodles, Curries, Hot Meals, Mains, Grills)
+  if (
+    cat.includes('rice') ||
+    cat.includes('kottu') ||
+    cat.includes('kotthu') ||
+    cat.includes('burger') ||
+    cat.includes('noodle') ||
+    cat.includes('pasta') ||
+    cat.includes('curry') ||
+    cat.includes('gravy') ||
+    cat.includes('hot') ||
+    cat.includes('meal') ||
+    cat.includes('main') ||
+    cat.includes('kitchen') ||
+    cat.includes('soup') ||
+    cat.includes('appetizer') ||
+    cat.includes('fried') ||
+    cat.includes('bbq') ||
+    cat.includes('grill') ||
+    cat.includes('chicken') ||
+    cat.includes('beef') ||
+    cat.includes('seafood')
+  ) {
+    return 'KITCHEN';
+  }
+
+  if (fallbackDept && ['JUICE', 'BUN', 'KITCHEN'].includes(fallbackDept.toUpperCase())) {
+    return fallbackDept.toUpperCase();
+  }
+
+  return 'KITCHEN';
+};
+
 // @desc    Create new order (Waiter / Admin)
 // @route   POST /api/orders
 // @access  Private (Waiter / Admin)
@@ -98,12 +176,13 @@ const createOrder = async (req, res) => {
       const price = menuItem.price;
       subtotal += price * qty;
 
+      const detectedDept = detectKOTSection(menuItem.category, menuItem.department);
       processedItems.push({
         menuItemId: menuItem._id,
         name: menuItem.name,
         quantity: qty,
         price: price,
-        department: menuItem.department || 'KITCHEN',
+        department: detectedDept,
         category: menuItem.category || '',
         specialInstructions: item.specialInstructions || '',
         preparationStatus: 'PENDING',
@@ -154,7 +233,7 @@ const createOrder = async (req, res) => {
     if (shouldAutoApprove) {
       const departmentGroups = {};
       order.items.forEach((item) => {
-        const dept = item.department || 'KITCHEN';
+        const dept = detectKOTSection(item.category, item.department);
         if (!departmentGroups[dept]) {
           departmentGroups[dept] = [];
         }
@@ -162,6 +241,7 @@ const createOrder = async (req, res) => {
           menuItemId: item.menuItemId,
           name: item.name,
           quantity: item.quantity,
+          category: item.category || '',
           specialInstructions: item.specialInstructions,
           isReady: false,
         });
@@ -224,7 +304,7 @@ const approveOrder = async (req, res) => {
     // Group items by department to create Preparation Tasks
     const departmentGroups = {};
     order.items.forEach((item) => {
-      const dept = item.department || 'KITCHEN';
+      const dept = detectKOTSection(item.category, item.department);
       if (!departmentGroups[dept]) {
         departmentGroups[dept] = [];
       }
@@ -232,6 +312,7 @@ const approveOrder = async (req, res) => {
         menuItemId: item.menuItemId,
         name: item.name,
         quantity: item.quantity,
+        category: item.category || '',
         specialInstructions: item.specialInstructions,
         isReady: false,
       });

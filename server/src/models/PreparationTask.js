@@ -49,6 +49,10 @@ const preparationTaskSchema = new mongoose.Schema(
           type: String,
           default: '',
         },
+        category: {
+          type: String,
+          default: '',
+        },
         isReady: {
           type: Boolean,
           default: false,

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { detectKOTSection } from '../utils/kotRouting';
 
 const PrinterContext = createContext();
 
@@ -121,11 +122,11 @@ export const PrinterProvider = ({ children }) => {
   const printPreparationSlip = async (order, isAutoTrigger = false, department = null) => {
     if (!isAutoTrigger || autoPrintEnabled) {
       if (multiPrinterMode && !department) {
-        // Multi-printer routing: identify active departments in the order
+        // Multi-printer routing: automatically detect active stations from item categories
         const items = order.items || [];
         const activeDepts = new Set();
         items.forEach((it) => {
-          const d = (it.department || 'KITCHEN').toUpperCase();
+          const d = detectKOTSection(it.category, it.department);
           activeDepts.add(d);
         });
 

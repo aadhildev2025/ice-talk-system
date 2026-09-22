@@ -267,11 +267,16 @@ const KitchenDisplay = () => {
                           <div className="flex-1">
                             <div className="flex justify-between items-center">
                               <span
-                                className={`text-sm font-black ${
+                                className={`text-sm font-black flex items-center flex-wrap gap-1 ${
                                   item.isReady ? 'line-through opacity-70 text-emerald-300' : 'text-white'
                                 }`}
                               >
                                 {item.name}
+                                {item.category && (
+                                  <span className="text-[10px] text-amber-400 font-bold px-1.5 py-0.5 bg-amber-500/10 rounded border border-amber-500/20 uppercase tracking-wide">
+                                    [{item.category}]
+                                  </span>
+                                )}
                               </span>
                               <span className="w-7 h-7 rounded-lg bg-black/40 text-white font-black text-xs flex items-center justify-center border border-white/10">
                                 x{item.quantity}

@@ -375,10 +375,69 @@
   <div class="page-break"></div>
 
   <!-- SECTION 5 -->
-  <h2>5. How Daily Operations &amp; KOT Printing Work</h2>
+  <h2>5. Menu Category Detection &amp; Mixed Orders (Juice, Rice, Buns)</h2>
 
-  <h3>Sample Printed KOT Ticket Output (78mm Width)</h3>
-  <div class="kot-preview">
+  <p>
+    In a busy restaurant, orders frequently contain items from multiple departments at the same time (for example, 
+    <strong>Juice + Rice</strong> or <strong>Bun + Rice</strong>). Ice Talk POS handles this automatically through its 
+    <strong>Category Detection Engine</strong>:
+  </p>
+
+  <div class="tip-box">
+    <strong>How Automatic Detection Works:</strong> Staff members do <em>not</em> need to configure internal department codes manually. 
+    The POS inspects the item's <strong>Menu Category</strong> and instantly routes it to the correct station printer:
+    <ul style="margin: 6px 0 0 16px;">
+      <li><strong>Juice Bar &amp; Desserts:</strong> Categories containing <em>Juice, Milkshakes, Falooda, Ice Cream, Desserts, Brownies, Cakes, Beverages, Tea, Coffee</em>.</li>
+      <li><strong>Rice &amp; Kitchen:</strong> Categories containing <em>Rice, Kottu, Burgers, Noodles, Curries, Hot Meals, Mains, Grills</em>.</li>
+      <li><strong>Buns &amp; Short Eats:</strong> Categories containing <em>Buns, Short Eats, Bakery, Rolls, Pastries, Patties, Samosas, Snacks, Sandwiches</em>.</li>
+    </ul>
+  </div>
+
+  <h3>Mixed Order Routing Scenarios</h3>
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 25%;">Customer Order</th>
+        <th style="width: 25%;">Kitchen Printer (POS-Kitchen)</th>
+        <th style="width: 25%;">Juice Printer (POS-Juice)</th>
+        <th style="width: 25%;">Buns Printer (POS-Buns)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Mixed Order A:<br>Juice + Rice</strong><br><small>(e.g. 1x Fried Rice + 1x Mango Juice)</small></td>
+        <td style="color: #059669; font-weight: bold;">&#10004; PRINTS<br><small>1x Fried Rice [RICE]</small></td>
+        <td style="color: #059669; font-weight: bold;">&#10004; PRINTS<br><small>1x Mango Juice [JUICE]</small></td>
+        <td style="color: #94a3b8; font-weight: bold;">&#10006; SILENT<br><small>(Zero paper waste)</small></td>
+      </tr>
+      <tr>
+        <td><strong>Mixed Order B:<br>Bun + Rice</strong><br><small>(e.g. 1x Cheese Kottu + 2x Fish Bun)</small></td>
+        <td style="color: #059669; font-weight: bold;">&#10004; PRINTS<br><small>1x Cheese Kottu [KOTTU]</small></td>
+        <td style="color: #94a3b8; font-weight: bold;">&#10006; SILENT<br><small>(Zero paper waste)</small></td>
+        <td style="color: #059669; font-weight: bold;">&#10004; PRINTS<br><small>2x Fish Bun [BUNS]</small></td>
+      </tr>
+      <tr>
+        <td><strong>Mixed Order C:<br>Juice + Bun</strong><br><small>(e.g. 1x Falooda + 1x Chicken Roll)</small></td>
+        <td style="color: #94a3b8; font-weight: bold;">&#10006; SILENT<br><small>(Zero paper waste)</small></td>
+        <td style="color: #059669; font-weight: bold;">&#10004; PRINTS<br><small>1x Falooda [JUICE]</small></td>
+        <td style="color: #059669; font-weight: bold;">&#10004; PRINTS<br><small>1x Chicken Roll [BUNS]</small></td>
+      </tr>
+      <tr>
+        <td><strong>Mixed Order D:<br>All 3 Sections</strong><br><small>(Rice + Juice + Bun)</small></td>
+        <td style="color: #059669; font-weight: bold;">&#10004; PRINTS<br><small>Rice/Hot items only</small></td>
+        <td style="color: #059669; font-weight: bold;">&#10004; PRINTS<br><small>Juice/Dessert items only</small></td>
+        <td style="color: #059669; font-weight: bold;">&#10004; PRINTS<br><small>Bakery/Bun items only</small></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Sample Station KOT Slip Output (78mm Width)</h3>
+  <p>Notice each item line displays its <strong>detected Menu Category</strong> in brackets for instant identification:</p>
+
+  <div style="display: flex; gap: 15px; margin: 12px 0;">
+    <div style="flex: 1;">
+      <strong>Kitchen Printer Slip:</strong>
+      <div class="kot-preview">
 ========================================<br>
 KOT - RICE &amp; KITCHEN<br>
 User: WAITER 1<br>
@@ -386,28 +445,47 @@ Table: TABLE 04<br>
 Round: 1<br>
 Time: 9/22/2026 10:15 AM<br>
 ----------------------------------------<br>
-2 x SPECIAL MIXED FRIED RICE<br>
+2 x SPECIAL MIXED FRIED RICE    [RICE]<br>
   * Extra chili paste<br>
-1 x CHEESE CHICKEN KOTTU<br>
+1 x CHEESE CHICKEN KOTTU        [KOTTU]<br>
 ----------------------------------------<br>
 KOT<br>
 ========================================
+      </div>
+    </div>
+    <div style="flex: 1;">
+      <strong>Juice Bar Printer Slip:</strong>
+      <div class="kot-preview">
+========================================<br>
+KOT - JUICE &amp; DESSERTS<br>
+User: WAITER 1<br>
+Table: TABLE 04<br>
+Round: 1<br>
+Time: 9/22/2026 10:15 AM<br>
+----------------------------------------<br>
+1 x FRESH MANGO JUICE           [JUICE]<br>
+  * Less sugar<br>
+1 x ROYAL ICE TALK FALOODA      [DESSERT]<br>
+----------------------------------------<br>
+KOT<br>
+========================================
+      </div>
+    </div>
   </div>
 
-  <h3>Operational Rules &amp; Zero-Paper-Waste Intelligence</h3>
+  <h3>Operational Features &amp; Rules</h3>
   <ul>
     <li>
-      <strong>Order Approval Trigger:</strong> When an order is accepted in the <strong>"Order Receive"</strong> screen or created directly in <strong>"POS Billing"</strong>, the background print engine automatically fires.
+      <strong>Instant Automatic Trigger:</strong> When an order is placed on the POS Billing screen or approved in "Order Receive", the system processes categories and prints slips to target printers in under 1 second.
     </li>
     <li>
-      <strong>Silent Background Printing:</strong> In the desktop executable, print jobs run silently in the background without opening any Windows print pop-ups or disturbing the cashier.
+      <strong>Silent Printing:</strong> Runs directly through Windows spooler in the background without pop-ups or interrupts.
     </li>
     <li>
-      <strong>Zero Paper Waste:</strong> If a customer at Table 02 orders <em>only</em> Mango Juice and Chocolate Brownie, 
-      the <strong>Juice Bar printer prints</strong>, while the Kitchen and Bun printers <strong>remain completely silent</strong>.
+      <strong>Single Printer Master Mode:</strong> If only 1 printer is active, it prints a single master ticket neatly grouped by section headers (<span class="code-pill">[RICE &amp; KITCHEN]</span>, <span class="code-pill">[JUICE &amp; DESSERTS]</span>, <span class="code-pill">[BUNS &amp; SHORT EATS]</span>).
     </li>
     <li>
-      <strong>Re-printing Slips:</strong> If a chef or runner loses a ticket, open <strong>Orders Monitor</strong> (<span class="code-pill">/admin/orders</span>), click on the order card, and hit <strong>"Print KOT"</strong> to re-print on demand.
+      <strong>On-Demand Re-Printing:</strong> If kitchen staff misplaces a slip, click on the order in the Orders screen and click <strong>"Print Slip"</strong> to re-print.
     </li>
   </ul>
 

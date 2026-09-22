@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useSocket } from '../../context/SocketContext';
+import { detectKOTSection, getDeptDisplayName } from '../../utils/kotRouting';
 import {
   UtensilsCrossed,
   Plus,
@@ -81,12 +82,13 @@ const MenuManagement = () => {
 
   const handleOpenAddModal = () => {
     setEditingItem(null);
+    const defaultCat = categories.length > 0 ? categories[1]?.name || 'Rice' : 'Rice';
     setFormData({
       name: '',
       description: '',
       price: '',
-      category: categories.length > 0 ? categories[1]?.name || 'Rice' : 'Rice',
-      department: 'KITCHEN',
+      category: defaultCat,
+      department: detectKOTSection(defaultCat),
       image: '',
       prepTimeMinutes: 10,
       isPopular: false,
@@ -439,8 +441,12 @@ const MenuManagement = () => {
                   </label>
                   <select
                     value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    className="w-full bg-[#1C1C24] border border-[#2D2D3B] focus:border-[#FF6B00] rounded-xl px-3 py-2.5 text-white outline-none"
+                    onChange={(e) => {
+                      const newCat = e.target.value;
+                      const autoDept = detectKOTSection(newCat);
+                      setFormData({ ...formData, category: newCat, department: autoDept });
+                    }}
+                    className="w-full bg-[#1C1C24] border border-[#2D2D3B] focus:border-[#FF6B00] rounded-xl px-3 py-2.5 text-white outline-none font-bold"
                   >
                     {categories
                       .filter((c) => c.name !== 'All')
@@ -453,6 +459,20 @@ const MenuManagement = () => {
                 </div>
               </div>
 
+              {/* Auto Routing Indicator */}
+              <div className="bg-[#131318] border border-[#2A2A38] rounded-xl p-2.5 flex items-center justify-between text-[11px]">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span className="text-neutral-400">KOT Station Routing:</span>
+                  <span className="font-extrabold text-[#FF6B00]">
+                    {getDeptDisplayName(formData.department)}
+                  </span>
+                </div>
+                <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                  Auto-detected from Category
+                </span>
+              </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block font-bold text-neutral-300 mb-1 uppercase tracking-wider">
@@ -463,9 +483,9 @@ const MenuManagement = () => {
                     onChange={(e) => setFormData({ ...formData, department: e.target.value })}
                     className="w-full bg-[#1C1C24] border border-[#2D2D3B] focus:border-[#FF6B00] rounded-xl px-3 py-2.5 text-white outline-none font-bold"
                   >
-                    <option value="KITCHEN">KITCHEN</option>
-                    <option value="JUICE">JUICE</option>
-                    <option value="BUN">BUN</option>
+                    <option value="KITCHEN">RICE & KITCHEN</option>
+                    <option value="JUICE">JUICE & DESSERTS</option>
+                    <option value="BUN">BUNS & SHORT EATS</option>
                     <option value="OTHER">OTHER</option>
                   </select>
                 </div>
