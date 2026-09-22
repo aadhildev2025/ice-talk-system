@@ -97,6 +97,40 @@ const PrintModal = () => {
 
   const roundNum = data.round || data.roundNumber || 1;
 
+  const getDeptDisplayName = (deptCode) => {
+    switch (deptCode?.toUpperCase()) {
+      case 'KITCHEN':
+        return 'RICE & KITCHEN';
+      case 'JUICE':
+        return 'JUICE & DESSERTS';
+      case 'BUN':
+        return 'BUNS & SHORT EATS';
+      default:
+        return deptCode || 'KITCHEN';
+    }
+  };
+
+  // Group KOT items by section
+  const groupedSections = {
+    KITCHEN: [],
+    JUICE: [],
+    BUN: [],
+    OTHER: [],
+  };
+
+  kotItems.forEach((it) => {
+    const dept = (it.department || 'KITCHEN').toUpperCase();
+    if (groupedSections[dept]) {
+      groupedSections[dept].push(it);
+    } else {
+      groupedSections.OTHER.push(it);
+    }
+  });
+
+  const activeSections = ['KITCHEN', 'JUICE', 'BUN', 'OTHER'].filter(
+    (sec) => groupedSections[sec].length > 0
+  );
+
   return (
     <div className="fixed -left-[9999px] -top-[9999px] opacity-0 pointer-events-none print:opacity-100 print:pointer-events-auto print:static print:left-0 print:top-0 print:m-0 print:p-0">
       <div
@@ -110,8 +144,8 @@ const PrintModal = () => {
           /* ========================================================= */
           <div className="text-left font-mono text-black leading-snug">
             {/* Top KOT Header */}
-            <div className="font-extrabold text-[14px] tracking-wide mb-1">
-              KOT{department && department !== 'ALL' ? ` - ${department}` : ''}
+            <div className="font-extrabold text-[15px] tracking-wide mb-1">
+              KOT{department && department !== 'ALL' ? ` - ${getDeptDisplayName(department)}` : ''}
             </div>
 
             {/* Meta details */}
@@ -125,21 +159,52 @@ const PrintModal = () => {
             {/* Dashed line */}
             <div className="border-b border-dashed border-black my-1.5"></div>
 
-            {/* Items */}
-            <div className="space-y-1.5 my-1.5">
-              {kotItems.map((item, idx) => (
-                <div key={idx} className="text-[12px] font-bold">
-                  <div>
-                    {item.quantity} x {item.name?.toUpperCase()}
-                  </div>
-                  {item.specialInstructions && (
-                    <div className="text-[10px] font-normal pl-3 italic text-neutral-800">
-                      * {item.specialInstructions}
+            {/* Items with Section Headers */}
+            {department && department !== 'ALL' ? (
+              // Specific Department KOT
+              <div className="space-y-1.5 my-1.5">
+                {kotItems.map((item, idx) => (
+                  <div key={idx} className="text-[12px] font-bold">
+                    <div>
+                      {item.quantity} x {item.name?.toUpperCase()}
                     </div>
-                  )}
-                </div>
-              ))}
-            </div>
+                    {item.specialInstructions && (
+                      <div className="text-[10px] font-normal pl-3 italic text-neutral-800">
+                        * {item.specialInstructions}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              // Combined KOT with distinct sections (Rice/Kitchen, Juice & Desserts, Buns)
+              <div className="space-y-2.5 my-1.5">
+                {activeSections.map((sec) => (
+                  <div key={sec} className="space-y-1">
+                    {/* Section Header */}
+                    <div className="text-[11px] font-black uppercase tracking-wider bg-black text-white px-1.5 py-0.5 rounded-sm inline-block">
+                      {getDeptDisplayName(sec)}
+                    </div>
+
+                    {/* Section Items */}
+                    <div className="space-y-1 pl-1">
+                      {groupedSections[sec].map((item, idx) => (
+                        <div key={idx} className="text-[12px] font-bold">
+                          <div>
+                            {item.quantity} x {item.name?.toUpperCase()}
+                          </div>
+                          {item.specialInstructions && (
+                            <div className="text-[10px] font-normal pl-3 italic text-neutral-800">
+                              * {item.specialInstructions}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
 
             {/* Dashed line */}
             <div className="border-b border-dashed border-black my-1.5"></div>
