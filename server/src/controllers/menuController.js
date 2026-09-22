@@ -166,7 +166,7 @@ const getCategories = async (req, res) => {
 // @access  Private (Admin)
 const createCategory = async (req, res) => {
   try {
-    const { name, icon, sortOrder } = req.body;
+    const { name, department, icon, sortOrder } = req.body;
     if (!name) {
       return res.status(400).json({ success: false, message: 'Category name is required' });
     }
@@ -176,8 +176,15 @@ const createCategory = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Category already exists' });
     }
 
+    // Default to provided department or KITCHEN
+    let finalDept = (department || 'KITCHEN').toUpperCase();
+    if (!['KITCHEN', 'JUICE', 'BUN', 'OTHER'].includes(finalDept)) {
+      finalDept = 'KITCHEN';
+    }
+
     const category = await Category.create({
       name: name.trim(),
+      department: finalDept,
       icon: icon || 'Utensils',
       sortOrder: sortOrder || 0,
       isActive: true,
@@ -186,6 +193,48 @@ const createCategory = async (req, res) => {
     emitMenuUpdated();
 
     res.status(201).json({ success: true, category });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Update category (name, department)
+// @route   PUT /api/categories/:id
+// @access  Private (Admin)
+const updateCategory = async (req, res) => {
+  try {
+    const { name, department, icon, sortOrder } = req.body;
+    const category = await Category.findById(req.params.id);
+    if (!category) {
+      return res.status(404).json({ success: false, message: 'Category not found' });
+    }
+
+    const oldName = category.name;
+    if (name && name.trim()) category.name = name.trim();
+    if (department && ['KITCHEN', 'JUICE', 'BUN', 'OTHER'].includes(department.toUpperCase())) {
+      category.department = department.toUpperCase();
+    }
+    if (icon) category.icon = icon;
+    if (sortOrder !== undefined) category.sortOrder = sortOrder;
+
+    await category.save();
+
+    // If department or name was changed, sync all menu items under this category
+    const updateFields = {};
+    if (name && name.trim() && name.trim() !== oldName) {
+      updateFields.category = name.trim();
+    }
+    if (department && ['KITCHEN', 'JUICE', 'BUN', 'OTHER'].includes(department.toUpperCase())) {
+      updateFields.department = department.toUpperCase();
+    }
+
+    if (Object.keys(updateFields).length > 0) {
+      await MenuItem.updateMany({ category: oldName }, updateFields);
+    }
+
+    emitMenuUpdated();
+
+    res.json({ success: true, category });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -249,6 +298,7 @@ module.exports = {
   deleteMenuItem,
   getCategories,
   createCategory,
+  updateCategory,
   deleteCategory,
   seedDefaultMenu,
 };

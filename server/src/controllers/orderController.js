@@ -21,11 +21,19 @@ const getNextOrderNumber = async () => {
   return 1001; // Start at 1001
 };
 
-// Helper: Detect KOT preparation section directly from menu item category
-const detectKOTSection = (categoryName, fallbackDept = 'KITCHEN') => {
+// Helper: Detect KOT preparation section directly from menu item category or explicit department
+const detectKOTSection = (categoryName, explicitDept = null) => {
+  const dept = (explicitDept || '').trim().toUpperCase();
+
+  // 1. If an explicit station was selected by the user (JUICE, BUN, KITCHEN, OTHER), respect it directly!
+  if (['JUICE', 'BUN', 'KITCHEN', 'OTHER'].includes(dept)) {
+    return dept;
+  }
+
   const cat = (categoryName || '').trim().toLowerCase();
 
-  // 1. JUICE & DESSERTS (Beverages, Shakes, Falooda, Ice Cream, Desserts, Sweets, Smoothies, Mojitos)
+  // 2. Detect from Category Name keywords
+  // JUICE & DESSERTS (Beverages, Shakes, Falooda, Ice Cream, Desserts, Sweets, Smoothies, Mojitos)
   if (
     cat.includes('juice') ||
     cat.includes('shake') ||
@@ -49,7 +57,7 @@ const detectKOTSection = (categoryName, fallbackDept = 'KITCHEN') => {
     return 'JUICE';
   }
 
-  // 2. BUNS & SHORT EATS (Bakery, Buns, Rolls, Pastries, Samosas, Snacks, Sandwiches)
+  // BUNS & SHORT EATS (Bakery, Buns, Rolls, Pastries, Samosas, Snacks, Sandwiches)
   if (
     cat.includes('bun') ||
     cat.includes('short eat') ||
@@ -66,7 +74,7 @@ const detectKOTSection = (categoryName, fallbackDept = 'KITCHEN') => {
     return 'BUN';
   }
 
-  // 3. RICE & KITCHEN (Rice, Kottu, Burgers, Noodles, Curries, Hot Meals, Mains, Grills)
+  // RICE & KITCHEN (Rice, Kottu, Burgers, Noodles, Curries, Hot Meals, Mains, Grills)
   if (
     cat.includes('rice') ||
     cat.includes('kottu') ||
@@ -92,8 +100,8 @@ const detectKOTSection = (categoryName, fallbackDept = 'KITCHEN') => {
     return 'KITCHEN';
   }
 
-  if (fallbackDept && ['JUICE', 'BUN', 'KITCHEN'].includes(fallbackDept.toUpperCase())) {
-    return fallbackDept.toUpperCase();
+  if (cat.includes('other')) {
+    return 'OTHER';
   }
 
   return 'KITCHEN';

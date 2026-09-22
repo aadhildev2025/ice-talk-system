@@ -9,6 +9,7 @@ const {
   deleteMenuItem,
   getCategories,
   createCategory,
+  updateCategory,
   deleteCategory,
   seedDefaultMenu,
 } = require('../controllers/menuController');
@@ -26,6 +27,7 @@ router.delete('/:id', protect, authorize('admin'), deleteMenuItem);
 // Categories
 router.get('/categories/all', protect, getCategories);
 router.post('/categories', protect, authorize('admin'), createCategory);
+router.put('/categories/:id', protect, authorize('admin'), updateCategory);
 router.delete('/categories/:id', protect, authorize('admin'), deleteCategory);
 
 module.exports = router;

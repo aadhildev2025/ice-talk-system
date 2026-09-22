@@ -133,7 +133,7 @@ export const PrinterProvider = ({ children }) => {
         // Print each active station sequentially to its target printer
         for (const dept of activeDepts) {
           let targetPrinter = selectedPrinter;
-          if (dept === 'KITCHEN') targetPrinter = kitchenPrinter || selectedPrinter;
+          if (dept === 'KITCHEN' || dept === 'OTHER') targetPrinter = kitchenPrinter || selectedPrinter;
           else if (dept === 'JUICE') targetPrinter = juicePrinter || selectedPrinter;
           else if (dept === 'BUN') targetPrinter = bunPrinter || selectedPrinter;
 
@@ -150,7 +150,7 @@ export const PrinterProvider = ({ children }) => {
       } else {
         // Single printer master KOT (or specific department manual print)
         let targetPrinter = selectedPrinter;
-        if (department === 'KITCHEN') targetPrinter = kitchenPrinter || selectedPrinter;
+        if (department === 'KITCHEN' || department === 'OTHER') targetPrinter = kitchenPrinter || selectedPrinter;
         else if (department === 'JUICE') targetPrinter = juicePrinter || selectedPrinter;
         else if (department === 'BUN') targetPrinter = bunPrinter || selectedPrinter;
 

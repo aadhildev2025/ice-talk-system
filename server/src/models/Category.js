@@ -16,6 +16,11 @@ const categorySchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    department: {
+      type: String,
+      enum: ['KITCHEN', 'JUICE', 'BUN', 'OTHER'],
+      default: 'KITCHEN',
+    },
     isActive: {
       type: Boolean,
       default: true,

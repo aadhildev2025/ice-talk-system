@@ -13,18 +13,18 @@ const Sale = require('./models/Sale');
 dotenv.config();
 
 const defaultCategories = [
-  { name: 'All', icon: 'LayoutGrid', sortOrder: 0 },
-  { name: 'Rice', icon: 'Utensils', sortOrder: 1 },
-  { name: 'Kottu', icon: 'Flame', sortOrder: 2 },
-  { name: 'Buns', icon: 'Sandwich', sortOrder: 3 },
-  { name: 'Short Eats', icon: 'Cookie', sortOrder: 4 },
-  { name: 'Burgers', icon: 'Beef', sortOrder: 5 },
-  { name: 'Juice', icon: 'GlassWater', sortOrder: 6 },
-  { name: 'Milkshakes', icon: 'CupSoda', sortOrder: 7 },
-  { name: 'Falooda', icon: 'Cherry', sortOrder: 8 },
-  { name: 'Ice Cream', icon: 'IceCream', sortOrder: 9 },
-  { name: 'Desserts', icon: 'Sparkles', sortOrder: 10 },
-  { name: 'Other', icon: 'Layers', sortOrder: 11 },
+  { name: 'All', icon: 'LayoutGrid', sortOrder: 0, department: 'KITCHEN' },
+  { name: 'Rice', icon: 'Utensils', sortOrder: 1, department: 'KITCHEN' },
+  { name: 'Kottu', icon: 'Flame', sortOrder: 2, department: 'KITCHEN' },
+  { name: 'Buns', icon: 'Sandwich', sortOrder: 3, department: 'BUN' },
+  { name: 'Short Eats', icon: 'Cookie', sortOrder: 4, department: 'BUN' },
+  { name: 'Burgers', icon: 'Beef', sortOrder: 5, department: 'KITCHEN' },
+  { name: 'Juice', icon: 'GlassWater', sortOrder: 6, department: 'JUICE' },
+  { name: 'Milkshakes', icon: 'CupSoda', sortOrder: 7, department: 'JUICE' },
+  { name: 'Falooda', icon: 'Cherry', sortOrder: 8, department: 'JUICE' },
+  { name: 'Ice Cream', icon: 'IceCream', sortOrder: 9, department: 'JUICE' },
+  { name: 'Desserts', icon: 'Sparkles', sortOrder: 10, department: 'JUICE' },
+  { name: 'Other', icon: 'Layers', sortOrder: 11, department: 'OTHER' },
 ];
 
 const defaultMenuItems = [

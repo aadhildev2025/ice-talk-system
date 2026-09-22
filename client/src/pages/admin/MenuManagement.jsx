@@ -44,6 +44,8 @@ const MenuManagement = () => {
   });
 
   const [newCategoryName, setNewCategoryName] = useState('');
+  const [newCategoryDept, setNewCategoryDept] = useState('KITCHEN');
+  const [editingCategory, setEditingCategory] = useState(null);
 
   const { socket } = useSocket();
 
@@ -83,12 +85,14 @@ const MenuManagement = () => {
   const handleOpenAddModal = () => {
     setEditingItem(null);
     const defaultCat = categories.length > 0 ? categories[1]?.name || 'Rice' : 'Rice';
+    const defaultCatObj = categories.find((c) => c.name === defaultCat);
+    const defaultDept = defaultCatObj?.department || detectKOTSection(defaultCat);
     setFormData({
       name: '',
       description: '',
       price: '',
       category: defaultCat,
-      department: detectKOTSection(defaultCat),
+      department: defaultDept,
       image: '',
       prepTimeMinutes: 10,
       isPopular: false,
@@ -104,7 +108,7 @@ const MenuManagement = () => {
       description: item.description || '',
       price: item.price,
       category: item.category,
-      department: item.department || 'KITCHEN',
+      department: item.department || detectKOTSection(item.category),
       image: item.image || '',
       prepTimeMinutes: item.prepTimeMinutes || 10,
       isPopular: !!item.isPopular,
@@ -151,16 +155,41 @@ const MenuManagement = () => {
     }
   };
 
-  const handleAddCategory = async (e) => {
+  const handleOpenAddCategory = () => {
+    setEditingCategory(null);
+    setNewCategoryName('');
+    setNewCategoryDept('KITCHEN');
+    setCategoryModalOpen(true);
+  };
+
+  const handleOpenEditCategory = (cat) => {
+    setEditingCategory(cat);
+    setNewCategoryName(cat.name);
+    setNewCategoryDept(cat.department || detectKOTSection(cat.name));
+    setCategoryModalOpen(true);
+  };
+
+  const handleSaveCategory = async (e) => {
     e.preventDefault();
     if (!newCategoryName.trim()) return;
     try {
-      await axios.post('/api/categories', { name: newCategoryName.trim() });
+      if (editingCategory) {
+        await axios.put(`/api/categories/${editingCategory._id}`, {
+          name: newCategoryName.trim(),
+          department: newCategoryDept,
+        });
+      } else {
+        await axios.post('/api/categories', {
+          name: newCategoryName.trim(),
+          department: newCategoryDept,
+        });
+      }
       setNewCategoryName('');
+      setEditingCategory(null);
       setCategoryModalOpen(false);
       fetchMenuData();
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to create category');
+      alert(err.response?.data?.message || 'Failed to save category');
     }
   };
 
@@ -209,10 +238,11 @@ const MenuManagement = () => {
             <span>Restore Default Menu</span>
           </button>
           <button
-            onClick={() => setCategoryModalOpen(true)}
-            className="px-3.5 py-2 rounded-xl bg-[#1C1C24] hover:bg-[#252532] text-xs font-bold text-neutral-300 border border-[#2A2A38] transition-all"
+            onClick={handleOpenAddCategory}
+            className="px-3.5 py-2 rounded-xl bg-[#1C1C24] hover:bg-[#252532] text-xs font-bold text-neutral-300 border border-[#2A2A38] transition-all flex items-center gap-1.5"
           >
-            + Category
+            <Plus className="w-3.5 h-3.5 text-orange-400" />
+            <span>+ Category</span>
           </button>
           <button
             onClick={handleOpenAddModal}
@@ -259,7 +289,7 @@ const MenuManagement = () => {
         </div>
 
         {/* Category Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pt-2 border-t border-[#24242E] scrollbar-none">
+        <div className="flex items-center gap-2 overflow-x-auto pt-2 border-t border-[#24242E] scrollbar-none">
           <button
             onClick={() => setSelectedCategory('All')}
             className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap transition-all ${
@@ -272,19 +302,46 @@ const MenuManagement = () => {
           </button>
           {categories
             .filter((c) => c.name !== 'All')
-            .map((cat) => (
-              <button
-                key={cat._id}
-                onClick={() => setSelectedCategory(cat.name)}
-                className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap transition-all ${
-                  selectedCategory === cat.name
-                    ? 'bg-[#FF6B00] text-white shadow'
-                    : 'bg-[#1C1C24] text-neutral-400 hover:text-white border border-[#2B2B38]'
-                }`}
-              >
-                {cat.name}
-              </button>
-            ))}
+            .map((cat) => {
+              const catDept = cat.department || detectKOTSection(cat.name);
+              return (
+                <div key={cat._id} className="inline-flex items-center gap-0.5 group/pill shrink-0">
+                  <button
+                    onClick={() => setSelectedCategory(cat.name)}
+                    className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 ${
+                      selectedCategory === cat.name
+                        ? 'bg-[#FF6B00] text-white shadow'
+                        : 'bg-[#1C1C24] text-neutral-400 hover:text-white border border-[#2B2B38]'
+                    }`}
+                  >
+                    <span>{cat.name}</span>
+                    <span
+                      className={`text-[8.5px] px-1 py-0.2 rounded font-black uppercase tracking-wider ${
+                        catDept === 'JUICE'
+                          ? 'bg-blue-500/20 text-blue-300'
+                          : catDept === 'BUN'
+                          ? 'bg-amber-500/20 text-amber-300'
+                          : catDept === 'OTHER'
+                          ? 'bg-purple-500/20 text-purple-300'
+                          : 'bg-emerald-500/20 text-emerald-300'
+                      }`}
+                    >
+                      {catDept}
+                    </span>
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleOpenEditCategory(cat);
+                    }}
+                    title="Edit Category Station"
+                    className="p-1 rounded text-neutral-500 hover:text-white hover:bg-neutral-800 transition-colors"
+                  >
+                    <Edit2 className="w-2.5 h-2.5" />
+                  </button>
+                </div>
+              );
+            })}
         </div>
       </div>
 
@@ -443,7 +500,8 @@ const MenuManagement = () => {
                     value={formData.category}
                     onChange={(e) => {
                       const newCat = e.target.value;
-                      const autoDept = detectKOTSection(newCat);
+                      const catObj = categories.find((c) => c.name === newCat);
+                      const autoDept = catObj?.department || detectKOTSection(newCat);
                       setFormData({ ...formData, category: newCat, department: autoDept });
                     }}
                     className="w-full bg-[#1C1C24] border border-[#2D2D3B] focus:border-[#FF6B00] rounded-xl px-3 py-2.5 text-white outline-none font-bold"
@@ -452,44 +510,62 @@ const MenuManagement = () => {
                       .filter((c) => c.name !== 'All')
                       .map((cat) => (
                         <option key={cat._id} value={cat.name}>
-                          {cat.name}
+                          {cat.name} ({cat.department || detectKOTSection(cat.name)})
                         </option>
                       ))}
                   </select>
                 </div>
               </div>
 
-              {/* Auto Routing Indicator */}
+              {/* Station Selection Cards (Kitchen, Juice, Bun, Other) */}
+              <div>
+                <label className="block font-bold text-neutral-300 mb-1.5 uppercase tracking-wider">
+                  Preparation Station / Printer (Select Juice, Kitchen, Bun, or Other)
+                </label>
+                <div className="grid grid-cols-4 gap-2">
+                  {[
+                    { id: 'KITCHEN', label: 'Kitchen', icon: '🍚', desc: 'POS-Kitchen' },
+                    { id: 'JUICE', label: 'Juice', icon: '🍹', desc: 'POS-Juice' },
+                    { id: 'BUN', label: 'Bun', icon: '🥐', desc: 'POS-Buns' },
+                    { id: 'OTHER', label: 'Other', icon: '🍽️', desc: 'POS-Kitchen' },
+                  ].map((station) => (
+                    <button
+                      type="button"
+                      key={station.id}
+                      onClick={() => setFormData({ ...formData, department: station.id })}
+                      className={`p-2.5 rounded-xl border text-center transition-all ${
+                        formData.department === station.id
+                          ? 'border-[#FF6B00] bg-orange-500/15 text-white ring-1 ring-[#FF6B00]'
+                          : 'bg-[#1C1C24] border-[#2A2A38] text-neutral-400 hover:text-white hover:border-neutral-500'
+                      }`}
+                    >
+                      <div className="text-lg">{station.icon}</div>
+                      <div className="font-extrabold text-xs mt-0.5">{station.label}</div>
+                      <div className="text-[9px] text-neutral-400 mt-0.5">{station.desc}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Station Routing Live Indicator */}
               <div className="bg-[#131318] border border-[#2A2A38] rounded-xl p-2.5 flex items-center justify-between text-[11px]">
                 <div className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                  <span className="text-neutral-400">KOT Station Routing:</span>
+                  <span className="text-neutral-400">Print Slip Destination:</span>
                   <span className="font-extrabold text-[#FF6B00]">
                     {getDeptDisplayName(formData.department)}
                   </span>
                 </div>
                 <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-                  Auto-detected from Category
+                  {formData.department === 'JUICE'
+                    ? 'Juice Bar Printer'
+                    : formData.department === 'BUN'
+                    ? 'Bun Counter Printer'
+                    : 'Kitchen Hot Food Printer'}
                 </span>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-neutral-300 mb-1 uppercase tracking-wider">
-                    Department (Preparation)
-                  </label>
-                  <select
-                    value={formData.department}
-                    onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                    className="w-full bg-[#1C1C24] border border-[#2D2D3B] focus:border-[#FF6B00] rounded-xl px-3 py-2.5 text-white outline-none font-bold"
-                  >
-                    <option value="KITCHEN">RICE & KITCHEN</option>
-                    <option value="JUICE">JUICE & DESSERTS</option>
-                    <option value="BUN">BUNS & SHORT EATS</option>
-                    <option value="OTHER">OTHER</option>
-                  </select>
-                </div>
-
                 <div>
                   <label className="block font-bold text-neutral-300 mb-1 uppercase tracking-wider">
                     Prep Time (Minutes)
@@ -499,7 +575,7 @@ const MenuManagement = () => {
                     min="1"
                     value={formData.prepTimeMinutes}
                     onChange={(e) => setFormData({ ...formData, prepTimeMinutes: e.target.value })}
-                    className="w-full bg-[#1C1C24] border border-[#2D2D3B] focus:border-[#FF6B00] rounded-xl px-3 py-2.5 text-white outline-none"
+                    className="w-full bg-[#1C1C24] border border-[#2D2D3B] focus:border-[#FF6B00] rounded-xl px-3 py-2.5 text-white outline-none font-bold"
                   />
                 </div>
               </div>
@@ -559,24 +635,91 @@ const MenuManagement = () => {
         </div>
       )}
 
-      {/* Add Category Modal */}
+      {/* Add / Edit Category Modal */}
       {categoryModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-[#17171C] border border-[#2B2B38] rounded-2xl max-w-sm w-full p-6 space-y-4 shadow-2xl">
-            <h3 className="font-black text-lg text-white">Create New Category</h3>
-            <form onSubmit={handleAddCategory} className="space-y-4 text-xs">
+          <div className="bg-[#17171C] border border-[#2B2B38] rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+            <div className="flex justify-between items-center border-b border-[#24242E] pb-3">
+              <h3 className="font-black text-lg text-white">
+                {editingCategory ? 'Edit Category Station' : 'Create New Category'}
+              </h3>
+              <button
+                onClick={() => setCategoryModalOpen(false)}
+                className="p-1 text-neutral-400 hover:text-white rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveCategory} className="space-y-4 text-xs">
               <div>
-                <label className="block font-bold text-neutral-300 mb-1 uppercase">Category Name</label>
+                <label className="block font-bold text-neutral-300 mb-1 uppercase tracking-wider">
+                  Category Name
+                </label>
                 <input
                   type="text"
                   value={newCategoryName}
-                  onChange={(e) => setNewCategoryName(e.target.value)}
-                  placeholder="e.g. Falooda, Desserts, Pizza"
-                  className="w-full bg-[#1C1C24] border border-[#2D2D3B] focus:border-[#FF6B00] rounded-xl px-3 py-2.5 text-white outline-none"
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setNewCategoryName(val);
+                    if (!editingCategory) {
+                      setNewCategoryDept(detectKOTSection(val));
+                    }
+                  }}
+                  placeholder="e.g. Falooda, Desserts, Pizza, Mocktails"
+                  className="w-full bg-[#1C1C24] border border-[#2D2D3B] focus:border-[#FF6B00] rounded-xl px-3 py-2.5 text-white outline-none font-bold"
                   required
                 />
               </div>
-              <div className="flex justify-end gap-2 pt-2">
+
+              <div>
+                <label className="block font-bold text-neutral-300 mb-2 uppercase tracking-wider">
+                  Select Preparation Station / Printer (KOT)
+                </label>
+                <div className="grid grid-cols-2 gap-2.5">
+                  {[
+                    { id: 'KITCHEN', label: 'Rice & Kitchen', desc: 'Rice, Kottu, Burgers, Noodles', icon: '🍚', color: 'border-emerald-500 bg-emerald-500/10 text-emerald-300' },
+                    { id: 'JUICE', label: 'Juice & Desserts', desc: 'Juice, Shakes, Falooda, Ice Cream', icon: '🍹', color: 'border-blue-500 bg-blue-500/10 text-blue-300' },
+                    { id: 'BUN', label: 'Buns & Short Eats', desc: 'Bakery Buns, Rolls, Pastries', icon: '🥐', color: 'border-amber-500 bg-amber-500/10 text-amber-300' },
+                    { id: 'OTHER', label: 'Other Items', desc: 'General & special items', icon: '🍽️', color: 'border-purple-500 bg-purple-500/10 text-purple-300' },
+                  ].map((station) => (
+                    <button
+                      type="button"
+                      key={station.id}
+                      onClick={() => setNewCategoryDept(station.id)}
+                      className={`p-3 rounded-xl border text-left transition-all ${
+                        newCategoryDept === station.id
+                          ? `${station.color} ring-2 ring-[#FF6B00]`
+                          : 'bg-[#1C1C24] border-[#2A2A38] text-neutral-300 hover:border-neutral-500'
+                      }`}
+                    >
+                      <div className="text-xl mb-1">{station.icon}</div>
+                      <div className="font-extrabold text-sm text-white">{station.label}</div>
+                      <div className="text-[10px] text-neutral-400 mt-0.5">{station.desc}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Target Printer Live Preview */}
+              <div className="bg-[#131318] border border-[#2A2A38] rounded-xl p-2.5 flex items-center justify-between text-[11px]">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span className="text-neutral-400">Target Printer:</span>
+                  <span className="font-extrabold text-[#FF6B00]">
+                    {getDeptDisplayName(newCategoryDept)}
+                  </span>
+                </div>
+                <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                  {newCategoryDept === 'JUICE'
+                    ? 'POS-Juice Printer'
+                    : newCategoryDept === 'BUN'
+                    ? 'POS-Buns Printer'
+                    : 'POS-Kitchen Printer'}
+                </span>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2 border-t border-[#24242E]">
                 <button
                   type="button"
                   onClick={() => setCategoryModalOpen(false)}
@@ -586,9 +729,9 @@ const MenuManagement = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-xl bg-[#FF6B00] text-white font-bold"
+                  className="px-5 py-2 rounded-xl bg-[#FF6B00] hover:bg-[#E05A00] text-white font-bold shadow-lg shadow-orange-500/20"
                 >
-                  Add Category
+                  {editingCategory ? 'Update Category' : 'Save Category'}
                 </button>
               </div>
             </form>

@@ -7,10 +7,18 @@
  * - BUN: Bakery Buns, Short Eats, Rolls, Pastries, Patties, Samosas, Snacks, Sandwiches
  */
 
-export const detectKOTSection = (categoryName, fallbackDept = 'KITCHEN') => {
+export const detectKOTSection = (categoryName, explicitDept = null) => {
+  const dept = (explicitDept || '').trim().toUpperCase();
+
+  // 1. If an explicit station was selected by the user (JUICE, BUN, KITCHEN, OTHER), respect it directly!
+  if (['JUICE', 'BUN', 'KITCHEN', 'OTHER'].includes(dept)) {
+    return dept;
+  }
+
   const cat = (categoryName || '').trim().toLowerCase();
 
-  // 1. JUICE & DESSERTS (Beverages, Shakes, Falooda, Ice Cream, Desserts, Sweets)
+  // 2. Detect from Category Name keywords
+  // JUICE & DESSERTS (Beverages, Shakes, Falooda, Ice Cream, Desserts, Sweets)
   if (
     cat.includes('juice') ||
     cat.includes('shake') ||
@@ -34,7 +42,7 @@ export const detectKOTSection = (categoryName, fallbackDept = 'KITCHEN') => {
     return 'JUICE';
   }
 
-  // 2. BUNS & SHORT EATS (Bakery, Buns, Rolls, Pastries, Patties, Samosas, Snacks, Sandwiches)
+  // BUNS & SHORT EATS (Bakery, Buns, Rolls, Pastries, Patties, Samosas, Snacks, Sandwiches)
   if (
     cat.includes('bun') ||
     cat.includes('short eat') ||
@@ -51,7 +59,7 @@ export const detectKOTSection = (categoryName, fallbackDept = 'KITCHEN') => {
     return 'BUN';
   }
 
-  // 3. RICE & KITCHEN (Rice, Kottu, Burgers, Noodles, Curries, Hot Meals, Mains, Grills)
+  // RICE & KITCHEN (Rice, Kottu, Burgers, Noodles, Curries, Hot Meals, Mains, Grills)
   if (
     cat.includes('rice') ||
     cat.includes('kottu') ||
@@ -77,8 +85,8 @@ export const detectKOTSection = (categoryName, fallbackDept = 'KITCHEN') => {
     return 'KITCHEN';
   }
 
-  if (fallbackDept && ['JUICE', 'BUN', 'KITCHEN'].includes(fallbackDept.toUpperCase())) {
-    return fallbackDept.toUpperCase();
+  if (cat.includes('other')) {
+    return 'OTHER';
   }
 
   return 'KITCHEN';
@@ -92,6 +100,8 @@ export const getDeptDisplayName = (deptCode) => {
       return 'JUICE & DESSERTS';
     case 'BUN':
       return 'BUNS & SHORT EATS';
+    case 'OTHER':
+      return 'OTHER ITEMS';
     default:
       return deptCode || 'RICE & KITCHEN';
   }

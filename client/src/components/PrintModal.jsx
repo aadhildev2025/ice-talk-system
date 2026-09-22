@@ -98,11 +98,12 @@ const PrintModal = () => {
 
   const roundNum = data.round || data.roundNumber || 1;
 
-  // Group KOT items by detected section directly from category
+  // Group KOT items by detected section directly from category or explicit department
   const groupedSections = {
     KITCHEN: [],
     JUICE: [],
     BUN: [],
+    OTHER: [],
   };
 
   kotItems.forEach((it) => {
@@ -110,11 +111,11 @@ const PrintModal = () => {
     if (groupedSections[sec]) {
       groupedSections[sec].push(it);
     } else {
-      groupedSections.KITCHEN.push(it);
+      groupedSections.OTHER.push(it);
     }
   });
 
-  const activeSections = ['KITCHEN', 'JUICE', 'BUN'].filter(
+  const activeSections = ['KITCHEN', 'JUICE', 'BUN', 'OTHER'].filter(
     (sec) => groupedSections[sec].length > 0
   );
 
