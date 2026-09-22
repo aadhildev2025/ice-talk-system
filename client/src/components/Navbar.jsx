@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom';
 const Navbar = () => {
   const { user, logout } = useAuth();
   const { isConnected } = useSocket();
-  const { isElectron, availablePrinters, selectedPrinter, setPrinter, autoPrintEnabled, toggleAutoPrint } = usePrinter();
+  const { isElectron, autoPrintEnabled, openSettings, multiPrinterMode } = usePrinter();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -51,33 +51,19 @@ const Navbar = () => {
 
       {/* Center Controls: Live Status */}
       <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-        {/* Native Hardware Printer Status & Selector (Admin / Desktop Mode) */}
+        {/* Native Hardware Printer Status & Settings (Admin / Desktop Mode) */}
         {(user?.role === 'admin' || user?.role === 'superadmin') && isElectron && (
-          <div
-            className="hidden lg:flex items-center gap-1.5 bg-[#1C1C24] px-2.5 py-1 rounded-xl border border-[#2B2B38] text-xs"
-            title="Silent Receipt Printing Active: Direct to thermal printer with no dialogs"
+          <button
+            onClick={openSettings}
+            className="flex items-center gap-1.5 bg-[#1C1C24] hover:bg-[#252532] text-neutral-300 hover:text-white px-3 py-1 rounded-xl border border-[#2B2B38] text-xs font-bold transition-all shadow-sm"
+            title="Configure Station Printers & KOT Routing (Kitchen, Juice Bar, Buns, Cashier)"
           >
             <Printer className={`w-3.5 h-3.5 ${autoPrintEnabled ? 'text-emerald-400' : 'text-neutral-500'}`} />
-            {availablePrinters.length > 0 ? (
-              <select
-                value={selectedPrinter}
-                onChange={(e) => setPrinter(e.target.value)}
-                className="bg-transparent text-neutral-300 font-semibold text-xs outline-none cursor-pointer max-w-[140px] truncate"
-                title="Silent Thermal Printer (Select specific or leave as Auto-Default)"
-              >
-                <option value="" className="bg-[#1C1C24] text-white">
-                  Default Printer (Auto)
-                </option>
-                {availablePrinters.map((p) => (
-                  <option key={p.name} value={p.name} className="bg-[#1C1C24] text-white">
-                    {p.name} {p.isDefault ? '(Default)' : ''}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <span className="text-[11px] text-emerald-400 font-bold">Auto-Print Ready</span>
+            <span className="hidden sm:inline">Printers</span>
+            {multiPrinterMode && (
+              <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse"></span>
             )}
-          </div>
+          </button>
         )}
 
         {/* Live status indicator */}

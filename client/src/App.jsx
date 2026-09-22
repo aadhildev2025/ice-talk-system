@@ -6,6 +6,7 @@ import { PrinterProvider } from './context/PrinterContext';
 import { UIProvider } from './context/UIContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import PrintModal from './components/PrintModal';
+import PrinterSettingsModal from './components/PrinterSettingsModal';
 
 // Pages
 import Login from './pages/Login';
@@ -39,6 +40,7 @@ function App() {
         <UIProvider>
           <PrinterProvider>
             <PrintModal />
+            <PrinterSettingsModal />
             <Routes>
             {/* Public Login Route */}
             <Route path="/login" element={<Login />} />

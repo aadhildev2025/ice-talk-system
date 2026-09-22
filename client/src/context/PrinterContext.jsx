@@ -3,16 +3,25 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 const PrinterContext = createContext();
 
 export const PrinterProvider = ({ children }) => {
-  const [printData, setPrintData] = useState(null); // { type: 'PREPARATION_SLIP' | 'CUSTOMER_RECEIPT', data: object }
+  const [printData, setPrintData] = useState(null); // { type: 'PREPARATION_SLIP' | 'CUSTOMER_RECEIPT', data: object, department: string | null }
   const [paperWidth, setPaperWidth] = useState(() => localStorage.getItem('icetalk_paper_width') || '78mm'); // '58mm' | '78mm' | '80mm'
   const [autoPrintEnabled, setAutoPrintEnabled] = useState(() => localStorage.getItem('icetalk_autoprint') !== 'false');
   const [availablePrinters, setAvailablePrinters] = useState([]);
+
+  // Station specific printer mappings
   const [selectedPrinter, setSelectedPrinter] = useState(() => localStorage.getItem('icetalk_selected_printer') || '');
+  const [billPrinter, setBillPrinter] = useState(() => localStorage.getItem('icetalk_bill_printer') || '');
+  const [kitchenPrinter, setKitchenPrinter] = useState(() => localStorage.getItem('icetalk_kitchen_printer') || '');
+  const [juicePrinter, setJuicePrinter] = useState(() => localStorage.getItem('icetalk_juice_printer') || '');
+  const [bunPrinter, setBunPrinter] = useState(() => localStorage.getItem('icetalk_bun_printer') || '');
+  const [multiPrinterMode, setMultiPrinterMode] = useState(() => localStorage.getItem('icetalk_multiprinter_mode') === 'true');
+
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const isElectron = Boolean(window.electronAPI?.isElectron);
 
   // Load hardware printers if running in Electron desktop app
-  useEffect(() => {
+  const refreshPrinters = () => {
     if (isElectron && window.electronAPI?.getPrinters) {
       window.electronAPI
         .getPrinters()
@@ -23,6 +32,10 @@ export const PrinterProvider = ({ children }) => {
           console.error('Failed to query native printers:', err);
         });
     }
+  };
+
+  useEffect(() => {
+    refreshPrinters();
   }, [isElectron]);
 
   const setWidth = (width) => {
@@ -35,38 +48,59 @@ export const PrinterProvider = ({ children }) => {
     localStorage.setItem('icetalk_selected_printer', printerName);
   };
 
+  const updateStationPrinter = (station, printerName) => {
+    if (station === 'bill') {
+      setBillPrinter(printerName);
+      localStorage.setItem('icetalk_bill_printer', printerName);
+    } else if (station === 'kitchen') {
+      setKitchenPrinter(printerName);
+      localStorage.setItem('icetalk_kitchen_printer', printerName);
+    } else if (station === 'juice') {
+      setJuicePrinter(printerName);
+      localStorage.setItem('icetalk_juice_printer', printerName);
+    } else if (station === 'bun') {
+      setBunPrinter(printerName);
+      localStorage.setItem('icetalk_bun_printer', printerName);
+    }
+  };
+
+  const toggleMultiPrinterMode = () => {
+    const next = !multiPrinterMode;
+    setMultiPrinterMode(next);
+    localStorage.setItem('icetalk_multiprinter_mode', String(next));
+  };
+
   const toggleAutoPrint = () => {
     const next = !autoPrintEnabled;
     setAutoPrintEnabled(next);
     localStorage.setItem('icetalk_autoprint', String(next));
   };
 
-  // Trigger direct silent thermal print job
-  const executeSilentPrint = async () => {
-    // Short pause for React to render printable HTML into DOM
+  // Direct silent thermal print to a specified target printer
+  const executeSilentPrintTo = async (targetPrinterName, targetWidth = null) => {
     await new Promise((resolve) => setTimeout(resolve, 150));
 
     const receiptEl = document.getElementById('printable-receipt-area');
     const receiptHtml = receiptEl ? receiptEl.outerHTML : '';
+    const printerToUse = targetPrinterName || selectedPrinter;
+    const widthToUse = targetWidth || paperWidth;
 
     if (isElectron) {
-      // Preferred: Dedicated offscreen thermal print engine (exact width, no page breaks, no dialog)
       if (window.electronAPI?.printHtml && receiptHtml) {
         try {
           const res = await window.electronAPI.printHtml(receiptHtml, {
-            printerName: selectedPrinter,
-            paperWidth,
+            printerName: printerToUse,
+            paperWidth: widthToUse,
           });
           if (res?.success) return;
         } catch (err) {
-          console.warn('[Printer] printHtml failed, attempting printSilent fallback:', err);
+          console.warn('[Printer] printHtml failed, trying fallback:', err);
         }
       }
 
-      // Fallback 1: Silent print via main window webContents
       if (window.electronAPI?.printSilent) {
         try {
-          await window.electronAPI.printSilent({ printerName: selectedPrinter });
+          await window.electronAPI.printSilent({ printerName: printerToUse });
           return;
         } catch (err) {
           console.error('[Printer] Electron printSilent error:', err);
@@ -74,7 +108,6 @@ export const PrinterProvider = ({ children }) => {
       }
     }
 
-    // Fallback 2: Browser standard print (for web browser clients)
     try {
       window.print();
     } catch (e) {
@@ -82,25 +115,66 @@ export const PrinterProvider = ({ children }) => {
     }
   };
 
-  // Open preparation slip & trigger direct silent print
-  // isAutoTrigger = true: automated background trigger (checks autoPrintEnabled)
-  // isAutoTrigger = false: manual button click (always prints immediately)
-  const printPreparationSlip = (order, isAutoTrigger = false, department = null) => {
-    setPrintData({
-      type: 'PREPARATION_SLIP',
-      data: order,
-      department,
-    });
-
+  // Trigger preparation slip
+  // Supports multi-printer split routing:
+  // If multiPrinterMode is ON and department is not passed, it can print separate slips to station printers!
+  const printPreparationSlip = async (order, isAutoTrigger = false, department = null) => {
     if (!isAutoTrigger || autoPrintEnabled) {
-      setTimeout(() => {
-        executeSilentPrint();
-      }, 100);
+      if (multiPrinterMode && !department) {
+        // Multi-printer routing: identify active departments in the order
+        const items = order.items || [];
+        const activeDepts = new Set();
+        items.forEach((it) => {
+          const d = (it.department || 'KITCHEN').toUpperCase();
+          activeDepts.add(d);
+        });
+
+        // Print each active station sequentially to its target printer
+        for (const dept of activeDepts) {
+          let targetPrinter = selectedPrinter;
+          if (dept === 'KITCHEN') targetPrinter = kitchenPrinter || selectedPrinter;
+          else if (dept === 'JUICE') targetPrinter = juicePrinter || selectedPrinter;
+          else if (dept === 'BUN') targetPrinter = bunPrinter || selectedPrinter;
+
+          setPrintData({
+            type: 'PREPARATION_SLIP',
+            data: order,
+            department: dept,
+          });
+
+          await new Promise((r) => setTimeout(r, 200));
+          await executeSilentPrintTo(targetPrinter);
+          await new Promise((r) => setTimeout(r, 300));
+        }
+      } else {
+        // Single printer master KOT (or specific department manual print)
+        let targetPrinter = selectedPrinter;
+        if (department === 'KITCHEN') targetPrinter = kitchenPrinter || selectedPrinter;
+        else if (department === 'JUICE') targetPrinter = juicePrinter || selectedPrinter;
+        else if (department === 'BUN') targetPrinter = bunPrinter || selectedPrinter;
+
+        setPrintData({
+          type: 'PREPARATION_SLIP',
+          data: order,
+          department,
+        });
+
+        setTimeout(() => {
+          executeSilentPrintTo(targetPrinter);
+        }, 100);
+      }
+    } else {
+      setPrintData({
+        type: 'PREPARATION_SLIP',
+        data: order,
+        department,
+      });
     }
   };
 
-  // Open customer receipt & trigger direct silent print
+  // Print customer tax receipt
   const printCustomerReceipt = (sale, isAutoTrigger = false) => {
+    const targetPrinter = billPrinter || selectedPrinter;
     setPrintData({
       type: 'CUSTOMER_RECEIPT',
       data: sale,
@@ -108,17 +182,41 @@ export const PrinterProvider = ({ children }) => {
 
     if (!isAutoTrigger || autoPrintEnabled) {
       setTimeout(() => {
-        executeSilentPrint();
+        executeSilentPrintTo(targetPrinter);
       }, 100);
     }
   };
 
-  const closePrintModal = () => {
-    setPrintData(null);
+  // Station Test Print
+  const testPrintStation = async (stationName, printerName) => {
+    const dummyOrder = {
+      orderNumber: 'TEST-01',
+      tableNameSnapshot: 'TEST TABLE',
+      waiterNameSnapshot: 'ADMIN',
+      createdAt: new Date(),
+      items: [
+        {
+          name: `${stationName} PRINTER TEST`,
+          quantity: 1,
+          department: stationName === 'RICE & KITCHEN' ? 'KITCHEN' : stationName === 'JUICE & DESSERTS' ? 'JUICE' : 'BUN',
+          specialInstructions: 'Printer connected & communicating successfully',
+        },
+      ],
+    };
+
+    setPrintData({
+      type: 'PREPARATION_SLIP',
+      data: dummyOrder,
+      department: stationName === 'RICE & KITCHEN' ? 'KITCHEN' : stationName === 'JUICE & DESSERTS' ? 'JUICE' : 'BUN',
+    });
+
+    setTimeout(() => {
+      executeSilentPrintTo(printerName);
+    }, 150);
   };
 
-  const triggerBrowserPrint = () => {
-    executeSilentPrint();
+  const closePrintModal = () => {
+    setPrintData(null);
   };
 
   return (
@@ -130,13 +228,24 @@ export const PrinterProvider = ({ children }) => {
         autoPrintEnabled,
         toggleAutoPrint,
         availablePrinters,
+        refreshPrinters,
         selectedPrinter,
         setPrinter,
+        billPrinter,
+        kitchenPrinter,
+        juicePrinter,
+        bunPrinter,
+        multiPrinterMode,
+        updateStationPrinter,
+        toggleMultiPrinterMode,
+        settingsOpen,
+        openSettings: () => setSettingsOpen(true),
+        closeSettings: () => setSettingsOpen(false),
         isElectron,
         printPreparationSlip,
         printCustomerReceipt,
+        testPrintStation,
         closePrintModal,
-        triggerBrowserPrint,
       }}
     >
       {children}
