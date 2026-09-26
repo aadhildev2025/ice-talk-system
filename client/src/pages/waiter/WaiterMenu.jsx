@@ -20,6 +20,7 @@ import {
   AlertCircle,
   FileText,
 } from 'lucide-react';
+import QuickNoteModal, { QuickNotePills } from '../../components/QuickNoteModal';
 
 const WaiterMenu = () => {
   const { user } = useAuth();
@@ -35,17 +36,18 @@ const WaiterMenu = () => {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
 
-  // Cart state: [{ menuItemId, name, price, department, category, quantity, specialInstructions }]
+  // Cart state: [{ cartId, menuItemId, name, price, department, category, quantity, specialInstructions }]
   const [cart, setCart] = useState([]);
+  const [orderType, setOrderType] = useState('DINE_IN');
   const [selectedTableId, setSelectedTableId] = useState('');
   const [orderInstructions, setOrderInstructions] = useState('');
   const [cartOpen, setCartOpen] = useState(false);
   const [submittingOrder, setSubmittingOrder] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(null);
 
-  // Item note modal
-  const [editingItemNote, setEditingItemNote] = useState(null);
-  const [itemNoteText, setItemNoteText] = useState('');
+  // Quick note modal state
+  const [pendingAddItem, setPendingAddItem] = useState(null);
+  const [editingCartItem, setEditingCartItem] = useState(null);
 
   const fetchMenuAndTables = async () => {
     try {
@@ -81,35 +83,48 @@ const WaiterMenu = () => {
   }, [socket]);
 
   // Cart manipulation helpers
-  const handleAddToCart = (item) => {
+  const handleInitiateAdd = (item) => {
     if (!item.isAvailable) return;
+    setPendingAddItem(item);
+  };
+
+  const handleConfirmAddItem = (note = '') => {
+    if (!pendingAddItem) return;
+    const item = pendingAddItem;
+    const trimmedNote = (note || '').trim();
+
     setCart((prev) => {
-      const existing = prev.find((i) => i.menuItemId === item._id);
+      const existing = prev.find(
+        (i) => i.menuItemId === item._id && (i.specialInstructions || '') === trimmedNote
+      );
       if (existing) {
         return prev.map((i) =>
-          i.menuItemId === item._id ? { ...i, quantity: i.quantity + 1 } : i
+          i.cartId === existing.cartId ? { ...i, quantity: i.quantity + 1 } : i
         );
       }
       return [
         ...prev,
         {
+          cartId: `${item._id}_${Date.now()}_${Math.random()}`,
           menuItemId: item._id,
           name: item.name,
           price: item.price,
           department: item.department || 'KITCHEN',
           category: item.category,
           quantity: 1,
-          specialInstructions: '',
+          specialInstructions: trimmedNote,
         },
       ];
     });
+
+    setPendingAddItem(null);
   };
 
-  const handleUpdateQty = (menuItemId, delta) => {
+  const handleUpdateQty = (cartId, delta) => {
     setCart((prev) => {
       return prev
         .map((item) => {
-          if (item.menuItemId === menuItemId) {
+          if (item.cartId === cartId || item.menuItemId === cartId) {
             const newQty = item.quantity + delta;
             return newQty > 0 ? { ...item, quantity: newQty } : null;
           }
@@ -119,22 +134,29 @@ const WaiterMenu = () => {
     });
   };
 
-  const handleRemoveFromCart = (menuItemId) => {
-    setCart((prev) => prev.filter((i) => i.menuItemId !== menuItemId));
+  const handleRemoveFromCart = (cartId) => {
+    setCart((prev) => prev.filter((i) => i.cartId !== cartId && i.menuItemId !== cartId));
   };
 
-  const handleSaveItemNote = (e) => {
-    e.preventDefault();
-    if (!editingItemNote) return;
+  const handleSaveCartItemNote = (note) => {
+    if (!editingCartItem) return;
     setCart((prev) =>
       prev.map((i) =>
-        i.menuItemId === editingItemNote.menuItemId
-          ? { ...i, specialInstructions: itemNoteText }
+        i.cartId === editingCartItem.cartId
+          ? { ...i, specialInstructions: (note || '').trim() }
           : i
       )
     );
-    setEditingItemNote(null);
-    setItemNoteText('');
+    setEditingCartItem(null);
+  };
+
+  const handleAppendOverallNote = (phrase) => {
+    setOrderInstructions((prev) => {
+      if (!prev) return phrase;
+      const parts = prev.split(',').map((s) => s.trim()).filter(Boolean);
+      if (parts.includes(phrase)) return prev;
+      return [...parts, phrase].join(', ');
+    });
   };
 
   const totalCartItems = cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -142,7 +164,7 @@ const WaiterMenu = () => {
 
   // Submit order -> PENDING -> Admin Receive
   const handlePlaceOrder = async () => {
-    if (!selectedTableId) {
+    if (orderType === 'DINE_IN' && !selectedTableId) {
       alert('Please select a table before placing order.');
       return;
     }
@@ -154,11 +176,16 @@ const WaiterMenu = () => {
 
     setSubmittingOrder(true);
     try {
-      const res = await axios.post('/api/orders', {
-        tableId: selectedTableId,
+      const payload = {
+        orderType,
         items: cart,
         specialInstructions: orderInstructions,
-      });
+      };
+      if (orderType === 'DINE_IN') {
+        payload.tableId = selectedTableId;
+      }
+
+      const res = await axios.post('/api/orders', payload);
 
       if (res.data.success) {
         setOrderSuccess(res.data.order);
@@ -330,24 +357,30 @@ const WaiterMenu = () => {
                     ) : inCart ? (
                       <div className="flex items-center justify-between bg-[#1C1C24] border border-[#FF6B00]/40 rounded-xl p-1">
                         <button
-                          onClick={() => handleUpdateQty(item._id, -1)}
+                          onClick={() => handleUpdateQty(inCart.cartId, -1)}
                           className="w-8 h-8 rounded-lg bg-[#282834] active:bg-neutral-700 text-white flex items-center justify-center font-bold text-sm touch-manipulation"
                         >
                           <Minus className="w-4 h-4" />
                         </button>
-                        <span className="font-black text-xs text-white px-2">
-                          {inCart.quantity}
-                        </span>
                         <button
-                          onClick={() => handleUpdateQty(item._id, 1)}
+                          type="button"
+                          onClick={() => handleInitiateAdd(item)}
+                          className="font-black text-xs text-white px-2 hover:text-[#FF6B00] transition-colors"
+                          title="Add another with quick note"
+                        >
+                          {inCart.quantity}
+                        </button>
+                        <button
+                          onClick={() => handleInitiateAdd(item)}
                           className="w-8 h-8 rounded-lg bg-[#FF6B00] active:bg-[#E05A00] text-white flex items-center justify-center font-bold text-sm shadow touch-manipulation"
+                          title="Add another with quick note"
                         >
                           <Plus className="w-4 h-4" />
                         </button>
                       </div>
                     ) : (
                       <button
-                        onClick={() => handleAddToCart(item)}
+                        onClick={() => handleInitiateAdd(item)}
                         className="w-full py-2.5 rounded-xl bg-[#1C1C24] hover:bg-[#FF6B00] active:bg-[#FF6B00] text-neutral-300 hover:text-white border border-[#2B2B38] font-bold text-xs transition-all flex items-center justify-center gap-1.5 touch-manipulation"
                       >
                         <Plus className="w-3.5 h-3.5" />
@@ -419,85 +452,115 @@ const WaiterMenu = () => {
 
             {/* Drawer Body */}
             <div className="p-4 overflow-y-auto space-y-4 flex-1">
-              {/* Step 1: Mandatory Table Selector */}
-              <div className="bg-[#1C1C24] p-3.5 rounded-2xl border border-[#2B2B38] space-y-2">
-                <div className="flex justify-between items-center">
-                  <label className="text-xs font-bold text-neutral-300 uppercase tracking-wider flex items-center gap-1.5">
-                    <Grid className="w-4 h-4 text-orange-400" />
-                    <span>Select Dining Table <span className="text-rose-400">*</span></span>
-                  </label>
-                  {selectedTableObj && (
-                    <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-                      {selectedTableObj.name} Selected
-                    </span>
-                  )}
-                </div>
-
-                {/* Floor Filter */}
-                <div className="flex gap-1 overflow-x-auto pb-1 no-scrollbar">
+              {/* Order Channel Selector (Dine-In or Takeaway) */}
+              <div className="bg-[#1C1C24] p-2.5 rounded-2xl border border-[#2B2B38] space-y-2">
+                <div className="flex bg-[#141418] p-1 rounded-xl border border-[#2B2B38] text-xs font-bold">
                   <button
                     type="button"
-                    onClick={() => setSelectedWaiterFloor('ALL')}
-                    className={`px-2 py-0.5 rounded text-[10px] font-bold whitespace-nowrap transition-all ${
-                      selectedWaiterFloor === 'ALL'
+                    onClick={() => setOrderType('DINE_IN')}
+                    className={`flex-1 py-1.5 rounded-lg transition-all ${
+                      orderType === 'DINE_IN'
                         ? 'bg-[#FF6B00] text-white shadow'
-                        : 'bg-[#141418] text-neutral-400 hover:text-white border border-[#2A2A38]'
+                        : 'text-neutral-400 hover:text-white'
                     }`}
                   >
-                    All
+                    🍽️ Dine In
                   </button>
-                  {Array.from(new Set(tables.map((t) => t.floor || 'Ground Floor'))).map((fl) => (
+                  <button
+                    type="button"
+                    onClick={() => setOrderType('TAKEAWAY')}
+                    className={`flex-1 py-1.5 rounded-lg transition-all ${
+                      orderType === 'TAKEAWAY'
+                        ? 'bg-[#FF6B00] text-white shadow'
+                        : 'text-neutral-400 hover:text-white'
+                    }`}
+                  >
+                    🥡 Takeaway
+                  </button>
+                </div>
+              </div>
+
+              {/* Table Selector - Only for DINE_IN */}
+              {orderType === 'DINE_IN' && (
+                <div className="bg-[#1C1C24] p-3.5 rounded-2xl border border-[#2B2B38] space-y-2">
+                  <div className="flex justify-between items-center">
+                    <label className="text-xs font-bold text-neutral-300 uppercase tracking-wider flex items-center gap-1.5">
+                      <Grid className="w-4 h-4 text-orange-400" />
+                      <span>Select Dining Table <span className="text-rose-400">*</span></span>
+                    </label>
+                    {selectedTableObj && (
+                      <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                        {selectedTableObj.name} Selected
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Floor Filter */}
+                  <div className="flex gap-1 overflow-x-auto pb-1 no-scrollbar">
                     <button
-                      key={fl}
                       type="button"
-                      onClick={() => setSelectedWaiterFloor(fl)}
+                      onClick={() => setSelectedWaiterFloor('ALL')}
                       className={`px-2 py-0.5 rounded text-[10px] font-bold whitespace-nowrap transition-all ${
-                        selectedWaiterFloor === fl
+                        selectedWaiterFloor === 'ALL'
                           ? 'bg-[#FF6B00] text-white shadow'
                           : 'bg-[#141418] text-neutral-400 hover:text-white border border-[#2A2A38]'
                       }`}
                     >
-                      {fl}
+                      All
                     </button>
-                  ))}
-                </div>
+                    {Array.from(new Set(tables.map((t) => t.floor || 'Ground Floor'))).map((fl) => (
+                      <button
+                        key={fl}
+                        type="button"
+                        onClick={() => setSelectedWaiterFloor(fl)}
+                        className={`px-2 py-0.5 rounded text-[10px] font-bold whitespace-nowrap transition-all ${
+                          selectedWaiterFloor === fl
+                            ? 'bg-[#FF6B00] text-white shadow'
+                            : 'bg-[#141418] text-neutral-400 hover:text-white border border-[#2A2A38]'
+                        }`}
+                      >
+                        {fl}
+                      </button>
+                    ))}
+                  </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-36 overflow-y-auto pr-1">
-                  {tables
-                    .filter(
-                      (t) =>
-                        t.status !== 'DISABLED' &&
-                        (selectedWaiterFloor === 'ALL' || (t.floor || 'Ground Floor') === selectedWaiterFloor)
-                    )
-                    .map((tbl) => {
-                      const isSelected = selectedTableId === tbl._id;
-                      return (
-                        <button
-                          key={tbl._id}
-                          type="button"
-                          onClick={() => setSelectedTableId(tbl._id)}
-                          className={`p-2 rounded-xl border text-center transition-all ${
-                            isSelected
-                              ? 'bg-[#FF6B00] text-white border-white/30 font-bold shadow'
-                              : 'bg-[#141418] text-neutral-300 border-[#2A2A38] hover:border-orange-500/40'
-                          }`}
-                        >
-                          <span className="text-[8px] font-bold text-amber-400 block truncate">
-                            {tbl.floor || 'Ground Floor'}
-                          </span>
-                          <p className="text-xs font-bold truncate">{tbl.name}</p>
-                          <p
-                            className={`text-[9px] ${
-                              isSelected ? 'text-white/80' : 'text-neutral-500'
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-36 overflow-y-auto pr-1">
+                    {tables
+                      .filter(
+                        (t) =>
+                          t.status !== 'DISABLED' &&
+                          (selectedWaiterFloor === 'ALL' || (t.floor || 'Ground Floor') === selectedWaiterFloor)
+                      )
+                      .map((tbl) => {
+                        const isSelected = selectedTableId === tbl._id;
+                        return (
+                          <button
+                            key={tbl._id}
+                            type="button"
+                            onClick={() => setSelectedTableId(tbl._id)}
+                            className={`p-2 rounded-xl border text-center transition-all ${
+                              isSelected
+                                ? 'bg-[#FF6B00] text-white border-white/30 font-bold shadow'
+                                : 'bg-[#141418] text-neutral-300 border-[#2A2A38] hover:border-orange-500/40'
                             }`}
                           >
-                            {tbl.type} • {tbl.capacity}p
-                          </p>
-                        </button>
-                      );
-                    })}
+                            <span className="text-[8px] font-bold text-amber-400 block truncate">
+                              {tbl.floor || 'Ground Floor'}
+                            </span>
+                            <p className="text-xs font-bold truncate">{tbl.name}</p>
+                            <p
+                              className={`text-[9px] ${
+                                isSelected ? 'text-white/80' : 'text-neutral-500'
+                              }`}
+                            >
+                              {tbl.type} • {tbl.capacity}p
+                            </p>
+                          </button>
+                        );
+                      })}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Step 2: Selected Items List */}
               <div className="space-y-2">
@@ -508,7 +571,7 @@ const WaiterMenu = () => {
                 <div className="space-y-2">
                   {cart.map((item) => (
                     <div
-                      key={item.menuItemId}
+                      key={item.cartId}
                       className="p-3 bg-[#1C1C24] rounded-xl border border-[#2B2B38] space-y-2"
                     >
                       <div className="flex justify-between items-start">
@@ -527,24 +590,25 @@ const WaiterMenu = () => {
                         {/* Special item note button */}
                         <button
                           type="button"
-                          onClick={() => {
-                            setEditingItemNote(item);
-                            setItemNoteText(item.specialInstructions || '');
-                          }}
-                          className="text-[10px] text-[#FF6B00] hover:underline flex items-center gap-1"
+                          onClick={() => setEditingCartItem(item)}
+                          className={`text-[10px] flex items-center gap-1.5 px-2 py-0.5 rounded-lg border transition-all ${
+                            item.specialInstructions
+                              ? 'bg-amber-500/10 text-amber-300 border-amber-500/30 font-bold'
+                              : 'text-neutral-400 hover:text-orange-400 border-dashed border-neutral-700 hover:border-orange-500/50'
+                          }`}
                         >
-                          <FileText className="w-3 h-3" />
-                          <span>
+                          <FileText className="w-3 h-3 text-orange-400" />
+                          <span className="truncate max-w-[150px]">
                             {item.specialInstructions
                               ? `Note: ${item.specialInstructions}`
-                              : '+ Add Note (e.g. Less Spicy)'}
+                              : '+ Add Quick Note'}
                           </span>
                         </button>
 
                         {/* Qty Counter */}
                         <div className="flex items-center gap-2">
                           <button
-                            onClick={() => handleUpdateQty(item.menuItemId, -1)}
+                            onClick={() => handleUpdateQty(item.cartId, -1)}
                             className="w-6 h-6 rounded bg-neutral-800 hover:bg-neutral-700 text-white flex items-center justify-center font-bold text-xs"
                           >
                             <Minus className="w-3 h-3" />
@@ -553,13 +617,13 @@ const WaiterMenu = () => {
                             {item.quantity}
                           </span>
                           <button
-                            onClick={() => handleUpdateQty(item.menuItemId, 1)}
+                            onClick={() => handleUpdateQty(item.cartId, 1)}
                             className="w-6 h-6 rounded bg-[#FF6B00] hover:bg-[#E05A00] text-white flex items-center justify-center font-bold text-xs shadow"
                           >
                             <Plus className="w-3 h-3" />
                           </button>
                           <button
-                            onClick={() => handleRemoveFromCart(item.menuItemId)}
+                            onClick={() => handleRemoveFromCart(item.cartId)}
                             className="p-1 text-neutral-500 hover:text-rose-400 ml-1"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -572,10 +636,17 @@ const WaiterMenu = () => {
               </div>
 
               {/* Order Level Special Instructions */}
-              <div>
-                <label className="block text-xs font-bold text-neutral-400 mb-1 uppercase tracking-wider">
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider">
                   Overall Order Instructions (Optional)
                 </label>
+
+                {/* Quick Note Pills */}
+                <QuickNotePills
+                  selectedText={orderInstructions}
+                  onAppendNote={handleAppendOverallNote}
+                />
+
                 <textarea
                   value={orderInstructions}
                   onChange={(e) => setOrderInstructions(e.target.value)}
@@ -597,7 +668,7 @@ const WaiterMenu = () => {
               <button
                 type="button"
                 onClick={handlePlaceOrder}
-                disabled={submittingOrder || !selectedTableId}
+                disabled={submittingOrder || (orderType === 'DINE_IN' && !selectedTableId)}
                 className="w-full bg-gradient-to-r from-[#FF6B00] to-[#FF8A33] hover:from-[#E55A00] hover:to-[#FF6B00] text-white py-3.5 px-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-lg shadow-orange-500/25 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
               >
                 {submittingOrder ? (
@@ -614,39 +685,30 @@ const WaiterMenu = () => {
         </div>
       )}
 
-      {/* Item Note Modal */}
-      {editingItemNote && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-[#17171C] border border-[#2B2B38] rounded-2xl max-w-sm w-full p-5 space-y-3 shadow-2xl">
-            <h3 className="font-bold text-sm text-white">
-              Special Instruction for {editingItemNote.name}
-            </h3>
-            <form onSubmit={handleSaveItemNote} className="space-y-3">
-              <textarea
-                value={itemNoteText}
-                onChange={(e) => setItemNoteText(e.target.value)}
-                placeholder="e.g. Less spicy, no onion, extra cheese..."
-                className="w-full bg-[#1C1C24] border border-[#2D2D3B] focus:border-[#FF6B00] rounded-xl p-2.5 text-xs text-white outline-none h-20"
-                autoFocus
-              ></textarea>
-              <div className="flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setEditingItemNote(null)}
-                  className="px-3 py-1.5 rounded-lg bg-neutral-800 text-neutral-300 text-xs font-semibold"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-1.5 rounded-lg bg-[#FF6B00] text-white text-xs font-bold"
-                >
-                  Save Note
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+      {/* Quick Note Modal: For initiating item add */}
+      {pendingAddItem && (
+        <QuickNoteModal
+          isOpen={Boolean(pendingAddItem)}
+          item={pendingAddItem}
+          initialNote=""
+          title={`Quick Note: ${pendingAddItem.name}`}
+          onClose={() => setPendingAddItem(null)}
+          onSkip={() => handleConfirmAddItem('')}
+          onSave={(note) => handleConfirmAddItem(note)}
+        />
+      )}
+
+      {/* Quick Note Modal: For editing existing cart item note */}
+      {editingCartItem && (
+        <QuickNoteModal
+          isOpen={Boolean(editingCartItem)}
+          item={editingCartItem}
+          initialNote={editingCartItem.specialInstructions || ''}
+          title={`Edit Note: ${editingCartItem.name}`}
+          onClose={() => setEditingCartItem(null)}
+          onSkip={() => handleSaveCartItemNote('')}
+          onSave={(note) => handleSaveCartItemNote(note)}
+        />
       )}
 
       {/* Success Modal */}

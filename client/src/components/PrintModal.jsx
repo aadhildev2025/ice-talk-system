@@ -267,6 +267,11 @@ const PrintModal = () => {
                     <div className="font-bold uppercase leading-tight">
                       {it.name}
                     </div>
+                    {it.specialInstructions && (
+                      <div className="text-[9px] italic pl-2 text-black">
+                        * {it.specialInstructions}
+                      </div>
+                    )}
                     <div className="flex justify-between items-center text-[11px] mt-0.5">
                       <span>
                         {it.quantity} x Rs.{Number(it.price).toFixed(2)}

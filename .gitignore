@@ -25,3 +25,5 @@ yarn-error.log*
 # Electron Builder Cache
 .icon-ico/
 builder-debug.yml
+preview.html
+

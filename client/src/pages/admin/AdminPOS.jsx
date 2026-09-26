@@ -35,6 +35,7 @@ import {
   FileText,
   Building,
 } from 'lucide-react';
+import QuickNoteModal, { QuickNotePills } from '../../components/QuickNoteModal';
 
 const AdminPOS = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -78,9 +79,9 @@ const AdminPOS = () => {
   const [orderInstructions, setOrderInstructions] = useState('');
   const [orderPriority, setOrderPriority] = useState('NORMAL');
 
-  // Item Note Modal state
-  const [editingItemNoteIndex, setEditingItemNoteIndex] = useState(null);
-  const [itemNoteText, setItemNoteText] = useState('');
+  // Quick note modal state
+  const [pendingAddItem, setPendingAddItem] = useState(null);
+  const [editingCartItem, setEditingCartItem] = useState(null);
 
   // Checkout / Billing states
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
@@ -211,36 +212,50 @@ const AdminPOS = () => {
     fetchTableOrders(table._id);
   };
 
-  // Cart Operations
-  const handleAddToCart = (item) => {
+  // Cart Operations & Quick Note handlers
+  const handleInitiateAdd = (item) => {
     if (!item.isAvailable) return;
+    setPendingAddItem(item);
+  };
+
+  const handleAddToCartWithNote = (item, note = '') => {
+    if (!item) return;
+    const trimmedNote = (note || '').trim();
     setCart((prev) => {
-      const existing = prev.find((i) => i.menuItemId === item._id);
+      const existing = prev.find(
+        (i) => i.menuItemId === item._id && (i.specialInstructions || '') === trimmedNote
+      );
       if (existing) {
         return prev.map((i) =>
-          i.menuItemId === item._id ? { ...i, quantity: i.quantity + 1 } : i
+          i.cartId === existing.cartId ? { ...i, quantity: i.quantity + 1 } : i
         );
       }
       return [
         ...prev,
         {
+          cartId: `${item._id}_${Date.now()}_${Math.random()}`,
           menuItemId: item._id,
           name: item.name,
           price: item.price,
           department: item.department || 'KITCHEN',
           category: item.category,
           quantity: 1,
-          specialInstructions: '',
+          specialInstructions: trimmedNote,
         },
       ];
     });
+    setPendingAddItem(null);
   };
 
-  const handleUpdateQuantity = (menuItemId, change) => {
+  const handleAddToCart = (item) => {
+    handleAddToCartWithNote(item, '');
+  };
+
+  const handleUpdateQuantity = (cartId, change) => {
     setCart((prev) =>
       prev
         .map((item) => {
-          if (item.menuItemId === menuItemId) {
+          if (item.cartId === cartId || item.menuItemId === cartId) {
             const newQty = item.quantity + change;
             return newQty > 0 ? { ...item, quantity: newQty } : null;
           }
@@ -250,8 +265,29 @@ const AdminPOS = () => {
     );
   };
 
-  const handleRemoveFromCart = (menuItemId) => {
-    setCart((prev) => prev.filter((i) => i.menuItemId !== menuItemId));
+  const handleRemoveFromCart = (cartId) => {
+    setCart((prev) => prev.filter((i) => i.cartId !== cartId && i.menuItemId !== cartId));
+  };
+
+  const handleSaveCartItemNote = (note) => {
+    if (!editingCartItem) return;
+    setCart((prev) =>
+      prev.map((i) =>
+        i.cartId === editingCartItem.cartId
+          ? { ...i, specialInstructions: (note || '').trim() }
+          : i
+      )
+    );
+    setEditingCartItem(null);
+  };
+
+  const handleAppendOverallNote = (phrase) => {
+    setOrderInstructions((prev) => {
+      if (!prev) return phrase;
+      const parts = prev.split(',').map((s) => s.trim()).filter(Boolean);
+      if (parts.includes(phrase)) return prev;
+      return [...parts, phrase].join(', ');
+    });
   };
 
   const handleClearCart = () => {
@@ -550,6 +586,45 @@ const AdminPOS = () => {
 
         {/* Channel Sub-Tabs & Refresh */}
         <div className="flex items-center justify-between md:justify-end gap-2">
+          {/* Sub-view switcher for Dine-In */}
+          {activeChannel === 'DINE_IN' && (
+            <div className="flex bg-[#1C1C24] p-1 rounded-xl border border-[#2B2B38] text-xs">
+              <button
+                type="button"
+                onClick={() => setChannelView('TABLES')}
+                className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
+                  channelView !== 'MENU'
+                    ? 'bg-[#2E2E3C] text-white shadow'
+                    : 'text-neutral-400 hover:text-white'
+                }`}
+              >
+                Table Layout & Billing
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (!selectedTable) {
+                    alert('Please select a table first from Table Layout.');
+                    return;
+                  }
+                  setChannelView('MENU');
+                }}
+                className={`px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition-all ${
+                  channelView === 'MENU'
+                    ? 'bg-[#2E2E3C] text-white shadow'
+                    : 'text-neutral-400 hover:text-white'
+                }`}
+              >
+                <span>Take Order (Menu)</span>
+                {selectedTable && (
+                  <span className="text-[10px] text-amber-400 font-extrabold bg-amber-500/10 px-1.5 py-0.2 rounded border border-amber-500/20">
+                    {selectedTable.name}
+                  </span>
+                )}
+              </button>
+            </div>
+          )}
+
           {activeChannel !== 'DINE_IN' && (
             <div className="flex bg-[#1C1C24] p-1 rounded-xl border border-[#2B2B38] text-xs">
               <button
@@ -601,7 +676,7 @@ const AdminPOS = () => {
       </div>
 
       {/* VIEW 1: DINE-IN TABLE SELECTION & SETTLEMENT */}
-      {activeChannel === 'DINE_IN' && (
+      {activeChannel === 'DINE_IN' && channelView !== 'MENU' && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
           {/* Left: Table Layout (5 cols) */}
           <div className="lg:col-span-5 bg-[#141418] border border-[#24242E] rounded-2xl p-4 flex flex-col space-y-3">
@@ -742,12 +817,12 @@ const AdminPOS = () => {
                 <button
                   type="button"
                   onClick={() => {
-                    setActiveChannel('TAKEAWAY'); // switch to menu mode with table assigned or stay in menu
                     setChannelView('MENU');
                   }}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl shadow transition-all"
+                  className="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl shadow transition-all flex items-center gap-1.5"
                 >
-                  Create New Order on Menu
+                  <Plus className="w-4 h-4" />
+                  <span>Take Order for {selectedTable.name} (Menu)</span>
                 </button>
               </div>
             ) : (
@@ -811,7 +886,7 @@ const AdminPOS = () => {
                   ))}
                 </div>
 
-                {/* Summary & Settle Button */}
+                {/* Summary & Dual Settle / Add Items Buttons */}
                 <div className="bg-[#191920] p-4 rounded-xl border border-[#262634] space-y-3">
                   <div className="flex justify-between items-center text-sm font-black pb-2 border-b border-[#2B2B38]">
                     <span className="text-neutral-300 uppercase tracking-wider">NET BILL TOTAL:</span>
@@ -820,16 +895,28 @@ const AdminPOS = () => {
                     </span>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => openCheckout('TABLE')}
-                    className={`w-full bg-gradient-to-r from-[#FF6B00] to-[#FF8A33] hover:from-[#E55A00] hover:to-[#FF6B00] text-white py-3.5 px-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-lg shadow-orange-500/30 flex items-center justify-center gap-2 transition-all active:scale-[0.99] ${
-                      isTouchMode ? 'h-14 text-base' : ''
-                    }`}
-                  >
-                    <Receipt className="w-5 h-5" />
-                    <span>Settle Table & Print Final Receipt</span>
-                  </button>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setChannelView('MENU')}
+                      className={`w-full bg-[#242430] hover:bg-[#303040] text-neutral-200 hover:text-white py-3 px-3 rounded-xl font-bold text-xs border border-[#3A3A4C] flex items-center justify-center gap-1.5 transition-all ${
+                        isTouchMode ? 'h-14 text-sm' : ''
+                      }`}
+                    >
+                      <Plus className="w-4 h-4 text-blue-400" />
+                      <span>Add More Items</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => openCheckout('TABLE')}
+                      className={`w-full bg-gradient-to-r from-[#FF6B00] to-[#FF8A33] hover:from-[#E55A00] hover:to-[#FF6B00] text-white py-3.5 px-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-lg shadow-orange-500/30 flex items-center justify-center gap-1.5 transition-all active:scale-[0.99] ${
+                        isTouchMode ? 'h-14 text-base' : ''
+                      }`}
+                    >
+                      <Receipt className="w-4 h-4" />
+                      <span>Settle & Print Receipt</span>
+                    </button>
+                  </div>
                 </div>
               </>
             )}
@@ -837,8 +924,8 @@ const AdminPOS = () => {
         </div>
       )}
 
-      {/* VIEW 2: MENU & CART (Takeaway, UberEats, PickMe) */}
-      {activeChannel !== 'DINE_IN' && channelView === 'MENU' && (
+      {/* VIEW 2: MENU & CART (Dine-In Menu, Takeaway, UberEats, PickMe) */}
+      {(activeChannel !== 'DINE_IN' || channelView === 'MENU') && channelView === 'MENU' && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
           {/* Menu Catalog (8 Cols) */}
           <div className="lg:col-span-8 bg-[#141418] border border-[#24242E] rounded-2xl p-4 space-y-4 flex flex-col">
@@ -860,16 +947,29 @@ const AdminPOS = () => {
 
               {/* Channel Indicator Badge */}
               <div className="flex items-center gap-2">
+                {activeChannel === 'DINE_IN' && selectedTable && (
+                  <button
+                    type="button"
+                    onClick={() => setChannelView('TABLES')}
+                    className="text-xs font-bold px-3 py-1 rounded-full bg-blue-600/20 text-blue-300 border border-blue-500/40 hover:bg-blue-600/30 transition-all flex items-center gap-1.5"
+                  >
+                    <span>← Back to Tables</span>
+                  </button>
+                )}
                 <span
                   className={`text-xs font-black uppercase px-3 py-1 rounded-full border ${
-                    activeChannel === 'UBEREATS'
+                    activeChannel === 'DINE_IN'
+                      ? 'bg-blue-500/20 text-blue-300 border-blue-500/40'
+                      : activeChannel === 'UBEREATS'
                       ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
                       : activeChannel === 'PICKME'
                       ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
                       : 'bg-orange-500/20 text-orange-400 border-orange-500/40'
                   }`}
                 >
-                  {activeChannel === 'UBEREATS'
+                  {activeChannel === 'DINE_IN'
+                    ? `Dine-In (${selectedTable?.name || 'No Table'})`
+                    : activeChannel === 'UBEREATS'
                     ? 'Uber Eats Menu'
                     : activeChannel === 'PICKME'
                     ? 'PickMe Menu'
@@ -936,7 +1036,7 @@ const AdminPOS = () => {
                       key={item._id}
                       type="button"
                       disabled={isOut}
-                      onClick={() => handleAddToCart(item)}
+                      onClick={() => handleInitiateAdd(item)}
                       className={`p-3 rounded-2xl border text-left flex flex-col justify-between transition-all relative overflow-hidden group ${
                         inCartItem
                           ? 'bg-gradient-to-br from-[#2D1B12] to-[#1C1412] border-[#FF6B00] shadow-md shadow-orange-500/10'
@@ -1000,13 +1100,16 @@ const AdminPOS = () => {
               <input
                 type="text"
                 placeholder={
-                  activeChannel === 'UBEREATS'
+                  activeChannel === 'DINE_IN'
+                    ? `Dine-In Table: ${selectedTable?.name || 'No Table Selected'}`
+                    : activeChannel === 'UBEREATS'
                     ? 'UberEats Order ID (e.g. #UB-9941)'
                     : activeChannel === 'PICKME'
                     ? 'PickMe Order ID (e.g. #PM-1234)'
                     : 'Customer Name (Optional)'
                 }
-                value={customerName || channelOrderRef}
+                value={activeChannel === 'DINE_IN' ? selectedTable?.name || '' : customerName || channelOrderRef}
+                disabled={activeChannel === 'DINE_IN'}
                 onChange={(e) => {
                   setCustomerName(e.target.value);
                   setChannelOrderRef(e.target.value);
@@ -1016,9 +1119,15 @@ const AdminPOS = () => {
                 }`}
               />
 
+              {/* Kitchen Note Quick Note Pills */}
+              <QuickNotePills
+                selectedText={orderInstructions}
+                onAppendNote={handleAppendOverallNote}
+              />
+
               <input
                 type="text"
-                placeholder="Kitchen Note / Special Instructions"
+                placeholder="Kitchen Note / Special Instructions (tap pills above or type)"
                 value={orderInstructions}
                 onChange={(e) => setOrderInstructions(e.target.value)}
                 className={`w-full bg-[#141418] border border-[#2A2A38] focus:border-[#FF6B00] rounded-lg px-2.5 text-xs text-white placeholder-neutral-500 outline-none ${
@@ -1037,9 +1146,9 @@ const AdminPOS = () => {
                   </p>
                 </div>
               ) : (
-                cart.map((item, idx) => (
+                cart.map((item) => (
                   <div
-                    key={idx}
+                    key={item.cartId}
                     className="p-2.5 rounded-xl bg-[#191920] border border-[#262634] space-y-1.5 text-xs"
                   >
                     <div className="flex justify-between items-start">
@@ -1050,29 +1159,55 @@ const AdminPOS = () => {
                     </div>
 
                     <div className="flex justify-between items-center pt-1 border-t border-neutral-800">
-                      <span className="text-[10px] text-neutral-400">
-                        Rs. {item.price.toLocaleString()} each
-                      </span>
-
-                      {/* Quantity Stepper */}
-                      <div className="flex items-center gap-1.5 bg-[#141418] p-0.5 rounded-lg border border-[#2A2A38]">
-                        <button
-                          type="button"
-                          onClick={() => handleUpdateQuantity(item.menuItemId, -1)}
-                          className="w-6 h-6 rounded bg-[#242430] hover:bg-neutral-700 text-neutral-300 flex items-center justify-center font-bold"
-                        >
-                          <Minus className="w-3 h-3" />
-                        </button>
-                        <span className="w-6 text-center font-black text-xs text-white">
-                          {item.quantity}
+                      {/* Special item note button */}
+                      <button
+                        type="button"
+                        onClick={() => setEditingCartItem(item)}
+                        className={`text-[10px] flex items-center gap-1 px-2 py-0.5 rounded-md border transition-all ${
+                          item.specialInstructions
+                            ? 'bg-amber-500/10 text-amber-300 border-amber-500/30 font-bold'
+                            : 'text-neutral-400 hover:text-orange-400 border-dashed border-neutral-700 hover:border-orange-500/40'
+                        }`}
+                      >
+                        <FileText className="w-3 h-3 text-orange-400" />
+                        <span className="truncate max-w-[130px]">
+                          {item.specialInstructions ? `Note: ${item.specialInstructions}` : '+ Add Note'}
                         </span>
-                        <button
-                          type="button"
-                          onClick={() => handleUpdateQuantity(item.menuItemId, 1)}
-                          className="w-6 h-6 rounded bg-[#FF6B00] hover:bg-[#E05A00] text-white flex items-center justify-center font-bold"
-                        >
-                          <Plus className="w-3 h-3" />
-                        </button>
+                      </button>
+
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] text-neutral-400">
+                          Rs. {item.price.toLocaleString()} ea
+                        </span>
+
+                        {/* Quantity Stepper */}
+                        <div className="flex items-center gap-1 bg-[#141418] p-0.5 rounded-lg border border-[#2A2A38]">
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateQuantity(item.cartId, -1)}
+                            className="w-5 h-5 rounded bg-[#242430] hover:bg-neutral-700 text-neutral-300 flex items-center justify-center font-bold"
+                          >
+                            <Minus className="w-2.5 h-2.5" />
+                          </button>
+                          <span className="w-5 text-center font-black text-xs text-white">
+                            {item.quantity}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateQuantity(item.cartId, 1)}
+                            className="w-5 h-5 rounded bg-[#FF6B00] hover:bg-[#E05A00] text-white flex items-center justify-center font-bold"
+                          >
+                            <Plus className="w-2.5 h-2.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveFromCart(item.cartId)}
+                            className="p-1 text-neutral-500 hover:text-rose-400"
+                            title="Remove"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1465,6 +1600,32 @@ const AdminPOS = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Quick Note Modal: For initiating item add */}
+      {pendingAddItem && (
+        <QuickNoteModal
+          isOpen={Boolean(pendingAddItem)}
+          item={pendingAddItem}
+          initialNote=""
+          title={`Quick Note: ${pendingAddItem.name}`}
+          onClose={() => setPendingAddItem(null)}
+          onSkip={() => handleAddToCartWithNote(pendingAddItem, '')}
+          onSave={(note) => handleAddToCartWithNote(pendingAddItem, note)}
+        />
+      )}
+
+      {/* Quick Note Modal: For editing existing cart item note */}
+      {editingCartItem && (
+        <QuickNoteModal
+          isOpen={Boolean(editingCartItem)}
+          item={editingCartItem}
+          initialNote={editingCartItem.specialInstructions || ''}
+          title={`Edit Note: ${editingCartItem.name}`}
+          onClose={() => setEditingCartItem(null)}
+          onSkip={() => handleSaveCartItemNote('')}
+          onSave={(note) => handleSaveCartItemNote(note)}
+        />
       )}
     </div>
   );

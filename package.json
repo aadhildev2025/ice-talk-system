@@ -55,7 +55,8 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "Ice Talk POS",
-      "artifactName": "Ice-Talk-POS-Setup-${version}.${ext}"
+      "artifactName": "Ice-Talk-POS-Setup-${version}.${ext}",
+      "runAfterFinish": true
     }
   },
   "dependencies": {

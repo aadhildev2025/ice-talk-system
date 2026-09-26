@@ -218,17 +218,24 @@ const OrderReceive = () => {
                   {order.items.map((item, idx) => (
                     <div
                       key={idx}
-                      className="flex justify-between items-center text-xs py-1 border-b border-neutral-800/60"
+                      className="py-1.5 border-b border-neutral-800/60"
                     >
-                      <div className="flex items-center gap-2">
-                        <span className="w-5 h-5 rounded-md bg-neutral-800 text-neutral-300 font-bold text-[11px] flex items-center justify-center">
-                          {item.quantity}
+                      <div className="flex justify-between items-center text-xs">
+                        <div className="flex items-center gap-2">
+                          <span className="w-5 h-5 rounded-md bg-neutral-800 text-neutral-300 font-bold text-[11px] flex items-center justify-center">
+                            {item.quantity}
+                          </span>
+                          <span className="font-medium text-neutral-200">{item.name}</span>
+                        </div>
+                        <span className="font-semibold text-neutral-400">
+                          Rs. {(item.price * item.quantity).toLocaleString()}
                         </span>
-                        <span className="font-medium text-neutral-200">{item.name}</span>
                       </div>
-                      <span className="font-semibold text-neutral-400">
-                        Rs. {(item.price * item.quantity).toLocaleString()}
-                      </span>
+                      {item.specialInstructions && (
+                        <p className="text-[10px] text-amber-300 italic pl-7 mt-0.5">
+                          * {item.specialInstructions}
+                        </p>
+                      )}
                     </div>
                   ))}
                 </div>
