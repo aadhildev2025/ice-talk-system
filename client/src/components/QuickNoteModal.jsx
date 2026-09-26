@@ -89,7 +89,7 @@ export const QuickNoteModal = ({
                 <FileText className="w-4 h-4" />
               </span>
               <h3 className="font-black text-sm sm:text-base text-white">
-                {title || (item ? `Quick Note: ${item.name}` : 'Order Quick Note')}
+                {title || (item ? `Special Note: ${item.name}` : 'Special Note')}
               </h3>
             </div>
             {item && (

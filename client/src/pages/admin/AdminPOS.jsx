@@ -80,7 +80,7 @@ const AdminPOS = () => {
   const [orderPriority, setOrderPriority] = useState('NORMAL');
 
   // Quick note modal state
-  const [pendingAddItem, setPendingAddItem] = useState(null);
+  const [showOrderNoteModal, setShowOrderNoteModal] = useState(false);
   const [editingCartItem, setEditingCartItem] = useState(null);
 
   // Checkout / Billing states
@@ -212,18 +212,12 @@ const AdminPOS = () => {
     fetchTableOrders(table._id);
   };
 
-  // Cart Operations & Quick Note handlers
-  const handleInitiateAdd = (item) => {
-    if (!item.isAvailable) return;
-    setPendingAddItem(item);
-  };
-
-  const handleAddToCartWithNote = (item, note = '') => {
-    if (!item) return;
-    const trimmedNote = (note || '').trim();
+  // Cart Operations & Direct Item Add (no popup modal on click)
+  const handleAddToCart = (item) => {
+    if (!item || !item.isAvailable) return;
     setCart((prev) => {
       const existing = prev.find(
-        (i) => i.menuItemId === item._id && (i.specialInstructions || '') === trimmedNote
+        (i) => i.menuItemId === item._id && !i.specialInstructions
       );
       if (existing) {
         return prev.map((i) =>
@@ -240,15 +234,10 @@ const AdminPOS = () => {
           department: item.department || 'KITCHEN',
           category: item.category,
           quantity: 1,
-          specialInstructions: trimmedNote,
+          specialInstructions: '',
         },
       ];
     });
-    setPendingAddItem(null);
-  };
-
-  const handleAddToCart = (item) => {
-    handleAddToCartWithNote(item, '');
   };
 
   const handleUpdateQuantity = (cartId, change) => {
@@ -1036,7 +1025,7 @@ const AdminPOS = () => {
                       key={item._id}
                       type="button"
                       disabled={isOut}
-                      onClick={() => handleInitiateAdd(item)}
+                      onClick={() => handleAddToCart(item)}
                       className={`p-3 rounded-2xl border text-left flex flex-col justify-between transition-all relative overflow-hidden group ${
                         inCartItem
                           ? 'bg-gradient-to-br from-[#2D1B12] to-[#1C1412] border-[#FF6B00] shadow-md shadow-orange-500/10'
@@ -1119,6 +1108,25 @@ const AdminPOS = () => {
                 }`}
               />
 
+              {/* Kitchen Note / Instructions with Special Note button */}
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">
+                  Kitchen Note / Instructions:
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowOrderNoteModal(true)}
+                  className={`text-[10px] px-2 py-0.5 rounded-lg border font-bold flex items-center gap-1 transition-all ${
+                    orderInstructions
+                      ? 'bg-amber-500/20 text-amber-300 border-amber-500/50'
+                      : 'bg-[#141418] text-orange-400 hover:text-white border-orange-500/30 hover:bg-[#FF6B00]'
+                  }`}
+                >
+                  <FileText className="w-3 h-3" />
+                  <span>Special Note</span>
+                </button>
+              </div>
+
               {/* Kitchen Note Quick Note Pills */}
               <QuickNotePills
                 selectedText={orderInstructions}
@@ -1127,7 +1135,7 @@ const AdminPOS = () => {
 
               <input
                 type="text"
-                placeholder="Kitchen Note / Special Instructions (tap pills above or type)"
+                placeholder="Kitchen Note / Special Instructions (or click Special Note)"
                 value={orderInstructions}
                 onChange={(e) => setOrderInstructions(e.target.value)}
                 className={`w-full bg-[#141418] border border-[#2A2A38] focus:border-[#FF6B00] rounded-lg px-2.5 text-xs text-white placeholder-neutral-500 outline-none ${
@@ -1163,15 +1171,16 @@ const AdminPOS = () => {
                       <button
                         type="button"
                         onClick={() => setEditingCartItem(item)}
-                        className={`text-[10px] flex items-center gap-1 px-2 py-0.5 rounded-md border transition-all ${
+                        className={`text-[10px] flex items-center gap-1 px-2 py-0.5 rounded-md border font-bold transition-all ${
                           item.specialInstructions
-                            ? 'bg-amber-500/10 text-amber-300 border-amber-500/30 font-bold'
-                            : 'text-neutral-400 hover:text-orange-400 border-dashed border-neutral-700 hover:border-orange-500/40'
+                            ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-sm'
+                            : 'bg-[#141418] text-neutral-400 hover:text-orange-400 border border-[#2A2A38] hover:border-orange-500/40'
                         }`}
+                        title="Click to add quick notes or custom instructions"
                       >
-                        <FileText className="w-3 h-3 text-orange-400" />
+                        <FileText className="w-3 h-3 text-[#FF6B00]" />
                         <span className="truncate max-w-[130px]">
-                          {item.specialInstructions ? `Note: ${item.specialInstructions}` : '+ Add Note'}
+                          {item.specialInstructions ? `Special Note: ${item.specialInstructions}` : 'Special Note'}
                         </span>
                       </button>
 
@@ -1223,6 +1232,24 @@ const AdminPOS = () => {
                   Rs. {cartSubtotal.toLocaleString()}
                 </span>
               </div>
+
+              {/* Special Note Button before confirming order */}
+              <button
+                type="button"
+                disabled={cart.length === 0}
+                onClick={() => setShowOrderNoteModal(true)}
+                className={`w-full bg-[#191922] hover:bg-[#22222E] text-amber-300 hover:text-white py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-between border border-amber-500/30 transition-all ${
+                  isTouchMode ? 'h-11 text-sm' : ''
+                } disabled:opacity-40 disabled:cursor-not-allowed`}
+              >
+                <span className="flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-[#FF6B00]" />
+                  <span>Special Note</span>
+                </span>
+                <span className="text-[11px] text-neutral-400 font-normal truncate max-w-[200px]">
+                  {orderInstructions || '+ Add Quick or Custom Notes'}
+                </span>
+              </button>
 
               {/* Action 1: Send to Kitchen (Auto-prints Kitchen Receipt) */}
               <button
@@ -1602,16 +1629,21 @@ const AdminPOS = () => {
         </div>
       )}
 
-      {/* Quick Note Modal: For initiating item add */}
-      {pendingAddItem && (
+      {/* Quick Note Modal: For overall order special note */}
+      {showOrderNoteModal && (
         <QuickNoteModal
-          isOpen={Boolean(pendingAddItem)}
-          item={pendingAddItem}
-          initialNote=""
-          title={`Quick Note: ${pendingAddItem.name}`}
-          onClose={() => setPendingAddItem(null)}
-          onSkip={() => handleAddToCartWithNote(pendingAddItem, '')}
-          onSave={(note) => handleAddToCartWithNote(pendingAddItem, note)}
+          isOpen={showOrderNoteModal}
+          initialNote={orderInstructions}
+          title="Order Special Note"
+          onClose={() => setShowOrderNoteModal(false)}
+          onSkip={() => {
+            setOrderInstructions('');
+            setShowOrderNoteModal(false);
+          }}
+          onSave={(note) => {
+            setOrderInstructions(note);
+            setShowOrderNoteModal(false);
+          }}
         />
       )}
 
@@ -1621,7 +1653,7 @@ const AdminPOS = () => {
           isOpen={Boolean(editingCartItem)}
           item={editingCartItem}
           initialNote={editingCartItem.specialInstructions || ''}
-          title={`Edit Note: ${editingCartItem.name}`}
+          title={`Special Note: ${editingCartItem.name}`}
           onClose={() => setEditingCartItem(null)}
           onSkip={() => handleSaveCartItemNote('')}
           onSave={(note) => handleSaveCartItemNote(note)}
