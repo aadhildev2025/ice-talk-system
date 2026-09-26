@@ -12,7 +12,7 @@ const getTables = async (req, res) => {
 
     // Fetch active unsettled orders
     const activeOrders = await Order.find({
-      status: { $in: ['PENDING', 'APPROVED', 'PREPARING', 'READY'] },
+      status: { $nin: ['CANCELLED', 'REJECTED'] },
       isSettled: false,
     });
 
@@ -128,7 +128,7 @@ const deleteTable = async (req, res) => {
     // Check active orders
     const activeOrder = await Order.findOne({
       tableId: table._id,
-      status: { $in: ['PENDING', 'APPROVED', 'PREPARING', 'READY'] },
+      status: { $nin: ['CANCELLED', 'REJECTED'] },
       isSettled: false,
     });
 

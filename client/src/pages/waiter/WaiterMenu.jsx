@@ -72,15 +72,31 @@ const WaiterMenu = () => {
     if (socket) {
       socket.on('menu:updated', () => fetchMenuAndTables());
       socket.on('table:updated', () => fetchMenuAndTables());
+      socket.on('order:created', () => fetchMenuAndTables());
+      socket.on('order:cancelled', () => fetchMenuAndTables());
+      socket.on('sale:completed', () => fetchMenuAndTables());
     }
 
     return () => {
       if (socket) {
         socket.off('menu:updated');
         socket.off('table:updated');
+        socket.off('order:created');
+        socket.off('order:cancelled');
+        socket.off('sale:completed');
       }
     };
   }, [socket]);
+
+  // Clear selected table if it becomes occupied or disabled
+  useEffect(() => {
+    if (selectedTableId) {
+      const found = tables.find((t) => t._id === selectedTableId);
+      if (!found || found.status !== 'AVAILABLE' || found.hasActiveOrder || found.status === 'DISABLED') {
+        setSelectedTableId('');
+      }
+    }
+  }, [tables, selectedTableId]);
 
   // Direct add item to cart (no popup modal on click)
   const handleAddToCart = (item) => {
@@ -507,13 +523,27 @@ const WaiterMenu = () => {
                   </div>
 
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-36 overflow-y-auto pr-1">
-                    {tables
-                      .filter(
+                    {(() => {
+                      const availableTables = tables.filter(
                         (t) =>
+                          t.status === 'AVAILABLE' &&
+                          !t.hasActiveOrder &&
                           t.status !== 'DISABLED' &&
                           (selectedWaiterFloor === 'ALL' || (t.floor || 'Ground Floor') === selectedWaiterFloor)
-                      )
-                      .map((tbl) => {
+                      );
+
+                      if (availableTables.length === 0) {
+                        return (
+                          <div className="col-span-full py-4 px-2 text-center bg-[#141418] rounded-xl border border-dashed border-[#2A2A38]">
+                            <p className="text-xs font-semibold text-neutral-400">No available tables</p>
+                            <p className="text-[10px] text-neutral-500 mt-0.5">
+                              All tables on {selectedWaiterFloor === 'ALL' ? 'all floors' : selectedWaiterFloor} are currently occupied with active orders.
+                            </p>
+                          </div>
+                        );
+                      }
+
+                      return availableTables.map((tbl) => {
                         const isSelected = selectedTableId === tbl._id;
                         return (
                           <button
@@ -539,7 +569,8 @@ const WaiterMenu = () => {
                             </p>
                           </button>
                         );
-                      })}
+                      });
+                    })()}
                   </div>
                 </div>
               )}

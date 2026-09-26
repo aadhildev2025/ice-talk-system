@@ -24,7 +24,7 @@ const getTableActiveOrders = async (req, res) => {
 
     const orders = await Order.find({
       tableId: table._id,
-      status: { $in: ['PENDING', 'APPROVED', 'PREPARING', 'READY'] },
+      status: { $nin: ['CANCELLED', 'REJECTED'] },
       isSettled: false,
     }).sort({ createdAt: 1 });
 
@@ -125,7 +125,7 @@ const settleTable = async (req, res) => {
       tableNameSnapshot = table.name;
       orders = await Order.find({
         tableId: table._id,
-        status: { $in: ['PENDING', 'APPROVED', 'PREPARING', 'READY'] },
+        status: { $nin: ['CANCELLED', 'REJECTED'] },
         isSettled: false,
       });
     } else if (orderId || (reqOrderIds && reqOrderIds.length > 0)) {
@@ -222,7 +222,7 @@ const settleTable = async (req, res) => {
       const remainingOrders = await Order.countDocuments({
         tableId: table._id,
         isSettled: false,
-        status: { $in: ['PENDING', 'APPROVED', 'PREPARING', 'READY'] },
+        status: { $nin: ['CANCELLED', 'REJECTED'] },
       });
       if (remainingOrders === 0) {
         table.status = 'AVAILABLE';
