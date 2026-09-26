@@ -20,7 +20,7 @@ import {
   AlertCircle,
   FileText,
 } from 'lucide-react';
-import QuickNoteModal, { QuickNotePills } from '../../components/QuickNoteModal';
+import QuickNoteModal from '../../components/QuickNoteModal';
 
 const WaiterMenu = () => {
   const { user } = useAuth();
@@ -569,24 +569,9 @@ const WaiterMenu = () => {
                       </div>
 
                       <div className="flex items-center justify-between pt-1 border-t border-neutral-800">
-                        {/* Special item note button */}
-                        <button
-                          type="button"
-                          onClick={() => setEditingCartItem(item)}
-                          className={`text-xs flex items-center gap-1.5 px-2.5 py-1 rounded-lg border font-bold transition-all ${
-                            item.specialInstructions
-                              ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-sm'
-                              : 'bg-[#141418] text-neutral-300 hover:text-white border-[#2A2A38] hover:border-orange-500/50'
-                          }`}
-                          title="Click to add quick notes or custom instructions"
-                        >
-                          <FileText className="w-3.5 h-3.5 text-[#FF6B00]" />
-                          <span className="truncate max-w-[140px]">
-                            {item.specialInstructions
-                              ? `Special Note: ${item.specialInstructions}`
-                              : 'Special Note'}
-                          </span>
-                        </button>
+                        <span className="text-[11px] text-neutral-400">
+                          Rs. {item.price.toLocaleString()} ea
+                        </span>
 
                         {/* Qty Counter */}
                         <div className="flex items-center gap-2">
@@ -618,39 +603,7 @@ const WaiterMenu = () => {
                 </div>
               </div>
 
-              {/* Order Level Special Instructions */}
-              <div className="space-y-1.5">
-                <div className="flex justify-between items-center">
-                  <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider">
-                    Overall Order Instructions (Optional)
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => setShowOrderNoteModal(true)}
-                    className={`text-[11px] px-2.5 py-1 rounded-lg border font-bold flex items-center gap-1 transition-all ${
-                      orderInstructions
-                        ? 'bg-amber-500/20 text-amber-300 border-amber-500/50'
-                        : 'bg-[#1C1C24] text-orange-400 hover:text-white border-orange-500/30 hover:bg-[#FF6B00]'
-                    }`}
-                  >
-                    <FileText className="w-3 h-3" />
-                    <span>Special Note</span>
-                  </button>
-                </div>
 
-                {/* Quick Note Pills */}
-                <QuickNotePills
-                  selectedText={orderInstructions}
-                  onAppendNote={handleAppendOverallNote}
-                />
-
-                <textarea
-                  value={orderInstructions}
-                  onChange={(e) => setOrderInstructions(e.target.value)}
-                  placeholder="e.g. Serve drinks immediately, customer allergic to nuts..."
-                  className="w-full bg-[#1C1C24] border border-[#2D2D3B] focus:border-[#FF6B00] rounded-xl p-2.5 text-xs text-white placeholder-neutral-500 outline-none h-16"
-                ></textarea>
-              </div>
             </div>
 
             {/* Drawer Footer & Submit Button */}
@@ -659,14 +612,29 @@ const WaiterMenu = () => {
               <button
                 type="button"
                 onClick={() => setShowOrderNoteModal(true)}
-                className="w-full bg-[#141418] hover:bg-[#252530] text-amber-300 hover:text-white py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-between border border-amber-500/30 transition-all"
+                className={`w-full py-2.5 px-3.5 rounded-xl font-bold text-xs flex items-center justify-between border transition-all ${
+                  orderInstructions
+                    ? 'bg-amber-500/15 text-amber-300 border-amber-500/50 shadow-md'
+                    : 'bg-[#141418] hover:bg-[#252530] text-neutral-300 hover:text-white border-[#2A2A38] hover:border-orange-500/50'
+                }`}
               >
-                <span className="flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-[#FF6B00]" />
-                  <span>Special Note</span>
-                </span>
-                <span className="text-[11px] text-neutral-400 font-normal truncate max-w-[200px]">
-                  {orderInstructions || '+ Add Quick or Custom Notes'}
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-orange-500/15 text-[#FF6B00] flex items-center justify-center">
+                    <FileText className="w-4 h-4" />
+                  </div>
+                  <div className="text-left">
+                    <span className="font-bold text-xs block leading-none">Special Note</span>
+                    <span className="text-[10px] text-neutral-400 mt-1 block max-w-[200px] truncate">
+                      {orderInstructions || 'Tap to add quick notes or custom notes'}
+                    </span>
+                  </div>
+                </div>
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg border ${
+                  orderInstructions
+                    ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                    : 'bg-[#1C1C24] text-[#FF6B00] border-orange-500/30'
+                }`}>
+                  {orderInstructions ? 'Edit' : '+ Add'}
                 </span>
               </button>
 

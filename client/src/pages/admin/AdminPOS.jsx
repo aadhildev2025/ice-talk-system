@@ -35,7 +35,7 @@ import {
   FileText,
   Building,
 } from 'lucide-react';
-import QuickNoteModal, { QuickNotePills } from '../../components/QuickNoteModal';
+import QuickNoteModal from '../../components/QuickNoteModal';
 
 const AdminPOS = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -1108,40 +1108,7 @@ const AdminPOS = () => {
                 }`}
               />
 
-              {/* Kitchen Note / Instructions with Special Note button */}
-              <div className="flex justify-between items-center mb-1">
-                <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">
-                  Kitchen Note / Instructions:
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setShowOrderNoteModal(true)}
-                  className={`text-[10px] px-2 py-0.5 rounded-lg border font-bold flex items-center gap-1 transition-all ${
-                    orderInstructions
-                      ? 'bg-amber-500/20 text-amber-300 border-amber-500/50'
-                      : 'bg-[#141418] text-orange-400 hover:text-white border-orange-500/30 hover:bg-[#FF6B00]'
-                  }`}
-                >
-                  <FileText className="w-3 h-3" />
-                  <span>Special Note</span>
-                </button>
-              </div>
 
-              {/* Kitchen Note Quick Note Pills */}
-              <QuickNotePills
-                selectedText={orderInstructions}
-                onAppendNote={handleAppendOverallNote}
-              />
-
-              <input
-                type="text"
-                placeholder="Kitchen Note / Special Instructions (or click Special Note)"
-                value={orderInstructions}
-                onChange={(e) => setOrderInstructions(e.target.value)}
-                className={`w-full bg-[#141418] border border-[#2A2A38] focus:border-[#FF6B00] rounded-lg px-2.5 text-xs text-white placeholder-neutral-500 outline-none ${
-                  isTouchMode ? 'py-2.5 text-sm' : 'py-1.5'
-                }`}
-              />
             </div>
 
             {/* Cart Items List */}
@@ -1167,23 +1134,6 @@ const AdminPOS = () => {
                     </div>
 
                     <div className="flex justify-between items-center pt-1 border-t border-neutral-800">
-                      {/* Special item note button */}
-                      <button
-                        type="button"
-                        onClick={() => setEditingCartItem(item)}
-                        className={`text-[10px] flex items-center gap-1 px-2 py-0.5 rounded-md border font-bold transition-all ${
-                          item.specialInstructions
-                            ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-sm'
-                            : 'bg-[#141418] text-neutral-400 hover:text-orange-400 border border-[#2A2A38] hover:border-orange-500/40'
-                        }`}
-                        title="Click to add quick notes or custom instructions"
-                      >
-                        <FileText className="w-3 h-3 text-[#FF6B00]" />
-                        <span className="truncate max-w-[130px]">
-                          {item.specialInstructions ? `Special Note: ${item.specialInstructions}` : 'Special Note'}
-                        </span>
-                      </button>
-
                       <div className="flex items-center gap-1.5">
                         <span className="text-[10px] text-neutral-400">
                           Rs. {item.price.toLocaleString()} ea
@@ -1238,16 +1188,31 @@ const AdminPOS = () => {
                 type="button"
                 disabled={cart.length === 0}
                 onClick={() => setShowOrderNoteModal(true)}
-                className={`w-full bg-[#191922] hover:bg-[#22222E] text-amber-300 hover:text-white py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-between border border-amber-500/30 transition-all ${
+                className={`w-full py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-between border transition-all ${
                   isTouchMode ? 'h-11 text-sm' : ''
+                } ${
+                  orderInstructions
+                    ? 'bg-amber-500/15 text-amber-300 border-amber-500/50 shadow-sm'
+                    : 'bg-[#141418] hover:bg-[#20202A] text-neutral-300 hover:text-white border-[#2A2A38] hover:border-orange-500/40'
                 } disabled:opacity-40 disabled:cursor-not-allowed`}
               >
-                <span className="flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-[#FF6B00]" />
-                  <span>Special Note</span>
-                </span>
-                <span className="text-[11px] text-neutral-400 font-normal truncate max-w-[200px]">
-                  {orderInstructions || '+ Add Quick or Custom Notes'}
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-md bg-orange-500/15 text-[#FF6B00] flex items-center justify-center">
+                    <FileText className="w-3.5 h-3.5" />
+                  </div>
+                  <div className="text-left">
+                    <span className="font-bold text-xs block leading-tight">Special Note</span>
+                    <span className="text-[10px] text-neutral-400 block max-w-[180px] truncate">
+                      {orderInstructions || 'Add quick or custom notes'}
+                    </span>
+                  </div>
+                </div>
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
+                  orderInstructions
+                    ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                    : 'bg-[#1C1C24] text-[#FF6B00] border-orange-500/30'
+                }`}>
+                  {orderInstructions ? 'Edit' : '+ Add'}
                 </span>
               </button>
 
