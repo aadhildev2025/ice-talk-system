@@ -49,8 +49,16 @@ const AdminPOS = () => {
 
   // Active Channel: 'DINE_IN' | 'TAKEAWAY' | 'UBEREATS' | 'PICKME'
   const [activeChannel, setActiveChannel] = useState(initialChannel);
-  // Channel sub-view: 'MENU' (place new order) | 'ACTIVE_ORDERS' (view/settle existing channel orders)
-  const [channelView, setChannelView] = useState('MENU');
+  // Channel sub-view: 'TABLES' (table layout & billing) | 'MENU' (place new order) | 'ACTIVE_ORDERS' (view/settle existing channel orders)
+  const [channelView, setChannelView] = useState('TABLES');
+
+  // Always default to Table Layout & Billing when opening POS billing
+  useEffect(() => {
+    if (!searchParams.get('channel') && !searchParams.get('table')) {
+      setActiveChannel('DINE_IN');
+      setChannelView('TABLES');
+    }
+  }, [searchParams]);
 
   // Dine-In Table states
   const [tables, setTables] = useState([]);
@@ -389,23 +397,6 @@ const AdminPOS = () => {
     }
   };
 
-  const handleDiscountAmountChange = (val, subtotalVal) => {
-    const num = parseFloat(val);
-    if (!isNaN(num) && num > 0) {
-      const clamped = Math.min(subtotalVal, num);
-      setDiscount(clamped);
-      if (subtotalVal > 0) {
-        const pct = Math.round(((clamped / subtotalVal) * 100) * 10) / 10;
-        setDiscountPercent(String(pct));
-      } else {
-        setDiscountPercent('');
-      }
-    } else {
-      setDiscount(0);
-      setDiscountPercent('');
-    }
-  };
-
   const handleQuickPercent = (pct, subtotalVal) => {
     if (pct === 0) {
       setDiscount(0);
@@ -555,6 +546,7 @@ const AdminPOS = () => {
             type="button"
             onClick={() => {
               setActiveChannel('DINE_IN');
+              setChannelView('TABLES');
               setSearchParams({ channel: 'DINE_IN' });
             }}
             className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-bold text-xs transition-all ${
@@ -1445,43 +1437,26 @@ const AdminPOS = () => {
                   })}
                 </div>
 
-                {/* Dual Inputs for Custom % and Rs. */}
-                <div className="grid grid-cols-2 gap-2 pt-0.5">
-                  <div>
-                    <label className="block text-[10px] text-neutral-400 font-medium mb-1">
-                      Discount (%):
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="number"
-                        min="0"
-                        max="100"
-                        step="any"
-                        placeholder="0"
-                        value={discountPercent}
-                        onChange={(e) => handleDiscountPercentChange(e.target.value, checkoutSubtotal)}
-                        className="w-full bg-[#1C1C24] border border-[#2D2D3B] focus:border-[#FF6B00] rounded-lg pl-2 pr-6 py-1.5 text-right text-xs text-white outline-none font-bold"
-                      />
-                      <span className="absolute right-2 top-1.5 text-neutral-400 text-xs font-bold pointer-events-none">
-                        %
-                      </span>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] text-neutral-400 font-medium mb-1">
-                      Discount (Rs.):
-                    </label>
+                {/* Single Input for Custom % */}
+                <div className="pt-0.5">
+                  <label className="block text-[10px] text-neutral-400 font-medium mb-1">
+                    Discount (%):
+                  </label>
+                  <div className="relative">
                     <input
                       type="number"
                       min="0"
-                      max={checkoutSubtotal}
+                      max="100"
                       step="any"
-                      placeholder="0"
-                      value={discount === 0 && discountPercent === '' ? '' : discount}
-                      onChange={(e) => handleDiscountAmountChange(e.target.value, checkoutSubtotal)}
-                      className="w-full bg-[#1C1C24] border border-[#2D2D3B] focus:border-[#FF6B00] rounded-lg px-2.5 py-1.5 text-right text-xs text-white outline-none font-bold"
+                      placeholder="Enter % discount (e.g. 10)"
+                      value={discountPercent}
+                      onWheel={(e) => e.target.blur()}
+                      onChange={(e) => handleDiscountPercentChange(e.target.value, checkoutSubtotal)}
+                      className="w-full bg-[#1C1C24] border border-[#2D2D3B] focus:border-[#FF6B00] rounded-lg pl-3 pr-8 py-2 text-right text-xs text-white outline-none font-bold"
                     />
+                    <span className="absolute right-3 top-2 text-neutral-400 text-xs font-bold pointer-events-none">
+                      %
+                    </span>
                   </div>
                 </div>
 
@@ -1563,6 +1538,7 @@ const AdminPOS = () => {
                       type="number"
                       autoFocus
                       value={amountTendered}
+                      onWheel={(e) => e.target.blur()}
                       onFocus={(e) => e.target.select()}
                       onChange={(e) => setAmountTendered(e.target.value)}
                       placeholder={`e.g. ${checkoutGrandTotal}`}

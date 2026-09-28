@@ -16,6 +16,17 @@ if (typeof window !== 'undefined') {
     },
     true
   );
+
+  // Prevent mouse wheel from inadvertently scrolling/changing number input values
+  window.addEventListener(
+    'wheel',
+    () => {
+      if (document.activeElement && document.activeElement.type === 'number') {
+        document.activeElement.blur();
+      }
+    },
+    { passive: true }
+  );
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(

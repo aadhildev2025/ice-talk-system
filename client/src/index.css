@@ -34,6 +34,16 @@
     user-select: text !important;
     pointer-events: auto !important;
   }
+
+  /* Disable spin buttons and wheel increment on number inputs */
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
 }
 
 /* Custom modern scrollbars */
