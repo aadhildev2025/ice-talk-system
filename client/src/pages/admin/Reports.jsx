@@ -396,8 +396,20 @@ const Reports = () => {
                             timeStyle: 'short',
                           })}
                         </td>
-                        <td className="p-3.5 font-black text-[#FF6B00] text-right whitespace-nowrap">
-                          Rs. {sale.total?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        <td className="p-3.5 text-right whitespace-nowrap">
+                          <div className="font-black text-[#FF6B00]">
+                            Rs. {sale.total?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </div>
+                          {Number(sale.discount || 0) > 0 && (
+                            <div className="text-[10px] text-emerald-400 font-semibold">
+                              Disc: -Rs.{Number(sale.discount).toLocaleString()}
+                              {sale.discountPercentage
+                                ? ` (${Number(sale.discountPercentage) % 1 === 0 ? Number(sale.discountPercentage).toFixed(0) : Number(sale.discountPercentage).toFixed(1)}%)`
+                                : sale.subtotal && Number(sale.subtotal) > 0
+                                ? ` (${Math.round((Number(sale.discount) / Number(sale.subtotal)) * 100 * 10) / 10}%)`
+                                : ''}
+                            </div>
+                          )}
                         </td>
                         <td className="p-3.5 text-right whitespace-nowrap">
                           <div className="flex items-center justify-end gap-1.5">

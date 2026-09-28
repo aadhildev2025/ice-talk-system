@@ -34,6 +34,7 @@ import {
   X,
   FileText,
   Building,
+  Percent,
 } from 'lucide-react';
 import QuickNoteModal from '../../components/QuickNoteModal';
 
@@ -89,6 +90,7 @@ const AdminPOS = () => {
   const [paymentMethod, setPaymentMethod] = useState('CASH'); // 'CASH' | 'CARD' | 'ONLINE'
   const [amountTendered, setAmountTendered] = useState('');
   const [discount, setDiscount] = useState(0);
+  const [discountPercent, setDiscountPercent] = useState('');
   const [submittingAction, setSubmittingAction] = useState(false);
 
   // Load Menu and Categories
@@ -365,6 +367,7 @@ const AdminPOS = () => {
   const openCheckout = (target, orderData = null) => {
     setCheckoutTarget(target);
     setDiscount(0);
+    setDiscountPercent('');
     setPaymentMethod('CASH');
     setAmountTendered('');
 
@@ -372,6 +375,46 @@ const AdminPOS = () => {
       setSelectedChannelOrder(orderData);
     }
     setShowCheckoutModal(true);
+  };
+
+  // Handlers for optional discount percentage and amount
+  const handleDiscountPercentChange = (val, subtotalVal) => {
+    setDiscountPercent(val);
+    const num = parseFloat(val);
+    if (!isNaN(num) && num > 0) {
+      const calculated = Math.round(((subtotalVal * num) / 100) * 100) / 100;
+      setDiscount(Math.min(subtotalVal, calculated));
+    } else {
+      setDiscount(0);
+    }
+  };
+
+  const handleDiscountAmountChange = (val, subtotalVal) => {
+    const num = parseFloat(val);
+    if (!isNaN(num) && num > 0) {
+      const clamped = Math.min(subtotalVal, num);
+      setDiscount(clamped);
+      if (subtotalVal > 0) {
+        const pct = Math.round(((clamped / subtotalVal) * 100) * 10) / 10;
+        setDiscountPercent(String(pct));
+      } else {
+        setDiscountPercent('');
+      }
+    } else {
+      setDiscount(0);
+      setDiscountPercent('');
+    }
+  };
+
+  const handleQuickPercent = (pct, subtotalVal) => {
+    if (pct === 0) {
+      setDiscount(0);
+      setDiscountPercent('');
+    } else {
+      setDiscountPercent(String(pct));
+      const calculated = Math.round(((subtotalVal * pct) / 100) * 100) / 100;
+      setDiscount(Math.min(subtotalVal, calculated));
+    }
   };
 
   // Action: Complete Payment & Settle Sale (Prints Final Customer Receipt)
@@ -413,6 +456,7 @@ const AdminPOS = () => {
           paymentMethod,
           amountTendered: tendered,
           discount: Number(discount) || 0,
+          discountPercentage: Number(discountPercent) || 0,
         });
 
         if (settleRes.data.success) {
@@ -429,6 +473,7 @@ const AdminPOS = () => {
           paymentMethod,
           amountTendered: tendered,
           discount: Number(discount) || 0,
+          discountPercentage: Number(discountPercent) || 0,
         });
 
         if (res.data.success) {
@@ -446,6 +491,7 @@ const AdminPOS = () => {
           paymentMethod,
           amountTendered: tendered,
           discount: Number(discount) || 0,
+          discountPercentage: Number(discountPercent) || 0,
         });
 
         if (res.data.success) {
@@ -1352,21 +1398,102 @@ const AdminPOS = () => {
             </div>
 
             {/* Bill Summary */}
-            <div className="bg-[#1C1C24] p-3.5 rounded-xl border border-[#2B2B38] space-y-2 text-xs">
-              <div className="flex justify-between text-neutral-400">
-                <span>Subtotal:</span>
-                <span className="font-bold text-white">Rs. {checkoutSubtotal.toLocaleString()}</span>
+            <div className="bg-[#1C1C24] p-3.5 rounded-xl border border-[#2B2B38] space-y-2.5 text-xs">
+              <div className="flex justify-between items-center text-neutral-400">
+                <span className="font-medium">Subtotal:</span>
+                <span className="font-bold text-white text-sm">Rs. {checkoutSubtotal.toLocaleString()}</span>
               </div>
 
-              <div className="flex justify-between items-center text-neutral-400">
-                <span>Discount (Rs.):</span>
-                <input
-                  type="number"
-                  min="0"
-                  value={discount}
-                  onChange={(e) => setDiscount(Math.max(0, Number(e.target.value)))}
-                  className="w-24 bg-[#141418] border border-[#2D2D3B] focus:border-[#FF6B00] rounded-lg px-2 py-1 text-right text-xs text-white outline-none font-bold"
-                />
+              {/* Optional Discount Section */}
+              <div className="bg-[#141418] p-2.5 rounded-xl border border-[#2A2A38] space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-neutral-300 font-bold text-[11px]">
+                    <Percent className="w-3.5 h-3.5 text-[#FF6B00]" />
+                    <span>Discount (Optional)</span>
+                  </div>
+                  {Number(discount) > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => handleQuickPercent(0, checkoutSubtotal)}
+                      className="text-[10px] text-red-400 hover:text-red-300 font-bold hover:underline"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+
+                {/* Quick % Preset Buttons */}
+                <div className="grid grid-cols-5 gap-1.5 text-[11px]">
+                  {[0, 5, 10, 15, 20].map((pct) => {
+                    const isSelected =
+                      (pct === 0 && Number(discount) === 0) ||
+                      (pct > 0 && Number(discountPercent) === pct);
+                    return (
+                      <button
+                        key={pct}
+                        type="button"
+                        onClick={() => handleQuickPercent(pct, checkoutSubtotal)}
+                        className={`py-1.5 rounded-lg font-bold transition-all text-center ${
+                          isSelected
+                            ? 'bg-[#FF6B00] text-white shadow-sm shadow-orange-500/30'
+                            : 'bg-[#1F1F28] hover:bg-[#2A2A38] text-neutral-300 border border-[#2D2D3B]'
+                        }`}
+                      >
+                        {pct === 0 ? 'None' : `${pct}%`}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Dual Inputs for Custom % and Rs. */}
+                <div className="grid grid-cols-2 gap-2 pt-0.5">
+                  <div>
+                    <label className="block text-[10px] text-neutral-400 font-medium mb-1">
+                      Discount (%):
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="any"
+                        placeholder="0"
+                        value={discountPercent}
+                        onChange={(e) => handleDiscountPercentChange(e.target.value, checkoutSubtotal)}
+                        className="w-full bg-[#1C1C24] border border-[#2D2D3B] focus:border-[#FF6B00] rounded-lg pl-2 pr-6 py-1.5 text-right text-xs text-white outline-none font-bold"
+                      />
+                      <span className="absolute right-2 top-1.5 text-neutral-400 text-xs font-bold pointer-events-none">
+                        %
+                      </span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] text-neutral-400 font-medium mb-1">
+                      Discount (Rs.):
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      max={checkoutSubtotal}
+                      step="any"
+                      placeholder="0"
+                      value={discount === 0 && discountPercent === '' ? '' : discount}
+                      onChange={(e) => handleDiscountAmountChange(e.target.value, checkoutSubtotal)}
+                      className="w-full bg-[#1C1C24] border border-[#2D2D3B] focus:border-[#FF6B00] rounded-lg px-2.5 py-1.5 text-right text-xs text-white outline-none font-bold"
+                    />
+                  </div>
+                </div>
+
+                {Number(discount) > 0 && (
+                  <div className="flex justify-between items-center text-[11px] text-emerald-400 font-medium pt-1 border-t border-dashed border-[#2A2A38]">
+                    <span>Discount Applied:</span>
+                    <span className="font-bold">
+                      - Rs. {Number(discount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      {discountPercent ? ` (${discountPercent}%)` : ''}
+                    </span>
+                  </div>
+                )}
               </div>
 
               <div className="flex justify-between items-center pt-2 border-t border-neutral-800 text-sm font-black">

@@ -102,6 +102,7 @@ const settleTable = async (req, res) => {
       paymentMethod,
       amountTendered,
       discount = 0,
+      discountPercentage = 0,
       tax = 0,
     } = req.body;
 
@@ -177,7 +178,16 @@ const settleTable = async (req, res) => {
       });
     });
 
-    const finalTotal = Math.max(0, subtotal - Number(discount) + Number(tax));
+    let finalDiscount = Number(discount) || 0;
+    let finalDiscountPercentage = Number(discountPercentage) || 0;
+
+    if (finalDiscountPercentage > 0 && (!finalDiscount || finalDiscount === 0)) {
+      finalDiscount = Math.round(((subtotal * finalDiscountPercentage) / 100) * 100) / 100;
+    } else if (finalDiscount > 0 && finalDiscountPercentage === 0 && subtotal > 0) {
+      finalDiscountPercentage = Math.round(((finalDiscount / subtotal) * 100) * 10) / 10;
+    }
+
+    const finalTotal = Math.max(0, subtotal - finalDiscount + Number(tax));
     const tendered = Number(amountTendered) || finalTotal;
     const change = paymentMethod === 'CASH' ? Math.max(0, tendered - finalTotal) : 0;
 
@@ -193,7 +203,8 @@ const settleTable = async (req, res) => {
       orderNumbers,
       items: itemsSnapshot,
       subtotal,
-      discount: Number(discount),
+      discount: finalDiscount,
+      discountPercentage: finalDiscountPercentage,
       tax: Number(tax),
       total: finalTotal,
       paymentMethod,

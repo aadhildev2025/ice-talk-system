@@ -294,49 +294,79 @@ const PrintModal = () => {
             <div className="border-b border-dashed border-black my-1.5"></div>
 
             {/* Totals Section */}
-            <div className="space-y-0.5 my-1.5 text-[11px]">
-              <div className="flex justify-between items-center text-[13px] font-black">
-                <span>TOTAL:</span>
-                <span>Rs.{formatCurrency(data.total || data.grandTotal)}</span>
-              </div>
+            {(() => {
+              const hasDiscount = Number(data.discount || 0) > 0;
+              const subtotalAmt =
+                Number(data.subtotal || 0) > 0
+                  ? Number(data.subtotal)
+                  : Number(data.total || data.grandTotal || 0) + Number(data.discount || 0);
 
-              {data.discount > 0 && (
-                <div className="flex justify-between items-center text-[11px]">
-                  <span>Discount:</span>
-                  <span>- Rs.{formatCurrency(data.discount)}</span>
-                </div>
-              )}
+              let pctLabel = '';
+              if (Number(data.discountPercentage || 0) > 0) {
+                const p = Number(data.discountPercentage);
+                pctLabel = p % 1 === 0 ? p.toFixed(0) : p.toFixed(1);
+              } else if (hasDiscount && subtotalAmt > 0) {
+                const p = (Number(data.discount) / subtotalAmt) * 100;
+                pctLabel = p % 1 === 0 ? p.toFixed(0) : (Math.round(p * 10) / 10).toFixed(1);
+              }
 
-              <div className="flex justify-between items-center text-[11px]">
-                <span>
-                  {data.paymentMethod === 'CARD'
-                    ? 'Card:'
-                    : data.paymentMethod === 'ONLINE'
-                    ? 'Online:'
-                    : 'Cash:'}
-                </span>
-                <span>
-                  Rs.
-                  {formatCurrency(
-                    data.amountTendered || data.total || data.grandTotal
+              return (
+                <div className="space-y-0.5 my-1.5 text-[11px]">
+                  {hasDiscount && (
+                    <div className="flex justify-between items-center text-[11px]">
+                      <span>Subtotal:</span>
+                      <span>Rs.{formatCurrency(subtotalAmt)}</span>
+                    </div>
                   )}
-                </span>
-              </div>
 
-              <div className="flex justify-between items-center text-[11px]">
-                <span>Paid amount:</span>
-                <span>Rs.{formatCurrency(data.total || data.grandTotal)}</span>
-              </div>
+                  {hasDiscount && (
+                    <div className="flex justify-between items-center text-[11px] font-semibold">
+                      <span>Discount{pctLabel ? ` (${pctLabel}%)` : ''}:</span>
+                      <span>- Rs.{formatCurrency(data.discount)}</span>
+                    </div>
+                  )}
 
-              {Number(data.changeAmount || data.change || 0) > 0 && (
-                <div className="flex justify-between items-center text-[11px] font-bold">
-                  <span>Change:</span>
-                  <span>
-                    Rs.{formatCurrency(data.changeAmount || data.change)}
-                  </span>
+                  <div
+                    className={`flex justify-between items-center text-[13px] font-black ${
+                      hasDiscount ? 'border-t border-dashed border-black pt-1 mt-1' : ''
+                    }`}
+                  >
+                    <span>{hasDiscount ? 'NET TOTAL:' : 'TOTAL:'}</span>
+                    <span>Rs.{formatCurrency(data.total || data.grandTotal)}</span>
+                  </div>
+
+                  <div className="flex justify-between items-center text-[11px] pt-0.5">
+                    <span>
+                      {data.paymentMethod === 'CARD'
+                        ? 'Card:'
+                        : data.paymentMethod === 'ONLINE'
+                        ? 'Online:'
+                        : 'Cash:'}
+                    </span>
+                    <span>
+                      Rs.
+                      {formatCurrency(
+                        data.amountTendered || data.total || data.grandTotal
+                      )}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between items-center text-[11px]">
+                    <span>Paid amount:</span>
+                    <span>Rs.{formatCurrency(data.total || data.grandTotal)}</span>
+                  </div>
+
+                  {Number(data.changeAmount || data.change || 0) > 0 && (
+                    <div className="flex justify-between items-center text-[11px] font-bold">
+                      <span>Change:</span>
+                      <span>
+                        Rs.{formatCurrency(data.changeAmount || data.change)}
+                      </span>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
+              );
+            })()}
 
             {/* Footer */}
             <div className="text-center text-[10px] leading-tight mt-3 pt-1 text-black">

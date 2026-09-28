@@ -57,6 +57,9 @@
       "shortcutName": "Ice Talk POS",
       "artifactName": "Ice-Talk-POS-Setup-${version}.${ext}",
       "runAfterFinish": true
+    },
+    "portable": {
+      "artifactName": "Ice-Talk-POS-Portable-${version}.${ext}"
     }
   },
   "dependencies": {
