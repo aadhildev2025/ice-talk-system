@@ -414,6 +414,21 @@ const AdminPOS = () => {
     try {
       let finalSale = null;
 
+      const currentSubtotal =
+        checkoutTarget === 'CART'
+          ? cartSubtotal
+          : checkoutTarget === 'TABLE'
+          ? (tableOrdersData?.total || 0)
+          : (selectedChannelOrder?.total || 0);
+
+      const pctNum = parseFloat(discountPercent) || 0;
+      let finalDiscount = Number(discount) || 0;
+      if (pctNum > 0 && finalDiscount === 0 && currentSubtotal > 0) {
+        finalDiscount = Math.round(((currentSubtotal * pctNum) / 100) * 100) / 100;
+      }
+      const grandTotal = Math.max(0, currentSubtotal - finalDiscount);
+      const tendered = Number(amountTendered) || grandTotal;
+
       if (checkoutTarget === 'CART') {
         // 1. First create the approved order
         const orderRes = await axios.post('/api/orders', {
@@ -439,50 +454,45 @@ const AdminPOS = () => {
         printPreparationSlip(order, false);
 
         // 2. Immediately settle this order
-        const grandTotal = Math.max(0, cartSubtotal - Number(discount));
-        const tendered = Number(amountTendered) || grandTotal;
-
         const settleRes = await axios.post('/api/pos/settle-orders', {
           orderId: order._id,
           paymentMethod,
           amountTendered: tendered,
-          discount: Number(discount) || 0,
-          discountPercentage: Number(discountPercent) || 0,
+          discount: finalDiscount,
+          discountPercentage: pctNum,
         });
 
         if (settleRes.data.success) {
           finalSale = settleRes.data.sale;
           handleClearCart();
+          if (activeChannel === 'DINE_IN') setChannelView('TABLES');
         }
       } else if (checkoutTarget === 'TABLE') {
         if (!selectedTable || !tableOrdersData) return;
-        const grandTotal = Math.max(0, tableOrdersData.total - Number(discount));
-        const tendered = Number(amountTendered) || grandTotal;
 
         const res = await axios.post('/api/pos/settle-table', {
           tableId: selectedTable._id,
           paymentMethod,
           amountTendered: tendered,
-          discount: Number(discount) || 0,
-          discountPercentage: Number(discountPercent) || 0,
+          discount: finalDiscount,
+          discountPercentage: pctNum,
         });
 
         if (res.data.success) {
           finalSale = res.data.sale;
           setTableOrdersData(null);
           setSelectedTable(null);
+          setChannelView('TABLES');
         }
       } else if (checkoutTarget === 'CHANNEL_ORDER') {
         if (!selectedChannelOrder) return;
-        const grandTotal = Math.max(0, selectedChannelOrder.total - Number(discount));
-        const tendered = Number(amountTendered) || grandTotal;
 
         const res = await axios.post('/api/pos/settle-orders', {
           orderId: selectedChannelOrder._id,
           paymentMethod,
           amountTendered: tendered,
-          discount: Number(discount) || 0,
-          discountPercentage: Number(discountPercent) || 0,
+          discount: finalDiscount,
+          discountPercentage: pctNum,
         });
 
         if (res.data.success) {

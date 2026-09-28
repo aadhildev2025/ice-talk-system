@@ -295,36 +295,48 @@ const PrintModal = () => {
 
             {/* Totals Section */}
             {(() => {
-              const hasDiscount = Number(data.discount || 0) > 0;
+              const itemsSubtotal = (data.items || []).reduce(
+                (sum, it) => sum + (Number(it.price || 0) * Number(it.quantity || 1)),
+                0
+              );
               const subtotalAmt =
                 Number(data.subtotal || 0) > 0
                   ? Number(data.subtotal)
+                  : itemsSubtotal > 0
+                  ? itemsSubtotal
                   : Number(data.total || data.grandTotal || 0) + Number(data.discount || 0);
 
+              let discountAmt = Number(data.discount || data.discountAmount || 0);
+              let pctVal = Number(data.discountPercentage || 0);
+
+              if (pctVal > 0 && discountAmt === 0 && subtotalAmt > 0) {
+                discountAmt = Math.round(((subtotalAmt * pctVal) / 100) * 100) / 100;
+              } else if (discountAmt > 0 && pctVal === 0 && subtotalAmt > 0) {
+                pctVal = Math.round(((discountAmt / subtotalAmt) * 100) * 10) / 10;
+              } else if (discountAmt === 0 && subtotalAmt > Number(data.total || data.grandTotal || 0)) {
+                discountAmt = Math.max(0, subtotalAmt - Number(data.total || data.grandTotal || 0));
+                if (subtotalAmt > 0) {
+                  pctVal = Math.round(((discountAmt / subtotalAmt) * 100) * 10) / 10;
+                }
+              }
+
+              const hasDiscount = discountAmt > 0;
               let pctLabel = '';
-              if (Number(data.discountPercentage || 0) > 0) {
-                const p = Number(data.discountPercentage);
-                pctLabel = p % 1 === 0 ? p.toFixed(0) : p.toFixed(1);
-              } else if (hasDiscount && subtotalAmt > 0) {
-                const p = (Number(data.discount) / subtotalAmt) * 100;
-                pctLabel = p % 1 === 0 ? p.toFixed(0) : (Math.round(p * 10) / 10).toFixed(1);
+              if (pctVal > 0) {
+                pctLabel = pctVal % 1 === 0 ? pctVal.toFixed(0) : pctVal.toFixed(1);
               }
 
               return (
                 <div className="space-y-0.5 my-1.5 text-[11px]">
-                  {hasDiscount && (
-                    <div className="flex justify-between items-center text-[11px]">
-                      <span>Subtotal:</span>
-                      <span>Rs.{formatCurrency(subtotalAmt)}</span>
-                    </div>
-                  )}
+                  <div className="flex justify-between items-center text-[11px]">
+                    <span>Subtotal:</span>
+                    <span>Rs.{formatCurrency(subtotalAmt)}</span>
+                  </div>
 
-                  {hasDiscount && (
-                    <div className="flex justify-between items-center text-[11px] font-semibold">
-                      <span>Discount{pctLabel ? ` (${pctLabel}%)` : ''}:</span>
-                      <span>- Rs.{formatCurrency(data.discount)}</span>
-                    </div>
-                  )}
+                  <div className="flex justify-between items-center text-[11px] font-semibold">
+                    <span>Discount Amount{pctLabel ? ` (${pctLabel}%)` : ''}:</span>
+                    <span>{hasDiscount ? `- Rs.${formatCurrency(discountAmt)}` : 'Rs.0.00'}</span>
+                  </div>
 
                   <div
                     className={`flex justify-between items-center text-[13px] font-black ${
