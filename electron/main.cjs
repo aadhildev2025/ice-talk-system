@@ -7,21 +7,19 @@ const gotTheLock = app.requestSingleInstanceLock();
 if (!gotTheLock) {
   console.log('[App] Another instance is already running. Quitting duplicate.');
   app.quit();
+  process.exit(0);
 }
 
 let mainWindow = null;
 
 function startBackendServerIfNeeded() {
   try {
-    const possiblePaths = [
+    const serverPaths = [
       path.join(__dirname, '../server/src/server.js'),
       path.join(app.getAppPath(), 'server/src/server.js'),
-      path.join(process.resourcesPath, 'app/server/src/server.js'),
-      path.join(process.resourcesPath, 'app.asar.unpacked/server/src/server.js'),
-      path.join(process.resourcesPath, 'server/src/server.js'),
     ];
 
-    for (const p of possiblePaths) {
+    for (const p of serverPaths) {
       if (fs.existsSync(p)) {
         console.log('[Backend] Initializing server script from:', p);
         require(p);
@@ -29,9 +27,8 @@ function startBackendServerIfNeeded() {
         return;
       }
     }
-    console.warn('[Backend] Server script not found at standard paths; assuming external service or dev server.');
   } catch (err) {
-    console.log('[Backend] Server notice / initialization info:', err.message);
+    console.log('[Backend] Server initialization notice:', err.message);
   }
 }
 
@@ -66,7 +63,10 @@ function createWindow() {
     }
   });
 
-  const distHtml = path.join(__dirname, '../client/dist/index.html');
+  const distHtml = [
+    path.join(app.getAppPath(), 'client/dist/index.html'),
+    path.join(__dirname, '../client/dist/index.html'),
+  ].find((p) => fs.existsSync(p));
   const targetUrl = process.env.ELECTRON_START_URL || 'http://localhost:5000';
 
   let attempts = 0;
@@ -80,7 +80,7 @@ function createWindow() {
       if (attempts < maxAttempts) {
         console.log(`[App] Connecting to ${targetUrl}, retrying (${attempts}/${maxAttempts})...`);
         setTimeout(loadWithRetry, 1000);
-      } else if (fs.existsSync(distHtml)) {
+      } else if (distHtml) {
         console.log('[App] Loading local production build fallback:', distHtml);
         mainWindow.loadFile(distHtml);
       } else {
