@@ -12,7 +12,6 @@ import {
   CheckCircle,
   Play,
   HelpCircle,
-  DollarSign,
 } from 'lucide-react';
 
 const PrinterSettingsModal = () => {
@@ -35,19 +34,8 @@ const PrinterSettingsModal = () => {
     updateStationPrinter,
     toggleMultiPrinterMode,
     testPrintStation,
-    cashDrawerEnabled,
-    toggleCashDrawer,
-    kickCashDrawer,
     isElectron,
   } = usePrinter();
-
-  const [drawerTesting, setDrawerTesting] = React.useState(false);
-
-  const handleTestDrawer = async () => {
-    setDrawerTesting(true);
-    await kickCashDrawer();
-    setTimeout(() => setDrawerTesting(false), 1200);
-  };
 
   if (!settingsOpen) return null;
 
@@ -312,61 +300,6 @@ const PrinterSettingsModal = () => {
                   }`}
                 />
               </button>
-            </div>
-          </div>
-
-          {/* Cash Drawer Control */}
-          <div className="bg-[#181820] p-4 rounded-xl border border-[#2B2B38] space-y-3">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-              <div className="flex items-center gap-2.5">
-                <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                  <DollarSign className="w-4 h-4" />
-                </div>
-                <div>
-                  <p className="font-bold text-white text-xs">Cash Drawer Control (RJ11 Kick)</p>
-                  <p className="text-[11px] text-neutral-400">
-                    Pulse drawer to open ONLY on Customer Bill (stays closed during KOT)
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-                {isElectron && (
-                  <button
-                    onClick={handleTestDrawer}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1C1C24] hover:bg-[#252532] text-neutral-300 hover:text-white border border-[#2B2B38] font-bold text-[11px] transition-all"
-                    title="Send test pulse to cash drawer"
-                  >
-                    {drawerTesting ? <CheckCircle className="w-3.5 h-3.5 text-emerald-400" /> : <Play className="w-3 h-3 text-orange-400 fill-orange-400" />}
-                    <span>{drawerTesting ? 'Kicked!' : 'Test Drawer'}</span>
-                  </button>
-                )}
-                <button
-                  onClick={toggleCashDrawer}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    cashDrawerEnabled ? 'bg-emerald-500' : 'bg-neutral-700'
-                  }`}
-                  title="Toggle automatic cash drawer kick on billing"
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      cashDrawerEnabled ? 'translate-x-6' : 'translate-x-1'
-                    }`}
-                  />
-                </button>
-              </div>
-            </div>
-
-            {/* Crucial Instructions Banner for Windows Driver */}
-            <div className="p-3 rounded-lg bg-[#141418] border border-[#24242E] text-[11px] text-neutral-400 space-y-1">
-              <p className="font-bold text-neutral-200 flex items-center gap-1.5">
-                <span className="text-orange-400 font-bold">Important:</span> How to stop drawer from opening on KOT:
-              </p>
-              <p className="leading-relaxed">
-                In Windows <strong>Settings &rarr; Bluetooth &amp; devices &rarr; Printers &amp; scanners &rarr; Your Printer &rarr; Printer properties &rarr; Device Settings</strong> (or Document Options), change <strong>Cash Drawer</strong> to <strong>"Do Not Open"</strong> (or None).
-              </p>
-              <p className="text-neutral-500 text-[10px] leading-relaxed">
-                Once disabled in the Windows driver, Ice Talk POS will automatically take over and pulse the drawer open <strong>ONLY</strong> when printing customer tax invoices!
-              </p>
             </div>
           </div>
         </div>

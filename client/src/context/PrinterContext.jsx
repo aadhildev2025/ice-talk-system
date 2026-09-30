@@ -16,7 +16,6 @@ export const PrinterProvider = ({ children }) => {
   const [juicePrinter, setJuicePrinter] = useState(() => localStorage.getItem('icetalk_juice_printer') || '');
   const [bunPrinter, setBunPrinter] = useState(() => localStorage.getItem('icetalk_bun_printer') || '');
   const [multiPrinterMode, setMultiPrinterMode] = useState(() => localStorage.getItem('icetalk_multiprinter_mode') === 'true');
-  const [cashDrawerEnabled, setCashDrawerEnabled] = useState(() => localStorage.getItem('icetalk_cash_drawer_enabled') !== 'false');
 
   const [settingsOpen, setSettingsOpen] = useState(false);
 
@@ -76,26 +75,6 @@ export const PrinterProvider = ({ children }) => {
     const next = !autoPrintEnabled;
     setAutoPrintEnabled(next);
     localStorage.setItem('icetalk_autoprint', String(next));
-  };
-
-  const toggleCashDrawer = () => {
-    const next = !cashDrawerEnabled;
-    setCashDrawerEnabled(next);
-    localStorage.setItem('icetalk_cash_drawer_enabled', String(next));
-  };
-
-  const kickCashDrawer = async (targetPrinterName = null) => {
-    if (isElectron && window.electronAPI?.openCashDrawer) {
-      try {
-        const printerToUse = targetPrinterName || billPrinter || selectedPrinter;
-        const res = await window.electronAPI.openCashDrawer(printerToUse);
-        return res;
-      } catch (err) {
-        console.error('[Printer] Cash drawer kick failed:', err);
-        return { success: false, error: err.message };
-      }
-    }
-    return { success: false, error: 'Desktop POS app required' };
   };
 
   // Direct silent thermal print to a specified target printer
@@ -202,11 +181,6 @@ export const PrinterProvider = ({ children }) => {
       data: sale,
     });
 
-    // Automatically pulse the cash drawer ONLY when printing a Customer Bill
-    if (cashDrawerEnabled) {
-      kickCashDrawer(targetPrinter);
-    }
-
     if (!isAutoTrigger || autoPrintEnabled) {
       setTimeout(() => {
         executeSilentPrintTo(targetPrinter);
@@ -265,9 +239,6 @@ export const PrinterProvider = ({ children }) => {
         multiPrinterMode,
         updateStationPrinter,
         toggleMultiPrinterMode,
-        cashDrawerEnabled,
-        toggleCashDrawer,
-        kickCashDrawer,
         settingsOpen,
         openSettings: () => setSettingsOpen(true),
         closeSettings: () => setSettingsOpen(false),
