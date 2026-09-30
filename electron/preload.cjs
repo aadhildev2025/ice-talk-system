@@ -5,4 +5,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getPrinters: () => ipcRenderer.invoke('printer:get-list'),
   printSilent: (options) => ipcRenderer.invoke('printer:print-silent', options),
   printHtml: (html, options) => ipcRenderer.invoke('printer:print-html', { html, options }),
+  openCashDrawer: (printerName) => ipcRenderer.invoke('printer:open-cash-drawer', { printerName }),
 });

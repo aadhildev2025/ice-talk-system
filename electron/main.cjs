@@ -1,6 +1,7 @@
 const { app, BrowserWindow, ipcMain, Menu } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const { execFile } = require('child_process');
 
 // Ensure single instance of Ice Talk POS
 const gotTheLock = app.requestSingleInstanceLock();
@@ -314,6 +315,38 @@ ipcMain.handle('printer:print-silent', async (event, options = {}) => {
       });
     } catch (err) {
       console.error('Silent print error:', err);
+      resolve({ success: false, error: err.message });
+    }
+  });
+});
+
+// IPC: Direct Cash Drawer Kick Pulse (Pin 2 + Pin 5 + DLE DC4)
+ipcMain.handle('printer:open-cash-drawer', async (event, { printerName } = {}) => {
+  return new Promise((resolve) => {
+    try {
+      const psPaths = [
+        path.join(__dirname, 'kickDrawer.ps1'),
+        path.join(app.getAppPath(), 'electron/kickDrawer.ps1'),
+        path.join(process.resourcesPath || '', 'app/electron/kickDrawer.ps1'),
+      ];
+      const scriptPath = psPaths.find((p) => fs.existsSync(p)) || psPaths[0];
+
+      const args = ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', scriptPath];
+      if (printerName && printerName.trim()) {
+        args.push('-PrinterName', printerName.trim());
+      }
+
+      execFile('powershell.exe', args, { windowsHide: true }, (error, stdout, stderr) => {
+        if (error) {
+          console.error('[Cash Drawer] Kick error:', stderr || error.message);
+          resolve({ success: false, error: stderr || error.message });
+        } else {
+          console.log('[Cash Drawer] Kick pulse sent:', stdout.trim());
+          resolve({ success: true, message: stdout.trim() });
+        }
+      });
+    } catch (err) {
+      console.error('[Cash Drawer] Invocation error:', err);
       resolve({ success: false, error: err.message });
     }
   });

@@ -337,6 +337,18 @@
     <li>Click <strong>Print Test Page</strong> to confirm Windows can print cleanly.</li>
   </ol>
 
+  <h3><span class="step-num">4</span> Cash Drawer Configuration (Open ONLY on Customer Bills)</h3>
+  <p>If your cash drawer is plugged into the printer's RJ11 / DK port:</p>
+  <ol>
+    <li>In <strong>Printer properties</strong>, go to the <strong>Device Settings</strong> tab (or <em>Printing Preferences &rarr; Document Options</em>).</li>
+    <li>Locate the <strong>Cash Drawer</strong> setting and set it to <span class="code-pill">Do Not Open</span> or <span class="code-pill">None</span>.</li>
+    <li>Click <strong>OK</strong> to save.</li>
+  </ol>
+  <div class="tip-box">
+    <strong>Why this is important:</strong> By setting the Windows driver to "Do Not Open", the printer will not kick the drawer open on food tickets (KOT). 
+    <strong>Ice Talk POS</strong> software will automatically send the drawer kick pulse <strong>only</strong> when the cashier prints the final Customer Receipt!
+  </div>
+
   <!-- SECTION 4 -->
   <h2>4. Configuring Printers in Ice Talk POS Software</h2>
 

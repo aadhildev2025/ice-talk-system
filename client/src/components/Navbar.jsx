@@ -2,13 +2,13 @@ import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 import { usePrinter } from '../context/PrinterContext';
-import { LogOut, Wifi, WifiOff, User as UserIcon, Printer } from 'lucide-react';
+import { LogOut, Wifi, WifiOff, User as UserIcon, Printer, DollarSign } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
   const { isConnected } = useSocket();
-  const { isElectron, autoPrintEnabled, openSettings, multiPrinterMode } = usePrinter();
+  const { isElectron, autoPrintEnabled, openSettings, multiPrinterMode, kickCashDrawer, cashDrawerEnabled } = usePrinter();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -53,17 +53,30 @@ const Navbar = () => {
       <div className="flex items-center gap-2 sm:gap-3 shrink-0">
         {/* Native Hardware Printer Status & Settings (Admin / Desktop Mode) */}
         {(user?.role === 'admin' || user?.role === 'superadmin') && isElectron && (
-          <button
-            onClick={openSettings}
-            className="flex items-center gap-1.5 bg-[#1C1C24] hover:bg-[#252532] text-neutral-300 hover:text-white px-3 py-1 rounded-xl border border-[#2B2B38] text-xs font-bold transition-all shadow-sm"
-            title="Configure Station Printers & KOT Routing (Kitchen, Juice Bar, Buns, Cashier)"
-          >
-            <Printer className={`w-3.5 h-3.5 ${autoPrintEnabled ? 'text-emerald-400' : 'text-neutral-500'}`} />
-            <span className="hidden sm:inline">Printers</span>
-            {multiPrinterMode && (
-              <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse"></span>
+          <>
+            <button
+              onClick={openSettings}
+              className="flex items-center gap-1.5 bg-[#1C1C24] hover:bg-[#252532] text-neutral-300 hover:text-white px-3 py-1 rounded-xl border border-[#2B2B38] text-xs font-bold transition-all shadow-sm"
+              title="Configure Station Printers & KOT Routing (Kitchen, Juice Bar, Buns, Cashier)"
+            >
+              <Printer className={`w-3.5 h-3.5 ${autoPrintEnabled ? 'text-emerald-400' : 'text-neutral-500'}`} />
+              <span className="hidden sm:inline">Printers</span>
+              {multiPrinterMode && (
+                <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse"></span>
+              )}
+            </button>
+
+            {cashDrawerEnabled && (
+              <button
+                onClick={() => kickCashDrawer()}
+                className="flex items-center gap-1.5 bg-[#1C1C24] hover:bg-[#252532] text-neutral-300 hover:text-white px-2.5 py-1 rounded-xl border border-[#2B2B38] text-xs font-bold transition-all shadow-sm"
+                title="Open Cash Drawer (RJ11 Kick)"
+              >
+                <DollarSign className="w-3.5 h-3.5 text-emerald-400" />
+                <span className="hidden lg:inline">Drawer</span>
+              </button>
             )}
-          </button>
+          </>
         )}
 
         {/* Live status indicator */}
