@@ -228,11 +228,11 @@ const PrintModal = () => {
           /* ========================================================= */
           <div className="text-black font-mono leading-snug">
             {/* Top Billing Logo */}
-            <div className="text-center mb-1">
+            <div className="text-center mb-1.5">
               <img
                 src={billingLogo}
                 alt="Ice Talk Logo"
-                className="mx-auto h-20 w-auto object-contain block"
+                className="mx-auto h-28 max-w-[220px] w-auto object-contain block"
               />
             </div>
 

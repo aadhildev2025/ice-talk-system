@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ice Talk POS - KOT & Customer Receipt Preview</title>
+  <style>
+    /* ========================================================= */
+    /*                   GLOBAL & UI STYLING                     */
+    /* ========================================================= */
+    :root {
+      --primary: #ff6b00;
+      --primary-hover: #e05e00;
+      --dark-bg: #0f172a;
+      --panel-bg: #1e293b;
+      --border-color: #334155;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: var(--dark-bg);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top Navigation Banner */
+    header {
+      background: #090d16;
+      border-bottom: 1px solid var(--border-color);
+      padding: 14px 24px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo-badge {
+      width: 40px;
+      height: 40px;
+      background: #ff6b00;
+      color: #fff;
+      font-weight: 900;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(255, 107, 0, 0.35);
+    }
+
+    .brand-title {
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+      color: #fff;
+    }
+
+    .brand-subtitle {
+      font-size: 11px;
+      color: var(--primary);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+      border: 1px solid transparent;
+      outline: none;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+    .btn-primary:hover {
+      background: var(--primary-hover);
+      box-shadow: 0 4px 12px rgba(255, 107, 0, 0.4);
+    }
+
+    .btn-secondary {
+      background: var(--panel-bg);
+      color: var(--text-main);
+      border-color: var(--border-color);
+    }
+    .btn-secondary:hover {
+      background: #273549;
+    }
+
+    .btn-active {
+      background: #3b82f6 !important;
+      color: #fff !important;
+      border-color: #2563eb !important;
+    }
+
+    /* Sub-Controls Bar */
+    .controls-bar {
+      background: #131b2e;
+      border-bottom: 1px solid var(--border-color);
+      padding: 10px 24px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .control-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+    }
+
+    .control-label {
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    select, input {
+      background: var(--panel-bg);
+      border: 1px solid var(--border-color);
+      color: #fff;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 13px;
+      outline: none;
+    }
+
+    select:focus, input:focus {
+      border-color: var(--primary);
+    }
+
+    /* Main Showcase Canvas */
+    main {
+      flex: 1;
+      padding: 30px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: radial-gradient(circle at 50% 20%, #1e293b 0%, #0f172a 75%);
+    }
+
+    .preview-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 32px;
+      max-width: 1400px;
+      width: 100%;
+    }
+
+    .receipt-column {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .receipt-column-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .station-badge {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      color: #fff;
+    }
+    .badge-bill { background: #059669; }
+    .badge-master { background: #6366f1; }
+    .badge-kitchen { background: #dc2626; }
+    .badge-juice { background: #0284c7; }
+    .badge-bun { background: #d97706; }
+
+    /* ========================================================= */
+    /*             THERMAL PAPER RECEIPT SIMULATION              */
+    /* ========================================================= */
+    .thermal-paper {
+      background: #ffffff;
+      color: #000000;
+      font-family: "Courier New", Courier, monospace, monospace;
+      font-size: 11px;
+      line-height: 1.25;
+      padding: 12px 10px 18px 10px;
+      position: relative;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45), 0 1px 3px rgba(0, 0, 0, 0.2);
+      border-radius: 2px;
+      user-select: text;
+      transition: width 0.2s ease;
+    }
+
+    /* Perforated / Serrated Paper Cutter effect */
+    .thermal-paper::before,
+    .thermal-paper::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 6px;
+      background: radial-gradient(circle, transparent, transparent 50%, #ffffff 50%, #ffffff 100%);
+      background-size: 8px 8px;
+    }
+    .thermal-paper::before {
+      top: -6px;
+      background-position: 0 0;
+    }
+    .thermal-paper::after {
+      bottom: -6px;
+      transform: rotate(180deg);
+      background-position: 0 0;
+    }
+
+    /* Paper Widths (Matches Ice Talk POS Settings) */
+    .paper-80mm {
+      width: 285px; /* Standard 78mm / 80mm roll representation */
+    }
+    .paper-58mm {
+      width: 216px; /* Compact 58mm roll representation */
+      font-size: 10px;
+    }
+
+    /* Text & Divider utilities */
+    .dashed-line {
+      border-bottom: 1px dashed #000000;
+      margin: 6px 0;
+      width: 100%;
+    }
+
+    .solid-line {
+      border-bottom: 1px solid #000000;
+      margin: 6px 0;
+      width: 100%;
+    }
+
+    .double-line {
+      border-bottom: 3px double #000000;
+      margin: 6px 0;
+      width: 100%;
+    }
+
+    .t-center { text-align: center; }
+    .t-left { text-align: left; }
+    .t-right { text-align: right; }
+    .t-bold { font-weight: bold; }
+    .t-bolder { font-weight: 800; }
+    .t-black { font-weight: 900; }
+    .t-italic { font-style: italic; }
+    .t-uppercase { text-transform: uppercase; }
+
+    .flex-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 4px;
+    }
+
+    .flex-row-center {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Section Header Badges in Master KOT */
+    .section-pill-tag {
+      background: #000000;
+      color: #ffffff;
+      padding: 2px 5px;
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 0.5px;
+      display: inline-block;
+      text-transform: uppercase;
+      border-radius: 2px;
+      margin-top: 4px;
+      margin-bottom: 4px;
+    }
+
+    /* Category border tag */
+    .cat-border-tag {
+      font-size: 9px;
+      font-weight: 900;
+      text-transform: uppercase;
+      padding: 1px 3px;
+      border: 1px solid #000000;
+      border-radius: 3px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    /* Specific print instructions */
+    .special-note {
+      font-size: 10px;
+      padding-left: 10px;
+      font-style: italic;
+      color: #222;
+    }
+
+    /* Footer info */
+    .footer-section {
+      margin-top: 40px;
+      max-width: 900px;
+      width: 100%;
+      background: var(--panel-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 20px;
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    .footer-section h3 {
+      color: #fff;
+      margin-bottom: 8px;
+      font-size: 15px;
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+      margin-top: 12px;
+    }
+
+    .footer-card {
+      background: rgba(0,0,0,0.25);
+      padding: 12px;
+      border-radius: 6px;
+      border-left: 3px solid var(--primary);
+    }
+
+    .footer-card strong {
+      color: #fff;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    /* ========================================================= */
+    /*                   PRINT MEDIA RULES                       */
+    /* ========================================================= */
+    @media print {
+      body {
+        background: #ffffff !important;
+        color: #000000 !important;
+      }
+      header, .controls-bar, .receipt-column-title, .footer-section, .no-print {
+        display: none !important;
+      }
+      main {
+        background: transparent !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+      .preview-container {
+        display: block !important;
+        gap: 0 !important;
+      }
+      .receipt-column {
+        page-break-after: always;
+        display: block !important;
+        margin: 0 auto !important;
+      }
+      .thermal-paper {
+        box-shadow: none !important;
+        border: none !important;
+        margin: 0 auto !important;
+        padding: 4px 0 !important;
+      }
+      .thermal-paper::before,
+      .thermal-paper::after {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ========================================================= -->
+  <!--                      NAVBAR HEADER                        -->
+  <!-- ========================================================= -->
+  <header class="no-print">
+    <div class="brand">
+      <div class="brand-logo-badge">IT</div>
+      <div>
+        <div class="brand-title">ICE TALK POS &bull; THERMAL PRINT PREVIEW</div>
+        <div class="brand-subtitle">Official KOT (Kitchen Order Ticket) &amp; Customer Final Bill Simulation</div>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <button class="btn btn-secondary" onclick="window.print()">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2m-4-1h4v4H6v-4h4z"/></svg>
+        Print / Test Thermal Output
+      </button>
+      <button class="btn btn-primary" onclick="switchMode('all')">
+        Side-by-Side View
+      </button>
+    </div>
+  </header>
+
+  <!-- ========================================================= -->
+  <!--                      CONTROLS BAR                         -->
+  <!-- ========================================================= -->
+  <div class="controls-bar no-print">
+    <div class="control-group">
+      <span class="control-label">View Mode:</span>
+      <select id="modeSelect" onchange="switchMode(this.value)">
+        <option value="all">Side-by-Side (Bill + Master KOT + Station KOTs)</option>
+        <option value="bill">1. Customer Final Bill / Receipt</option>
+        <option value="master">2. Master KOT (Single Printer - All Departments)</option>
+        <option value="stations">3. Station KOTs (Kitchen, Juice, Buns Split)</option>
+      </select>
+    </div>
+
+    <div class="control-group">
+      <span class="control-label">Paper Roll Width:</span>
+      <select id="widthSelect" onchange="switchPaperWidth(this.value)">
+        <option value="paper-80mm">78mm / 80mm Standard Roll (285px) - Default</option>
+        <option value="paper-58mm">58mm Compact Roll (216px)</option>
+      </select>
+    </div>
+
+    <div class="control-group">
+      <span class="control-label">Sample Order:</span>
+      <select id="sampleOrderSelect" onchange="loadSampleOrder(this.value)">
+        <option value="mixed">Order #1: Mixed Dine-In (Rice + Kottu + Juice + Falooda + Buns)</option>
+        <option value="juice_dessert">Order #2: Juice &amp; Dessert Bar Only</option>
+        <option value="kitchen_rush">Order #3: Hot Kitchen Meal Rush Only</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!--                   MAIN RECEIPT CANVAS                     -->
+  <!-- ========================================================= -->
+  <main>
+    <div class="preview-container" id="previewContainer">
+
+      <!-- ===================================================== -->
+      <!--            COLUMN 1: CUSTOMER FINAL BILL              -->
+      <!-- ===================================================== -->
+      <div class="receipt-column" id="col-bill">
+        <div class="receipt-column-title">
+          <span class="station-badge badge-bill">CASHIER</span>
+          Customer Tax Invoice / Bill
+        </div>
+
+        <div class="thermal-paper paper-80mm" id="receipt-bill">
+          <!-- Top Restaurant Logo -->
+          <div class="t-center" style="margin-bottom: 6px;">
+            <img 
+              src="client/public/billings.png" 
+              alt="Ice Talk Logo" 
+              id="bill-logo-img"
+              style="height: 95px; width: auto; max-width: 220px; object-fit: contain; display: block; margin: 0 auto;"
+              onerror="if (!this.triedFallback) { this.triedFallback = true; this.src='client/public/logo.png'; } else { this.style.display='none'; document.getElementById('logo-fallback').style.display='block'; }"
+            />
+            <div id="logo-fallback" style="display: none; padding: 6px 0;">
+              <div style="display: inline-block; border: 2px solid #000; padding: 4px 14px; font-weight: 900; font-size: 18px; letter-spacing: 2px;">ICE TALK</div>
+              <div style="font-size: 11px; letter-spacing: 1.5px; font-weight: bold; margin-top: 2px;">FAMILY RESTAURANT</div>
+            </div>
+          </div>
+
+          <!-- Restaurant Title & Address -->
+          <div class="t-center t-bolder t-uppercase" style="font-size: 13px; letter-spacing: 0.5px; line-height: 1.15;">
+            <div>ICE TALK FAMILY</div>
+            <div>RESTAURANT</div>
+          </div>
+          <div class="t-center" style="font-size: 10px; margin-top: 3px; margin-bottom: 6px; line-height: 1.25;">
+            <div>No. 08, KACHCHERI ROAD, PUTTALAM</div>
+            <div>61300 PUTTALAM</div>
+            <div class="t-bold">0777313285</div>
+          </div>
+
+          <!-- Receipt Metadata -->
+          <div class="t-left" style="font-size: 11px; line-height: 1.35; margin: 6px 0;">
+            <div>Receipt No.: <span id="bill-receipt-no">26-200-049324</span></div>
+            <div id="bill-datetime">9/22/2026 10:18:45 AM</div>
+            <div>User: <span id="bill-user" class="t-uppercase">SHAHL</span></div>
+            <div>Order No.: <span id="bill-table" class="t-uppercase">TABLE 04</span></div>
+          </div>
+
+          <!-- Dashed Divider -->
+          <div class="dashed-line"></div>
+
+          <!-- Line Items List -->
+          <div id="bill-items-list" style="margin: 6px 0;">
+            <!-- Dynamically populated -->
+          </div>
+
+          <!-- Items Count -->
+          <div style="font-size: 11px; margin: 4px 0;">
+            Items count: <span id="bill-items-count">6</span>
+          </div>
+
+          <!-- Dashed Divider -->
+          <div class="dashed-line"></div>
+
+          <!-- Financial Totals -->
+          <div style="font-size: 11px; line-height: 1.4; margin: 4px 0;">
+            <div class="flex-row-center">
+              <span>Subtotal:</span>
+              <span id="bill-subtotal">Rs.4,150.00</span>
+            </div>
+
+            <div class="flex-row-center t-bold" id="bill-discount-row">
+              <span id="bill-discount-label">Discount Amount (10%):</span>
+              <span id="bill-discount-val">- Rs.415.00</span>
+            </div>
+
+            <div class="flex-row-center t-black" style="font-size: 13px; border-top: 1px dashed #000; padding-top: 4px; margin-top: 4px;">
+              <span id="bill-total-label">NET TOTAL:</span>
+              <span id="bill-net-total">Rs.3,735.00</span>
+            </div>
+
+            <div class="flex-row-center" style="padding-top: 3px;">
+              <span id="bill-pay-method">Cash:</span>
+              <span id="bill-tendered">Rs.5,000.00</span>
+            </div>
+
+            <div class="flex-row-center">
+              <span>Paid amount:</span>
+              <span id="bill-paid">Rs.3,735.00</span>
+            </div>
+
+            <div class="flex-row-center t-bold" id="bill-change-row">
+              <span>Change:</span>
+              <span id="bill-change">Rs.1,265.00</span>
+            </div>
+          </div>
+
+          <!-- Footer Feedback Note -->
+          <div class="t-center" style="font-size: 10px; line-height: 1.3; margin-top: 14px;">
+            <div>We'd love to hear your feedback.</div>
+            <div>Thanks for dinning with us!</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================================================== -->
+      <!--        COLUMN 2: MASTER KOT (SINGLE PRINTER)          -->
+      <!-- ===================================================== -->
+      <div class="receipt-column" id="col-master">
+        <div class="receipt-column-title">
+          <span class="station-badge badge-master">SINGLE PRINTER</span>
+          Master KOT (Combined Ticket)
+        </div>
+
+        <div class="thermal-paper paper-80mm" id="receipt-master">
+          <!-- KOT Header -->
+          <div class="t-black t-left" style="font-size: 15px; letter-spacing: 0.5px; margin-bottom: 4px;">
+            KOT - MASTER (ALL)
+          </div>
+
+          <!-- KOT Meta Details -->
+          <div style="font-size: 11px; line-height: 1.35; margin-bottom: 6px;">
+            <div>User: <span id="master-user" class="t-uppercase">WAITER 1</span></div>
+            <div>Table: <span id="master-table" class="t-uppercase">TABLE 04</span></div>
+            <div>Round: <span id="master-round">1</span></div>
+            <div>Time: <span id="master-time">9/22/2026 10:15 AM</span></div>
+          </div>
+
+          <!-- Dashed Divider -->
+          <div class="dashed-line"></div>
+
+          <!-- Master Grouped Sections -->
+          <div id="master-sections-container">
+            <!-- Dynamically populated with Rice, Juice, Buns sections -->
+          </div>
+
+          <!-- Dashed Divider -->
+          <div class="dashed-line"></div>
+
+          <!-- Bottom KOT Tag -->
+          <div class="t-black" style="font-size: 13px; letter-spacing: 1px; margin-top: 2px;">
+            KOT
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================================================== -->
+      <!--      COLUMN 3: KITCHEN STATION KOT (HOT MEALS)        -->
+      <!-- ===================================================== -->
+      <div class="receipt-column" id="col-kitchen">
+        <div class="receipt-column-title">
+          <span class="station-badge badge-kitchen">HOT KITCHEN</span>
+          Station 1: POS-Kitchen Printer
+        </div>
+
+        <div class="thermal-paper paper-80mm" id="receipt-kitchen">
+          <!-- Top KOT Header -->
+          <div class="t-black t-left" style="font-size: 15px; letter-spacing: 0.5px; margin-bottom: 4px;">
+            KOT - RICE &amp; KITCHEN
+          </div>
+
+          <!-- Meta -->
+          <div style="font-size: 11px; line-height: 1.35; margin-bottom: 6px;">
+            <div>User: <span class="station-user t-uppercase">WAITER 1</span></div>
+            <div>Table: <span class="station-table t-uppercase">TABLE 04</span></div>
+            <div>Round: 1</div>
+            <div>Time: <span class="station-time">9/22/2026 10:15 AM</span></div>
+          </div>
+
+          <div class="dashed-line"></div>
+
+          <!-- Items -->
+          <div id="kitchen-items-container" style="margin: 6px 0;">
+            <!-- Only Kitchen items -->
+          </div>
+
+          <div class="dashed-line"></div>
+          <div class="t-black" style="font-size: 13px; margin-top: 2px;">KOT</div>
+        </div>
+      </div>
+
+      <!-- ===================================================== -->
+      <!--      COLUMN 4: JUICE BAR STATION KOT (BEVERAGES)      -->
+      <!-- ===================================================== -->
+      <div class="receipt-column" id="col-juice">
+        <div class="receipt-column-title">
+          <span class="station-badge badge-juice">JUICE BAR</span>
+          Station 2: POS-Juice Printer
+        </div>
+
+        <div class="thermal-paper paper-80mm" id="receipt-juice">
+          <!-- Top KOT Header -->
+          <div class="t-black t-left" style="font-size: 15px; letter-spacing: 0.5px; margin-bottom: 4px;">
+            KOT - JUICE &amp; DESSERTS
+          </div>
+
+          <!-- Meta -->
+          <div style="font-size: 11px; line-height: 1.35; margin-bottom: 6px;">
+            <div>User: <span class="station-user t-uppercase">WAITER 1</span></div>
+            <div>Table: <span class="station-table t-uppercase">TABLE 04</span></div>
+            <div>Round: 1</div>
+            <div>Time: <span class="station-time">9/22/2026 10:15 AM</span></div>
+          </div>
+
+          <div class="dashed-line"></div>
+
+          <!-- Items -->
+          <div id="juice-items-container" style="margin: 6px 0;">
+            <!-- Only Juice items -->
+          </div>
+
+          <div class="dashed-line"></div>
+          <div class="t-black" style="font-size: 13px; margin-top: 2px;">KOT</div>
+        </div>
+      </div>
+
+      <!-- ===================================================== -->
+      <!--      COLUMN 5: BUN COUNTER STATION KOT (BAKERY)       -->
+      <!-- ===================================================== -->
+      <div class="receipt-column" id="col-bun">
+        <div class="receipt-column-title">
+          <span class="station-badge badge-bun">BUN COUNTER</span>
+          Station 3: POS-Buns Printer
+        </div>
+
+        <div class="thermal-paper paper-80mm" id="receipt-bun">
+          <!-- Top KOT Header -->
+          <div class="t-black t-left" style="font-size: 15px; letter-spacing: 0.5px; margin-bottom: 4px;">
+            KOT - BUNS &amp; SHORT EATS
+          </div>
+
+          <!-- Meta -->
+          <div style="font-size: 11px; line-height: 1.35; margin-bottom: 6px;">
+            <div>User: <span class="station-user t-uppercase">WAITER 1</span></div>
+            <div>Table: <span class="station-table t-uppercase">TABLE 04</span></div>
+            <div>Round: 1</div>
+            <div>Time: <span class="station-time">9/22/2026 10:15 AM</span></div>
+          </div>
+
+          <div class="dashed-line"></div>
+
+          <!-- Items -->
+          <div id="bun-items-container" style="margin: 6px 0;">
+            <!-- Only Bun items -->
+          </div>
+
+          <div class="dashed-line"></div>
+          <div class="t-black" style="font-size: 13px; margin-top: 2px;">KOT</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ===================================================== -->
+    <!--            OPERATIONAL EXPLANATION & SPECS            -->
+    <!-- ===================================================== -->
+    <div class="footer-section no-print">
+      <h3>Key System Architecture &amp; Printing Features</h3>
+      <p>
+        The Ice Talk POS printing system uses an off-screen continuous thermal printer renderer configured for 80mm/78mm (285px) and 58mm (216px) ESC/POS paper rolls. 
+      </p>
+
+      <div class="footer-grid">
+        <div class="footer-card">
+          <strong>1. Customer Receipt (Bill)</strong>
+          Printed at the cashier desk upon settlement. Features the Ice Talk emblem, complete Puttalam contact details, cashier name, itemized pricing, calculated subtotal, automatic discount breakdown, payment method (Cash/Card/Online), tendered cash, and exact change calculation.
+        </div>
+
+        <div class="footer-card">
+          <strong>2. Single Printer Mode (Master KOT)</strong>
+          When only 1 thermal printer is connected at the restaurant, the system automatically groups line items under distinct inverted black section headers: <code>[RICE &amp; KITCHEN]</code>, <code>[JUICE &amp; DESSERTS]</code>, and <code>[BUNS &amp; SHORT EATS]</code>.
+        </div>
+
+        <div class="footer-card">
+          <strong>3. Multi-Station Split Routing</strong>
+          When station printers are enabled in the POS settings, a mixed order (e.g. Rice + Juice + Bun) is automatically split and routed simultaneously to the respective printers in under 1 second without disturbing the other stations.
+        </div>
+
+        <div class="footer-card">
+          <strong>4. Special Kitchen Instructions</strong>
+          Any customization added by the waiter (e.g. <em>"Extra spicy"</em> or <em>"Less sugar"</em>) prints in italics with an asterisk directly beneath the respective item on both the KOT and the bill.
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ========================================================= -->
+  <!--               DATA & INTERACTIVE LOGIC JAVASCRIPT         -->
+  <!-- ========================================================= -->
+  <script>
+    // Sample Orders Data Definition
+    const sampleOrders = {
+      mixed: {
+        receiptNo: "26-200-049324",
+        dateTime: "9/22/2026 10:18:45 AM",
+        kotTime: "9/22/2026 10:15 AM",
+        user: "SHAHL",
+        waiter: "WAITER 1",
+        table: "TABLE 04",
+        round: 1,
+        paymentMethod: "Cash:",
+        tendered: 5000,
+        discountPct: 10,
+        items: [
+          {
+            name: "SPECIAL MIXED FRIED RICE",
+            category: "Rice",
+            department: "KITCHEN",
+            quantity: 2,
+            price: 1150.00,
+            specialInstructions: "Extra chili paste"
+          },
+          {
+            name: "CHEESE CHICKEN KOTTU",
+            category: "Kottu",
+            department: "KITCHEN",
+            quantity: 1,
+            price: 950.00,
+            specialInstructions: "Spicy gravy on side"
+          },
+          {
+            name: "FRESH MANGO JUICE",
+            category: "Juice",
+            department: "JUICE",
+            quantity: 1,
+            price: 350.00,
+            specialInstructions: "Less sugar & no ice"
+          },
+          {
+            name: "ROYAL ICE TALK FALOODA",
+            category: "Dessert",
+            department: "JUICE",
+            quantity: 1,
+            price: 450.00,
+            specialInstructions: "Extra vanilla ice cream"
+          },
+          {
+            name: "SPICY FISH BUN",
+            category: "Buns",
+            department: "BUN",
+            quantity: 1,
+            price: 100.00,
+            specialInstructions: ""
+          }
+        ]
+      },
+
+      juice_dessert: {
+        receiptNo: "26-200-049325",
+        dateTime: "9/22/2026 11:30:12 AM",
+        kotTime: "9/22/2026 11:28 AM",
+        user: "CASHIER 2",
+        waiter: "WAITER 3",
+        table: "TAKEAWAY (MR. RIFAI)",
+        round: 1,
+        paymentMethod: "Card:",
+        tendered: 2200,
+        discountPct: 0,
+        items: [
+          {
+            name: "AVOCADO MILKSHAKE",
+            category: "Shake",
+            department: "JUICE",
+            quantity: 2,
+            price: 480.00,
+            specialInstructions: "With pure bee honey"
+          },
+          {
+            name: "ROYAL ICE TALK FALOODA",
+            category: "Dessert",
+            department: "JUICE",
+            quantity: 1,
+            price: 450.00,
+            specialInstructions: ""
+          },
+          {
+            name: "SIZZLING CHOCOLATE BROWNIE",
+            category: "Dessert",
+            department: "JUICE",
+            quantity: 1,
+            price: 790.00,
+            specialInstructions: "Serve hot with chocolate sauce"
+          }
+        ]
+      },
+
+      kitchen_rush: {
+        receiptNo: "26-200-049326",
+        dateTime: "9/22/2026 01:15:20 PM",
+        kotTime: "9/22/2026 01:12 PM",
+        user: "ADMIN",
+        waiter: "WAITER 2",
+        table: "TABLE 12",
+        round: 1,
+        paymentMethod: "Cash:",
+        tendered: 4000,
+        discountPct: 5,
+        items: [
+          {
+            name: "DUM CHICKEN BIRYANI",
+            category: "Rice",
+            department: "KITCHEN",
+            quantity: 2,
+            price: 1200.00,
+            specialInstructions: "With extra mint sambol"
+          },
+          {
+            name: "CRISPY CHICKEN BURGER",
+            category: "Burger",
+            department: "KITCHEN",
+            quantity: 1,
+            price: 850.00,
+            specialInstructions: "Double cheese slice"
+          },
+          {
+            name: "HOT DEVILLED CHICKEN (M)",
+            category: "Mains",
+            department: "KITCHEN",
+            quantity: 1,
+            price: 950.00,
+            specialInstructions: "Very spicy"
+          }
+        ]
+      }
+    };
+
+    // Format currency helper
+    function fmt(val) {
+      return Number(val || 0).toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    }
+
+    // Render receipt and KOT
+    function renderOrder(order) {
+      // 1. BILL METADATA
+      document.getElementById('bill-receipt-no').textContent = order.receiptNo;
+      document.getElementById('bill-datetime').textContent = order.dateTime;
+      document.getElementById('bill-user').textContent = order.user;
+      document.getElementById('bill-table').textContent = order.table;
+
+      // 2. BILL LINE ITEMS
+      let totalQty = 0;
+      let subtotal = 0;
+      let billItemsHtml = '';
+
+      order.items.forEach(it => {
+        const itemTotal = it.price * it.quantity;
+        totalQty += it.quantity;
+        subtotal += itemTotal;
+
+        billItemsHtml += `
+          <div style="margin-bottom: 6px;">
+            <div class="t-bold t-uppercase" style="line-height: 1.2;">${it.name}</div>
+            ${it.specialInstructions ? `<div class="special-note">* ${it.specialInstructions}</div>` : ''}
+            <div class="flex-row-center" style="margin-top: 1px;">
+              <span>${it.quantity} x Rs.${fmt(it.price)}</span>
+              <span class="t-bold">Rs.${fmt(itemTotal)}</span>
+            </div>
+          </div>
+        `;
+      });
+
+      document.getElementById('bill-items-list').innerHTML = billItemsHtml;
+      document.getElementById('bill-items-count').textContent = totalQty;
+      document.getElementById('bill-subtotal').textContent = 'Rs.' + fmt(subtotal);
+
+      // Financial discount calculation
+      let discountAmt = (subtotal * order.discountPct) / 100;
+      let netTotal = subtotal - discountAmt;
+      let change = Math.max(0, order.tendered - netTotal);
+
+      if (discountAmt > 0) {
+        document.getElementById('bill-discount-row').style.display = 'flex';
+        document.getElementById('bill-discount-label').textContent = `Discount Amount (${order.discountPct}%):`;
+        document.getElementById('bill-discount-val').textContent = `- Rs.${fmt(discountAmt)}`;
+        document.getElementById('bill-total-label').textContent = 'NET TOTAL:';
+      } else {
+        document.getElementById('bill-discount-row').style.display = 'none';
+        document.getElementById('bill-total-label').textContent = 'TOTAL:';
+      }
+
+      document.getElementById('bill-net-total').textContent = 'Rs.' + fmt(netTotal);
+      document.getElementById('bill-pay-method').textContent = order.paymentMethod;
+      document.getElementById('bill-tendered').textContent = 'Rs.' + fmt(order.tendered);
+      document.getElementById('bill-paid').textContent = 'Rs.' + fmt(netTotal);
+
+      if (change > 0 && order.paymentMethod === 'Cash:') {
+        document.getElementById('bill-change-row').style.display = 'flex';
+        document.getElementById('bill-change').textContent = 'Rs.' + fmt(change);
+      } else {
+        document.getElementById('bill-change-row').style.display = 'none';
+      }
+
+      // 3. MASTER KOT
+      document.getElementById('master-user').textContent = order.waiter;
+      document.getElementById('master-table').textContent = order.table;
+      document.getElementById('master-round').textContent = order.round;
+      document.getElementById('master-time').textContent = order.kotTime;
+
+      // Group by Section
+      const sections = {
+        KITCHEN: { title: "RICE & KITCHEN", items: [] },
+        JUICE: { title: "JUICE & DESSERTS", items: [] },
+        BUN: { title: "BUNS & SHORT EATS", items: [] }
+      };
+
+      order.items.forEach(it => {
+        if (sections[it.department]) {
+          sections[it.department].items.push(it);
+        } else {
+          sections.KITCHEN.items.push(it);
+        }
+      });
+
+      let masterHtml = '';
+      Object.keys(sections).forEach(secKey => {
+        const sec = sections[secKey];
+        if (sec.items.length > 0) {
+          masterHtml += `
+            <div style="margin: 6px 0;">
+              <div class="section-pill-tag">${sec.title}</div>
+              <div style="padding-left: 2px;">
+          `;
+
+          sec.items.forEach(it => {
+            masterHtml += `
+              <div style="font-size: 12px; font-weight: bold; margin-bottom: 4px;">
+                <div class="flex-row">
+                  <span>${it.quantity} x ${it.name}</span>
+                  <span class="cat-border-tag">[${(it.category || secKey).toUpperCase()}]</span>
+                </div>
+                ${it.specialInstructions ? `<div class="special-note">* ${it.specialInstructions}</div>` : ''}
+              </div>
+            `;
+          });
+
+          masterHtml += `</div></div>`;
+        }
+      });
+
+      document.getElementById('master-sections-container').innerHTML = masterHtml;
+
+      // 4. STATION KOTS (Split Multi-Printer Mode)
+      document.querySelectorAll('.station-user').forEach(el => el.textContent = order.waiter);
+      document.querySelectorAll('.station-table').forEach(el => el.textContent = order.table);
+      document.querySelectorAll('.station-time').forEach(el => el.textContent = order.kotTime);
+
+      renderStationSlip('kitchen-items-container', sections.KITCHEN.items, 'col-kitchen');
+      renderStationSlip('juice-items-container', sections.JUICE.items, 'col-juice');
+      renderStationSlip('bun-items-container', sections.BUN.items, 'col-bun');
+    }
+
+    function renderStationSlip(containerId, items, colId) {
+      const container = document.getElementById(containerId);
+      const colEl = document.getElementById(colId);
+
+      if (!items || items.length === 0) {
+        container.innerHTML = '<div style="font-style: italic; color: #888; font-size: 10px; padding: 4px 0;">No items for this station in this order. (Printer stays silent)</div>';
+        colEl.style.opacity = '0.45';
+        return;
+      }
+
+      colEl.style.opacity = '1';
+      let html = '';
+      items.forEach(it => {
+        html += `
+          <div style="font-size: 12px; font-weight: bold; margin-bottom: 5px;">
+            <div class="flex-row">
+              <span>${it.quantity} x ${it.name}</span>
+              <span class="cat-border-tag">[${(it.category || '').toUpperCase()}]</span>
+            </div>
+            ${it.specialInstructions ? `<div class="special-note">* ${it.specialInstructions}</div>` : ''}
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    // Interactive View Mode Switcher
+    function switchMode(mode) {
+      const cols = {
+        bill: document.getElementById('col-bill'),
+        master: document.getElementById('col-master'),
+        kitchen: document.getElementById('col-kitchen'),
+        juice: document.getElementById('col-juice'),
+        bun: document.getElementById('col-bun')
+      };
+
+      document.getElementById('modeSelect').value = mode;
+
+      if (mode === 'all') {
+        Object.values(cols).forEach(el => el.style.display = 'flex');
+      } else if (mode === 'bill') {
+        Object.values(cols).forEach(el => el.style.display = 'none');
+        cols.bill.style.display = 'flex';
+      } else if (mode === 'master') {
+        Object.values(cols).forEach(el => el.style.display = 'none');
+        cols.master.style.display = 'flex';
+      } else if (mode === 'stations') {
+        Object.values(cols).forEach(el => el.style.display = 'none');
+        cols.kitchen.style.display = 'flex';
+        cols.juice.style.display = 'flex';
+        cols.bun.style.display = 'flex';
+      }
+    }
+
+    // Interactive Paper Width Switcher
+    function switchPaperWidth(widthClass) {
+      document.querySelectorAll('.thermal-paper').forEach(el => {
+        el.classList.remove('paper-80mm', 'paper-58mm');
+        el.classList.add(widthClass);
+      });
+    }
+
+    // Interactive Sample Order Loader
+    function loadSampleOrder(orderKey) {
+      const order = sampleOrders[orderKey] || sampleOrders.mixed;
+      renderOrder(order);
+    }
+
+    // Initialize on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      loadSampleOrder('mixed');
+    });
+  </script>
+</body>
+</html>
