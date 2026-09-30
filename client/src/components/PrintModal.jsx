@@ -46,12 +46,9 @@ const PrintModal = () => {
   // Filter items if specific station department requested for KOT
   let kotItems = data.items || [];
   if (isPrepSlip && department && department !== 'ALL') {
-    const filtered = kotItems.filter(
+    kotItems = kotItems.filter(
       (it) => detectKOTSection(it.category, it.department) === department.toUpperCase()
     );
-    if (filtered.length > 0) {
-      kotItems = filtered;
-    }
   }
 
   // Calculate items count for final bill

@@ -18,7 +18,9 @@ import {
   Wallet,
   Menu,
   X,
+  Printer,
 } from 'lucide-react';
+import { usePrinter } from '../../context/PrinterContext';
 
 const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -27,6 +29,7 @@ const AdminLayout = () => {
   const [readyCount, setReadyCount] = useState(0);
   const { socket } = useSocket();
   const location = useLocation();
+  const { openSettings, multiPrinterMode } = usePrinter();
 
   const fetchBadgeCounts = async () => {
     try {
@@ -170,6 +173,30 @@ const AdminLayout = () => {
                 );
               })}
             </nav>
+
+            {/* Station Printers Setting Trigger */}
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={openSettings}
+                className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold text-neutral-300 hover:text-white hover:bg-[#1C1C24] border border-[#2B2B38] transition-all group"
+                title="Configure Station Printers & KOT Routing"
+              >
+                <div className="flex items-center gap-2.5">
+                  <Printer className="w-4 h-4 text-orange-400 group-hover:scale-110 transition-transform" />
+                  <span>Printers &amp; KOT Setup</span>
+                </div>
+                {multiPrinterMode ? (
+                  <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-orange-500/20 text-orange-400 border border-orange-500/30">
+                    Split ON
+                  </span>
+                ) : (
+                  <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-neutral-800 text-neutral-400 border border-neutral-700">
+                    Single
+                  </span>
+                )}
+              </button>
+            </div>
           </div>
 
           {/* Restaurant footer watermark */}

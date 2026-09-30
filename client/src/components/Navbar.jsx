@@ -51,8 +51,8 @@ const Navbar = () => {
 
       {/* Center Controls: Live Status */}
       <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-        {/* Native Hardware Printer Status & Settings (Admin / Desktop Mode) */}
-        {(user?.role === 'admin' || user?.role === 'superadmin') && isElectron && (
+        {/* Native Hardware Printer Status & Settings (Admin / Super Admin) */}
+        {(user?.role === 'admin' || user?.role === 'superadmin') && (
           <button
             onClick={openSettings}
             className="flex items-center gap-1.5 bg-[#1C1C24] hover:bg-[#252532] text-neutral-300 hover:text-white px-3 py-1 rounded-xl border border-[#2B2B38] text-xs font-bold transition-all shadow-sm"
