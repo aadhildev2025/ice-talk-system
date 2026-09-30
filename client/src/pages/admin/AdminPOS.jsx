@@ -1380,15 +1380,19 @@ const AdminPOS = () => {
         </div>
       )}
 
-      {/* CHECKOUT & FAST SETTLEMENT MODAL (With Touchscreen Numpad) */}
+      {/* CHECKOUT & FAST SETTLEMENT MODAL (Responsive & Fits in Screen) */}
       {showCheckoutModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-[#17171C] border border-[#2B2B38] rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
+          <div
+            className={`bg-[#17171C] border border-[#2B2B38] rounded-2xl w-full p-4 sm:p-5 shadow-2xl overflow-y-auto max-h-[95vh] transition-all ${
+              paymentMethod === 'CASH' && isTouchMode ? 'max-w-2xl lg:max-w-3xl' : 'max-w-lg'
+            }`}
+          >
             {/* Modal Header */}
-            <div className="flex justify-between items-center pb-3 border-b border-[#2B2B38]">
+            <div className="flex justify-between items-center pb-2.5 border-b border-[#2B2B38] mb-3">
               <div className="flex items-center gap-2">
                 <CreditCard className="w-5 h-5 text-[#FF6B00]" />
-                <h3 className="font-bold text-lg text-white">Complete POS Sale & Print</h3>
+                <h3 className="font-bold text-base sm:text-lg text-white">Complete POS Sale & Print</h3>
               </div>
               <button
                 type="button"
@@ -1399,259 +1403,313 @@ const AdminPOS = () => {
               </button>
             </div>
 
-            {/* Bill Summary */}
-            <div className="bg-[#1C1C24] p-3.5 rounded-xl border border-[#2B2B38] space-y-2.5 text-xs">
-              <div className="flex justify-between items-center text-neutral-400">
-                <span className="font-medium">Subtotal:</span>
-                <span className="font-bold text-white text-sm">Rs. {checkoutSubtotal.toLocaleString()}</span>
-              </div>
-
-              {/* Optional Discount Section */}
-              <div className="bg-[#141418] p-2.5 rounded-xl border border-[#2A2A38] space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 text-neutral-300 font-bold text-[11px]">
-                    <Percent className="w-3.5 h-3.5 text-[#FF6B00]" />
-                    <span>Discount (Optional)</span>
+            {/* Main Content Grid: 2 Columns on desktop when Cash + Touch Numpad, 1 Column otherwise */}
+            <div
+              className={`grid gap-3 sm:gap-4 ${
+                paymentMethod === 'CASH' && isTouchMode ? 'grid-cols-1 md:grid-cols-2 items-start' : 'grid-cols-1'
+              }`}
+            >
+              {/* LEFT COLUMN: Bill Summary, Discount, Net Total, Payment Method */}
+              <div className="space-y-3">
+                {/* Bill Summary */}
+                <div className="bg-[#1C1C24] p-3 rounded-xl border border-[#2B2B38] space-y-2 text-xs">
+                  <div className="flex justify-between items-center text-neutral-400">
+                    <span className="font-medium">Subtotal:</span>
+                    <span className="font-bold text-white text-sm">Rs. {checkoutSubtotal.toLocaleString()}</span>
                   </div>
-                  {Number(discount) > 0 && (
+
+                  {/* Optional Discount Section */}
+                  <div className="bg-[#141418] p-2 rounded-xl border border-[#2A2A38] space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 text-neutral-300 font-bold text-[11px]">
+                        <Percent className="w-3.5 h-3.5 text-[#FF6B00]" />
+                        <span>Discount (Optional)</span>
+                      </div>
+                      {Number(discount) > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => handleQuickPercent(0, checkoutSubtotal)}
+                          className="text-[10px] text-red-400 hover:text-red-300 font-bold hover:underline"
+                        >
+                          Clear
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Quick % Preset Buttons */}
+                    <div className="grid grid-cols-5 gap-1 text-[11px]">
+                      {[0, 5, 10, 15, 20].map((pct) => {
+                        const isSelected =
+                          (pct === 0 && Number(discount) === 0) ||
+                          (pct > 0 && Number(discountPercent) === pct);
+                        return (
+                          <button
+                            key={pct}
+                            type="button"
+                            onClick={() => handleQuickPercent(pct, checkoutSubtotal)}
+                            className={`py-1 rounded-lg font-bold transition-all text-center ${
+                              isSelected
+                                ? 'bg-[#FF6B00] text-white shadow-sm shadow-orange-500/30'
+                                : 'bg-[#1F1F28] hover:bg-[#2A2A38] text-neutral-300 border border-[#2D2D3B]'
+                            }`}
+                          >
+                            {pct === 0 ? 'None' : `${pct}%`}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Single Input for Custom % */}
+                    <div className="flex items-center justify-between gap-2 pt-0.5">
+                      <label className="text-[10px] text-neutral-400 font-medium whitespace-nowrap">
+                        Discount (%):
+                      </label>
+                      <div className="relative flex-1 max-w-[130px]">
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="any"
+                          placeholder="e.g. 10"
+                          value={discountPercent}
+                          onWheel={(e) => e.target.blur()}
+                          onChange={(e) => handleDiscountPercentChange(e.target.value, checkoutSubtotal)}
+                          className="w-full bg-[#1C1C24] border border-[#2D2D3B] focus:border-[#FF6B00] rounded-lg pl-2 pr-6 py-1 text-right text-xs text-white outline-none font-bold"
+                        />
+                        <span className="absolute right-2.5 top-1 text-neutral-400 text-xs font-bold pointer-events-none">
+                          %
+                        </span>
+                      </div>
+                    </div>
+
+                    {Number(discount) > 0 && (
+                      <div className="flex justify-between items-center text-[11px] text-emerald-400 font-medium pt-1 border-t border-dashed border-[#2A2A38]">
+                        <span>Discount Applied:</span>
+                        <span className="font-bold">
+                          - Rs. {Number(discount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          {discountPercent ? ` (${discountPercent}%)` : ''}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex justify-between items-center pt-1.5 border-t border-neutral-800 text-sm font-black">
+                    <span className="text-neutral-300 text-xs sm:text-sm">NET GRAND TOTAL:</span>
+                    <span className="text-xl sm:text-2xl text-[#FF6B00] font-display">
+                      Rs. {checkoutGrandTotal.toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Payment Method Selection */}
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-neutral-400 mb-1.5">
+                    Payment Method
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
                     <button
                       type="button"
-                      onClick={() => handleQuickPercent(0, checkoutSubtotal)}
-                      className="text-[10px] text-red-400 hover:text-red-300 font-bold hover:underline"
+                      onClick={() => setPaymentMethod('CASH')}
+                      className={`py-2 px-2 rounded-xl border font-bold text-xs flex items-center justify-center gap-1.5 transition-all ${
+                        paymentMethod === 'CASH'
+                          ? 'bg-emerald-500 text-white border-emerald-400 shadow-md shadow-emerald-500/20'
+                          : 'bg-[#1C1C24] border-[#2A2A38] text-neutral-400 hover:text-white'
+                      }`}
                     >
-                      Clear
+                      <Banknote className="w-4 h-4" />
+                      CASH
                     </button>
-                  )}
-                </div>
 
-                {/* Quick % Preset Buttons */}
-                <div className="grid grid-cols-5 gap-1.5 text-[11px]">
-                  {[0, 5, 10, 15, 20].map((pct) => {
-                    const isSelected =
-                      (pct === 0 && Number(discount) === 0) ||
-                      (pct > 0 && Number(discountPercent) === pct);
-                    return (
-                      <button
-                        key={pct}
-                        type="button"
-                        onClick={() => handleQuickPercent(pct, checkoutSubtotal)}
-                        className={`py-1.5 rounded-lg font-bold transition-all text-center ${
-                          isSelected
-                            ? 'bg-[#FF6B00] text-white shadow-sm shadow-orange-500/30'
-                            : 'bg-[#1F1F28] hover:bg-[#2A2A38] text-neutral-300 border border-[#2D2D3B]'
-                        }`}
-                      >
-                        {pct === 0 ? 'None' : `${pct}%`}
-                      </button>
-                    );
-                  })}
-                </div>
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod('CARD')}
+                      className={`py-2 px-2 rounded-xl border font-bold text-xs flex items-center justify-center gap-1.5 transition-all ${
+                        paymentMethod === 'CARD'
+                          ? 'bg-blue-600 text-white border-blue-400 shadow-md shadow-blue-500/20'
+                          : 'bg-[#1C1C24] border-[#2A2A38] text-neutral-400 hover:text-white'
+                      }`}
+                    >
+                      <CreditCard className="w-4 h-4" />
+                      CARD
+                    </button>
 
-                {/* Single Input for Custom % */}
-                <div className="pt-0.5">
-                  <label className="block text-[10px] text-neutral-400 font-medium mb-1">
-                    Discount (%):
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
-                      step="any"
-                      placeholder="Enter % discount (e.g. 10)"
-                      value={discountPercent}
-                      onWheel={(e) => e.target.blur()}
-                      onChange={(e) => handleDiscountPercentChange(e.target.value, checkoutSubtotal)}
-                      className="w-full bg-[#1C1C24] border border-[#2D2D3B] focus:border-[#FF6B00] rounded-lg pl-3 pr-8 py-2 text-right text-xs text-white outline-none font-bold"
-                    />
-                    <span className="absolute right-3 top-2 text-neutral-400 text-xs font-bold pointer-events-none">
-                      %
-                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod('ONLINE')}
+                      className={`py-2 px-2 rounded-xl border font-bold text-xs flex items-center justify-center gap-1.5 transition-all ${
+                        paymentMethod === 'ONLINE'
+                          ? 'bg-purple-600 text-white border-purple-400 shadow-md shadow-purple-500/20'
+                          : 'bg-[#1C1C24] border-[#2A2A38] text-neutral-400 hover:text-white'
+                      }`}
+                    >
+                      <Globe className="w-4 h-4" />
+                      ONLINE
+                    </button>
                   </div>
                 </div>
 
-                {Number(discount) > 0 && (
-                  <div className="flex justify-between items-center text-[11px] text-emerald-400 font-medium pt-1 border-t border-dashed border-[#2A2A38]">
-                    <span>Discount Applied:</span>
-                    <span className="font-bold">
-                      - Rs. {Number(discount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      {discountPercent ? ` (${discountPercent}%)` : ''}
-                    </span>
+                {/* If CASH but NOT touch numpad: show Tendered/Balance + chips here */}
+                {paymentMethod === 'CASH' && !isTouchMode && (
+                  <div className="space-y-2">
+                    <div className="grid grid-cols-2 gap-2 bg-[#1C1C24] p-2.5 rounded-xl border border-[#2B2B38] text-xs">
+                      <div>
+                        <label className="block text-[10px] font-bold text-neutral-400 uppercase mb-1">
+                          Amount Tendered (Rs.)
+                        </label>
+                        <input
+                          type="number"
+                          autoFocus
+                          value={amountTendered}
+                          onWheel={(e) => e.target.blur()}
+                          onFocus={(e) => e.target.select()}
+                          onChange={(e) => setAmountTendered(e.target.value)}
+                          placeholder={`e.g. ${checkoutGrandTotal}`}
+                          className="w-full bg-[#141418] border border-[#2E2E3E] focus:border-[#FF6B00] rounded-lg px-2.5 py-1 text-sm font-bold text-white outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-bold text-neutral-400 uppercase mb-1">
+                          Balance (Rs.)
+                        </label>
+                        <input
+                          type="text"
+                          readOnly
+                          value={
+                            !isTenderedEntered
+                              ? `Rs. 0`
+                              : checkoutBalance >= 0
+                              ? `Rs. ${checkoutBalance.toLocaleString()}`
+                              : `- Rs. ${Math.abs(checkoutBalance).toLocaleString()} (Due)`
+                          }
+                          className={`w-full bg-[#141418] border rounded-lg px-2.5 py-1 text-sm font-black outline-none cursor-default ${
+                            !isTenderedEntered || checkoutBalance >= 0
+                              ? 'border-[#2E2E3E] text-emerald-400'
+                              : 'border-red-500/50 text-red-400'
+                          }`}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Quick Cash Chips */}
+                    <div className="flex flex-wrap items-center gap-1.5 text-xs font-bold">
+                      <button
+                        type="button"
+                        onClick={() => setAmountTendered(String(checkoutGrandTotal))}
+                        className="py-1 px-2.5 bg-[#262634] hover:bg-[#343444] rounded-lg text-emerald-400 font-bold border border-[#2E2E3E] transition-all text-[11px]"
+                      >
+                        Exact (Rs. {checkoutGrandTotal.toLocaleString()})
+                      </button>
+                      {[1000, 2000, 5000].map((amt) => (
+                        <button
+                          key={amt}
+                          type="button"
+                          onClick={() => setAmountTendered(String(amt))}
+                          className="py-1 px-2.5 bg-[#262634] hover:bg-[#343444] rounded-lg text-white border border-[#2E2E3E] transition-all text-[11px]"
+                        >
+                          Rs. {amt.toLocaleString()}
+                        </button>
+                      ))}
+                      {amountTendered !== '' && (
+                        <button
+                          type="button"
+                          onClick={() => setAmountTendered('')}
+                          className="py-1 px-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg border border-red-500/30 transition-all text-[11px]"
+                        >
+                          Clear
+                        </button>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
 
-              <div className="flex justify-between items-center pt-2 border-t border-neutral-800 text-sm font-black">
-                <span className="text-neutral-300">NET GRAND TOTAL:</span>
-                <span className="text-2xl text-[#FF6B00] font-display">
-                  Rs. {checkoutGrandTotal.toLocaleString()}
-                </span>
-              </div>
-            </div>
+              {/* RIGHT COLUMN (when CASH and isTouchMode): Tendered/Balance + Touch Numpad */}
+              {paymentMethod === 'CASH' && isTouchMode && (
+                <div className="space-y-2.5">
+                  {/* Tendered & Balance inputs */}
+                  <div className="grid grid-cols-2 gap-2 bg-[#1C1C24] p-2.5 rounded-xl border border-[#2B2B38] text-xs">
+                    <div>
+                      <label className="block text-[10px] font-bold text-neutral-400 uppercase mb-1">
+                        Amount Tendered (Rs.)
+                      </label>
+                      <input
+                        type="number"
+                        autoFocus
+                        value={amountTendered}
+                        onWheel={(e) => e.target.blur()}
+                        onFocus={(e) => e.target.select()}
+                        onChange={(e) => setAmountTendered(e.target.value)}
+                        placeholder={`e.g. ${checkoutGrandTotal}`}
+                        className="w-full bg-[#141418] border border-[#2E2E3E] focus:border-[#FF6B00] rounded-lg px-2.5 py-1 text-sm font-bold text-white outline-none"
+                      />
+                    </div>
 
-            {/* Payment Method Selection */}
-            <div>
-              <label className="block text-[11px] font-bold uppercase tracking-wider text-neutral-400 mb-2">
-                Payment Method
-              </label>
-              <div className="grid grid-cols-3 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setPaymentMethod('CASH')}
-                  className={`p-3 rounded-xl border font-bold text-xs flex items-center justify-center gap-1.5 transition-all ${
-                    paymentMethod === 'CASH'
-                      ? 'bg-emerald-500 text-white border-emerald-400 shadow-md shadow-emerald-500/20'
-                      : 'bg-[#1C1C24] border-[#2A2A38] text-neutral-400 hover:text-white'
-                  }`}
-                >
-                  <Banknote className="w-4 h-4" />
-                  CASH
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setPaymentMethod('CARD')}
-                  className={`p-3 rounded-xl border font-bold text-xs flex items-center justify-center gap-1.5 transition-all ${
-                    paymentMethod === 'CARD'
-                      ? 'bg-blue-600 text-white border-blue-400 shadow-md shadow-blue-500/20'
-                      : 'bg-[#1C1C24] border-[#2A2A38] text-neutral-400 hover:text-white'
-                  }`}
-                >
-                  <CreditCard className="w-4 h-4" />
-                  CARD
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setPaymentMethod('ONLINE')}
-                  className={`p-3 rounded-xl border font-bold text-xs flex items-center justify-center gap-1.5 transition-all ${
-                    paymentMethod === 'ONLINE'
-                      ? 'bg-purple-600 text-white border-purple-400 shadow-md shadow-purple-500/20'
-                      : 'bg-[#1C1C24] border-[#2A2A38] text-neutral-400 hover:text-white'
-                  }`}
-                >
-                  <Globe className="w-4 h-4" />
-                  ONLINE
-                </button>
-              </div>
-            </div>
-
-            {/* Cash Tendered & Balance Calc */}
-            {paymentMethod === 'CASH' && (
-              <div className="space-y-2.5">
-                <div className="grid grid-cols-2 gap-3 bg-[#1C1C24] p-3 rounded-xl border border-[#2B2B38] text-xs">
-                  <div>
-                    <label className="block text-[10px] font-bold text-neutral-400 uppercase mb-1">
-                      Amount Tendered (Rs.)
-                    </label>
-                    <input
-                      type="number"
-                      autoFocus
-                      value={amountTendered}
-                      onWheel={(e) => e.target.blur()}
-                      onFocus={(e) => e.target.select()}
-                      onChange={(e) => setAmountTendered(e.target.value)}
-                      placeholder={`e.g. ${checkoutGrandTotal}`}
-                      className="w-full bg-[#141418] border border-[#2E2E3E] focus:border-[#FF6B00] rounded-lg px-2.5 py-1.5 text-sm font-bold text-white outline-none"
-                    />
+                    <div>
+                      <label className="block text-[10px] font-bold text-neutral-400 uppercase mb-1">
+                        Balance (Rs.)
+                      </label>
+                      <input
+                        type="text"
+                        readOnly
+                        value={
+                          !isTenderedEntered
+                            ? `Rs. 0`
+                            : checkoutBalance >= 0
+                            ? `Rs. ${checkoutBalance.toLocaleString()}`
+                            : `- Rs. ${Math.abs(checkoutBalance).toLocaleString()} (Due)`
+                        }
+                        className={`w-full bg-[#141418] border rounded-lg px-2.5 py-1 text-sm font-black outline-none cursor-default ${
+                          !isTenderedEntered || checkoutBalance >= 0
+                            ? 'border-[#2E2E3E] text-emerald-400'
+                            : 'border-red-500/50 text-red-400'
+                        }`}
+                      />
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="block text-[10px] font-bold text-neutral-400 uppercase mb-1">
-                      Balance (Rs.)
-                    </label>
-                    <input
-                      type="text"
-                      readOnly
-                      value={
-                        !isTenderedEntered
-                          ? `Rs. 0`
-                          : checkoutBalance >= 0
-                          ? `Rs. ${checkoutBalance.toLocaleString()}`
-                          : `- Rs. ${Math.abs(checkoutBalance).toLocaleString()} (Due)`
-                      }
-                      className={`w-full bg-[#141418] border rounded-lg px-2.5 py-1.5 text-sm font-black outline-none cursor-default ${
-                        !isTenderedEntered || checkoutBalance >= 0
-                          ? 'border-[#2E2E3E] text-emerald-400'
-                          : 'border-red-500/50 text-red-400'
-                      }`}
-                    />
-                  </div>
-                </div>
-
-                {/* Quick Cash Chips */}
-                <div className="flex flex-wrap items-center gap-1.5 text-xs font-bold">
-                  <button
-                    type="button"
-                    onClick={() => setAmountTendered(String(checkoutGrandTotal))}
-                    className="py-1 px-2.5 bg-[#262634] hover:bg-[#343444] rounded-lg text-emerald-400 font-bold border border-[#2E2E3E] transition-all text-[11px]"
-                  >
-                    Exact (Rs. {checkoutGrandTotal.toLocaleString()})
-                  </button>
-                  {[1000, 2000, 5000].map((amt) => (
-                    <button
-                      key={amt}
-                      type="button"
-                      onClick={() => setAmountTendered(String(amt))}
-                      className="py-1 px-2.5 bg-[#262634] hover:bg-[#343444] rounded-lg text-white border border-[#2E2E3E] transition-all text-[11px]"
-                    >
-                      Rs. {amt.toLocaleString()}
-                    </button>
-                  ))}
-                  {amountTendered !== '' && (
-                    <button
-                      type="button"
-                      onClick={() => setAmountTendered('')}
-                      className="py-1 px-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg border border-red-500/30 transition-all text-[11px]"
-                    >
-                      Clear
-                    </button>
-                  )}
-                </div>
-
-                {/* Touchscreen Numpad */}
-                {isTouchMode && (
-                  <div className="bg-[#141418] p-2.5 rounded-xl border border-[#2B2B38] space-y-2">
+                  {/* Touchscreen Numpad */}
+                  <div className="bg-[#141418] p-2 rounded-xl border border-[#2B2B38] space-y-1.5">
                     {/* Quick Cash Buttons */}
-                    <div className="grid grid-cols-4 gap-1.5 text-xs font-bold">
+                    <div className="grid grid-cols-4 gap-1 text-xs font-bold">
                       <button
                         type="button"
                         onClick={() => handleNumpadPress('EXACT')}
-                        className="py-2 bg-[#262634] hover:bg-[#343444] rounded-lg text-emerald-400 font-black"
+                        className="py-1.5 bg-[#262634] hover:bg-[#343444] rounded-lg text-emerald-400 font-black text-xs"
                       >
                         Exact
                       </button>
                       <button
                         type="button"
                         onClick={() => handleNumpadPress(500)}
-                        className="py-2 bg-[#262634] hover:bg-[#343444] rounded-lg text-white"
+                        className="py-1.5 bg-[#262634] hover:bg-[#343444] rounded-lg text-white text-xs"
                       >
                         +500
                       </button>
                       <button
                         type="button"
                         onClick={() => handleNumpadPress(1000)}
-                        className="py-2 bg-[#262634] hover:bg-[#343444] rounded-lg text-white"
+                        className="py-1.5 bg-[#262634] hover:bg-[#343444] rounded-lg text-white text-xs"
                       >
                         +1000
                       </button>
                       <button
                         type="button"
                         onClick={() => handleNumpadPress(5000)}
-                        className="py-2 bg-[#262634] hover:bg-[#343444] rounded-lg text-white"
+                        className="py-1.5 bg-[#262634] hover:bg-[#343444] rounded-lg text-white text-xs"
                       >
                         +5000
                       </button>
                     </div>
 
                     {/* Numeric Grid */}
-                    <div className="grid grid-cols-3 gap-1.5 text-sm font-bold text-white">
+                    <div className="grid grid-cols-3 gap-1 text-sm font-bold text-white">
                       {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
                         <button
                           key={num}
                           type="button"
                           onClick={() => handleNumpadPress(num)}
-                          className="py-2.5 bg-[#1E1E28] hover:bg-[#2A2A38] rounded-lg shadow-sm active:scale-95"
+                          className="py-1.5 sm:py-2 bg-[#1E1E28] hover:bg-[#2A2A38] rounded-lg shadow-sm active:scale-95 text-xs sm:text-sm font-bold"
                         >
                           {num}
                         </button>
@@ -1659,39 +1717,37 @@ const AdminPOS = () => {
                       <button
                         type="button"
                         onClick={() => handleNumpadPress('CLEAR')}
-                        className="py-2.5 bg-rose-500/20 text-rose-400 rounded-lg hover:bg-rose-500/30"
+                        className="py-1.5 sm:py-2 bg-rose-500/20 text-rose-400 rounded-lg hover:bg-rose-500/30 text-xs sm:text-sm font-bold"
                       >
                         C
                       </button>
                       <button
                         type="button"
                         onClick={() => handleNumpadPress(0)}
-                        className="py-2.5 bg-[#1E1E28] hover:bg-[#2A2A38] rounded-lg"
+                        className="py-1.5 sm:py-2 bg-[#1E1E28] hover:bg-[#2A2A38] rounded-lg text-xs sm:text-sm font-bold"
                       >
                         0
                       </button>
                       <button
                         type="button"
                         onClick={() => handleNumpadPress('BACK')}
-                        className="py-2.5 bg-[#2A2A38] text-neutral-300 rounded-lg hover:bg-[#343444] flex items-center justify-center"
+                        className="py-1.5 sm:py-2 bg-[#2A2A38] text-neutral-300 rounded-lg hover:bg-[#343444] flex items-center justify-center"
                       >
                         <Delete className="w-4 h-4" />
                       </button>
                     </div>
                   </div>
-                )}
-              </div>
-            )}
+                </div>
+              )}
+            </div>
 
-            {/* Confirm & Print Receipt Button */}
-            <div className="pt-2">
+            {/* Confirm & Print Receipt Button (Full width at bottom) */}
+            <div className="pt-2.5">
               <button
                 type="button"
                 onClick={handleCompletePayment}
                 disabled={submittingAction}
-                className={`w-full bg-gradient-to-r from-[#FF6B00] to-[#FF8A33] hover:from-[#E55A00] hover:to-[#FF6B00] text-white py-3.5 px-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-lg shadow-orange-500/30 flex items-center justify-center gap-2 transition-all active:scale-[0.99] disabled:opacity-50 ${
-                  isTouchMode ? 'h-14 text-base' : ''
-                }`}
+                className="w-full bg-gradient-to-r from-[#FF6B00] to-[#FF8A33] hover:from-[#E55A00] hover:to-[#FF6B00] text-white py-2.5 sm:py-3 px-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-lg shadow-orange-500/30 flex items-center justify-center gap-2 transition-all active:scale-[0.99] disabled:opacity-50"
               >
                 {submittingAction ? (
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>

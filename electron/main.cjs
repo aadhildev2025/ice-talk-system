@@ -165,13 +165,14 @@ ipcMain.handle('printer:print-html', async (event, { html, options = {} }) => {
               body {
                 margin: 0;
                 padding: 2px 4px;
-                font-family: 'Courier New', Courier, monospace;
-                font-size: 11px;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+                font-size: 13px;
                 line-height: 1.25;
                 color: #000;
                 background: #fff;
                 width: ${cssWidth};
                 max-width: ${cssWidth};
+                -webkit-font-smoothing: antialiased;
               }
               table { width: 100%; border-collapse: collapse; }
               .flex { display: flex; }

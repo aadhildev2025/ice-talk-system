@@ -123,21 +123,31 @@ const PrintModal = () => {
     <div className="fixed -left-[9999px] -top-[9999px] opacity-0 pointer-events-none print:opacity-100 print:pointer-events-auto print:static print:left-0 print:top-0 print:m-0 print:p-0">
       <div
         id="printable-receipt-area"
-        style={{ width: receiptWidthPx }}
-        className="bg-white text-black font-mono text-[11px] p-2 leading-tight select-text"
+        style={{
+          width: receiptWidthPx,
+          fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+          fontSize: '13px',
+          lineHeight: '1.25',
+          padding: '4px 6px',
+          boxSizing: 'border-box',
+        }}
+        className="bg-white text-black font-sans select-text"
       >
         {isPrepSlip ? (
           /* ========================================================= */
           /*                       KOT RECEIPT                         */
           /* ========================================================= */
-          <div className="text-left font-mono text-black leading-snug">
+          <div
+            className="text-left font-sans text-black"
+            style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" }}
+          >
             {/* Top KOT Header */}
-            <div className="font-extrabold text-[15px] tracking-wide mb-1">
-              KOT{department && department !== 'ALL' ? ` - ${getDeptDisplayName(department)}` : ' - MASTER (ALL)'}
+            <div style={{ fontSize: '18px', fontWeight: '900', letterSpacing: '0.5px', marginBottom: '4px' }}>
+              KOT{department && department !== 'ALL' ? ` - ${getDeptDisplayName(department)}` : ''}
             </div>
 
             {/* Meta details */}
-            <div className="text-[11px] space-y-0.5 mb-1.5 font-medium">
+            <div style={{ fontSize: '13.5px', fontWeight: '500', lineHeight: '1.35', marginBottom: '6px' }}>
               <div>User: {kotUserName}</div>
               <div>Table: {tableName}</div>
               <div>Round: {roundNum}</div>
@@ -145,80 +155,29 @@ const PrintModal = () => {
             </div>
 
             {/* Dashed line */}
-            <div className="border-b border-dashed border-black my-1.5"></div>
+            <div style={{ borderTop: '1px dashed #000', margin: '6px 0' }}></div>
 
-            {/* Items with Section Headers */}
-            {department && department !== 'ALL' ? (
-              // Specific Department KOT
-              <div className="space-y-2 my-1.5">
-                {kotItems.map((item, idx) => {
-                  const catTag = item.category || getDeptDisplayName(detectKOTSection(item.category, item.department));
-                  return (
-                    <div key={idx} className="text-[12px] font-bold">
-                      <div className="flex items-start justify-between gap-1">
-                        <span className="leading-tight">
-                          {item.quantity} x {item.name?.toUpperCase()}
-                        </span>
-                        {catTag && (
-                          <span className="text-[9px] font-mono font-extrabold uppercase px-1 py-0.5 border border-black rounded shrink-0 whitespace-nowrap">
-                            [{catTag.toUpperCase()}]
-                          </span>
-                        )}
-                      </div>
-                      {item.specialInstructions && (
-                        <div className="text-[10px] font-normal pl-3 italic text-neutral-800">
-                          * {item.specialInstructions}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              // Combined KOT with distinct sections (Rice/Kitchen, Juice & Desserts, Buns)
-              <div className="space-y-2.5 my-1.5">
-                {activeSections.map((sec) => (
-                  <div key={sec} className="space-y-1">
-                    {/* Section Header */}
-                    <div className="text-[11px] font-black uppercase tracking-wider bg-black text-white px-1.5 py-0.5 rounded-sm inline-block">
-                      {getDeptDisplayName(sec)}
-                    </div>
-
-                    {/* Section Items */}
-                    <div className="space-y-1.5 pl-1">
-                      {groupedSections[sec].map((item, idx) => {
-                        const catTag = item.category || getDeptDisplayName(sec);
-                        return (
-                          <div key={idx} className="text-[12px] font-bold">
-                            <div className="flex items-start justify-between gap-1">
-                              <span className="leading-tight">
-                                {item.quantity} x {item.name?.toUpperCase()}
-                              </span>
-                              {catTag && (
-                                <span className="text-[9px] font-mono font-extrabold uppercase px-1 py-0.5 border border-black rounded shrink-0 whitespace-nowrap">
-                                  [{catTag.toUpperCase()}]
-                                </span>
-                              )}
-                            </div>
-                            {item.specialInstructions && (
-                              <div className="text-[10px] font-normal pl-3 italic text-neutral-800">
-                                * {item.specialInstructions}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
+            {/* Items */}
+            <div style={{ margin: '6px 0' }}>
+              {kotItems.map((item, idx) => (
+                <div key={idx} style={{ marginBottom: '6px' }}>
+                  <div style={{ fontSize: '14.5px', fontWeight: '700', textTransform: 'uppercase', lineHeight: '1.25' }}>
+                    {item.quantity} x {item.name?.toUpperCase()}
                   </div>
-                ))}
-              </div>
-            )}
+                  {item.specialInstructions && (
+                    <div style={{ fontSize: '12px', fontStyle: 'italic', paddingLeft: '10px', color: '#111' }}>
+                      * {item.specialInstructions}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
 
             {/* Dashed line */}
-            <div className="border-b border-dashed border-black my-1.5"></div>
+            <div style={{ borderTop: '1px dashed #000', margin: '6px 0' }}></div>
 
             {/* Bottom KOT Tag */}
-            <div className="font-extrabold text-[13px] tracking-wide mt-1">
+            <div style={{ fontSize: '16px', fontWeight: '900', letterSpacing: '0.5px', marginTop: '4px' }}>
               KOT
             </div>
           </div>
@@ -226,29 +185,64 @@ const PrintModal = () => {
           /* ========================================================= */
           /*                 CUSTOMER FINAL BILL / RECEIPT             */
           /* ========================================================= */
-          <div className="text-black font-mono leading-snug">
+          <div
+            className="text-black font-sans"
+            style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" }}
+          >
             {/* Top Billing Logo */}
-            <div className="text-center mb-1.5">
+            <div style={{ textAlign: 'center', marginBottom: '4px' }}>
               <img
                 src={billingLogo}
                 alt="Ice Talk Logo"
-                className="mx-auto h-28 max-w-[220px] w-auto object-contain block"
+                style={{
+                  width: '76px',
+                  height: '76px',
+                  objectFit: 'contain',
+                  margin: '0 auto',
+                  display: 'block',
+                }}
               />
             </div>
 
             {/* Restaurant Title & Address */}
-            <div className="text-center font-extrabold text-[13px] uppercase tracking-wide leading-tight">
+            <div
+              style={{
+                textAlign: 'center',
+                fontWeight: '800',
+                fontSize: '16px',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+                lineHeight: '1.2',
+              }}
+            >
               <div>ICE TALK FAMILY</div>
               <div>RESTAURANT</div>
             </div>
-            <div className="text-center text-[10px] text-black leading-tight mt-1 mb-2">
+            <div
+              style={{
+                textAlign: 'center',
+                fontSize: '12px',
+                fontWeight: '500',
+                lineHeight: '1.3',
+                marginTop: '4px',
+                marginBottom: '8px',
+              }}
+            >
               <div>No. 08, KACHCHERI ROAD, PUTTALAM</div>
               <div>61300 PUTTALAM</div>
-              <div className="font-bold">0777313285</div>
+              <div style={{ fontWeight: '700' }}>0777313285</div>
             </div>
 
             {/* Receipt Meta */}
-            <div className="text-left text-[11px] space-y-0.5 my-1.5">
+            <div
+              style={{
+                textAlign: 'left',
+                fontSize: '13px',
+                fontWeight: '500',
+                lineHeight: '1.35',
+                margin: '6px 0',
+              }}
+            >
               <div>Receipt No.: {data.saleNumber || data.receiptNumber || '26-200-049324'}</div>
               <div>{formatReceiptDateTime(data.createdAt || Date.now())}</div>
               <div>User: {billUserName}</div>
@@ -256,27 +250,36 @@ const PrintModal = () => {
             </div>
 
             {/* Dashed Separator */}
-            <div className="border-b border-dashed border-black my-1.5"></div>
+            <div style={{ borderTop: '1px dashed #000', margin: '6px 0' }}></div>
 
             {/* Item List */}
-            <div className="space-y-1.5 my-1.5">
+            <div style={{ margin: '6px 0' }}>
               {data.items?.map((it, idx) => {
-                const itemTotal = it.total || it.price * it.quantity;
+                const itemTotal = it.total || Number(it.price) * Number(it.quantity);
                 return (
-                  <div key={idx} className="text-[11px]">
-                    <div className="font-bold uppercase leading-tight">
+                  <div key={idx} style={{ marginBottom: '6px' }}>
+                    <div style={{ fontSize: '13.5px', fontWeight: '700', textTransform: 'uppercase', lineHeight: '1.2' }}>
                       {it.name}
                     </div>
                     {it.specialInstructions && (
-                      <div className="text-[9px] italic pl-2 text-black">
+                      <div style={{ fontSize: '11px', fontStyle: 'italic', paddingLeft: '8px', color: '#111' }}>
                         * {it.specialInstructions}
                       </div>
                     )}
-                    <div className="flex justify-between items-center text-[11px] mt-0.5">
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        fontSize: '13px',
+                        lineHeight: '1.2',
+                        marginTop: '2px',
+                      }}
+                    >
                       <span>
                         {it.quantity} x Rs.{Number(it.price).toFixed(2)}
                       </span>
-                      <span className="font-bold text-right">
+                      <span style={{ fontWeight: '600', textAlign: 'right' }}>
                         Rs.{formatCurrency(itemTotal)}
                       </span>
                     </div>
@@ -286,17 +289,17 @@ const PrintModal = () => {
             </div>
 
             {/* Items count */}
-            <div className="text-[11px] my-1">
+            <div style={{ fontSize: '13px', fontWeight: '500', margin: '5px 0' }}>
               Items count: {totalItemsCount}
             </div>
 
             {/* Dashed Separator */}
-            <div className="border-b border-dashed border-black my-1.5"></div>
+            <div style={{ borderTop: '1px dashed #000', margin: '6px 0' }}></div>
 
             {/* Totals Section */}
             {(() => {
               const itemsSubtotal = (data.items || []).reduce(
-                (sum, it) => sum + (Number(it.price || 0) * Number(it.quantity || 1)),
+                (sum, it) => sum + Number(it.price || 0) * Number(it.quantity || 1),
                 0
               );
               const subtotalAmt =
@@ -327,27 +330,65 @@ const PrintModal = () => {
               }
 
               return (
-                <div className="space-y-0.5 my-1.5 text-[11px]">
-                  <div className="flex justify-between items-center text-[11px]">
-                    <span>Subtotal:</span>
-                    <span>Rs.{formatCurrency(subtotalAmt)}</span>
-                  </div>
+                <div style={{ fontSize: '13px', margin: '6px 0' }}>
+                  {hasDiscount && (
+                    <>
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          fontSize: '13px',
+                          marginBottom: '3px',
+                        }}
+                      >
+                        <span>Subtotal:</span>
+                        <span>Rs.{formatCurrency(subtotalAmt)}</span>
+                      </div>
 
-                  <div className="flex justify-between items-center text-[11px] font-semibold">
-                    <span>Discount Amount{pctLabel ? ` (${pctLabel}%)` : ''}:</span>
-                    <span>{hasDiscount ? `- Rs.${formatCurrency(discountAmt)}` : 'Rs.0.00'}</span>
-                  </div>
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          fontSize: '13px',
+                          fontWeight: '600',
+                          marginBottom: '3px',
+                        }}
+                      >
+                        <span>Discount{pctLabel ? ` (${pctLabel}%)` : ''}:</span>
+                        <span>- Rs.{formatCurrency(discountAmt)}</span>
+                      </div>
 
+                      <div style={{ borderTop: '1px dashed #000', margin: '4px 0' }}></div>
+                    </>
+                  )}
+
+                  {/* TOTAL */}
                   <div
-                    className={`flex justify-between items-center text-[13px] font-black ${
-                      hasDiscount ? 'border-t border-dashed border-black pt-1 mt-1' : ''
-                    }`}
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      fontSize: '16px',
+                      fontWeight: '900',
+                      margin: '4px 0',
+                    }}
                   >
                     <span>{hasDiscount ? 'NET TOTAL:' : 'TOTAL:'}</span>
                     <span>Rs.{formatCurrency(data.total || data.grandTotal)}</span>
                   </div>
 
-                  <div className="flex justify-between items-center text-[11px] pt-0.5">
+                  {/* Payment Method / Cash */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      fontSize: '13px',
+                      marginTop: '3px',
+                    }}
+                  >
                     <span>
                       {data.paymentMethod === 'CARD'
                         ? 'Card:'
@@ -356,32 +397,56 @@ const PrintModal = () => {
                         : 'Cash:'}
                     </span>
                     <span>
-                      Rs.
-                      {formatCurrency(
-                        data.amountTendered || data.total || data.grandTotal
-                      )}
+                      Rs.{formatCurrency(data.amountTendered || data.total || data.grandTotal)}
                     </span>
                   </div>
 
-                  <div className="flex justify-between items-center text-[11px]">
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      fontSize: '13px',
+                      marginTop: '3px',
+                    }}
+                  >
                     <span>Paid amount:</span>
                     <span>Rs.{formatCurrency(data.total || data.grandTotal)}</span>
                   </div>
 
                   {Number(data.changeAmount || data.change || 0) > 0 && (
-                    <div className="flex justify-between items-center text-[11px] font-bold">
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        fontSize: '13px',
+                        fontWeight: '700',
+                        marginTop: '3px',
+                      }}
+                    >
                       <span>Change:</span>
-                      <span>
-                        Rs.{formatCurrency(data.changeAmount || data.change)}
-                      </span>
+                      <span>Rs.{formatCurrency(data.changeAmount || data.change)}</span>
                     </div>
                   )}
                 </div>
               );
             })()}
 
+            {/* Dashed Separator before Footer */}
+            <div style={{ borderTop: '1px dashed #000', margin: '8px 0' }}></div>
+
             {/* Footer */}
-            <div className="text-center text-[10px] leading-tight mt-3 pt-1 text-black">
+            <div
+              style={{
+                textAlign: 'center',
+                fontSize: '12px',
+                fontWeight: '500',
+                lineHeight: '1.35',
+                marginTop: '6px',
+                color: '#000',
+              }}
+            >
               <div>We'd love to hear your feedback.</div>
               <div>Thanks for dinning with us!</div>
             </div>
