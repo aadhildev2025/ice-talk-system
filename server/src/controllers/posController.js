@@ -1,15 +1,6 @@
-const Order = require('../models/Order');
 const Table = require('../models/Table');
-const Sale = require('../models/Sale');
 const { emitSaleCompleted, emitTableUpdated } = require('../socket');
-const { generateDemoSalesIfNeeded } = require('../utils/demoSalesService');
-
-// Helper to generate sequential sale invoice number
-const getNextSaleNumber = async () => {
-  const count = await Sale.countDocuments();
-  const nextNum = count + 101; // Starts at INV-000101
-  return `INV-${String(nextNum).padStart(6, '0')}`;
-};
+const localDataService = require('../services/localDataService');
 
 // @desc    Get active unpaid orders for a specific table
 // @route   GET /api/pos/table/:tableId/orders
@@ -17,34 +8,40 @@ const getNextSaleNumber = async () => {
 const getTableActiveOrders = async (req, res) => {
   try {
     const { tableId } = req.params;
-    const table = await Table.findById(tableId);
+    let table = null;
 
-    if (!table) {
-      return res.status(404).json({ success: false, message: 'Table not found' });
+    try {
+      table = await Table.findById(tableId);
+    } catch {
+      // MongoDB offline fallback
     }
 
-    const orders = await Order.find({
-      tableId: table._id,
-      status: { $nin: ['CANCELLED', 'REJECTED'] },
-      isSettled: false,
-      isDemo: req.user?.isDemo ? true : { $ne: true },
-    }).sort({ createdAt: 1 });
+    if (!table) {
+      table = { _id: tableId, name: `Table ${tableId}` };
+    }
 
-    const totalAmount = orders.reduce((sum, ord) => sum + (ord.total || 0), 0);
-    const subtotal = orders.reduce((sum, ord) => sum + (ord.subtotal || 0), 0);
+    const allOrders = localDataService.getOrders({ tableId });
+    const activeOrders = allOrders.filter(
+      (o) => !o.isSettled && !['CANCELLED', 'REJECTED'].includes(o.status)
+    );
 
-    // Flatten all items across multiple orders for easy billing
+    activeOrders.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+
+    const totalAmount = activeOrders.reduce((sum, ord) => sum + (ord.total || 0), 0);
+    const subtotal = activeOrders.reduce((sum, ord) => sum + (ord.subtotal || ord.total || 0), 0);
+
+    // Flatten all items across multiple orders for billing
     const aggregatedItems = [];
-    orders.forEach((order) => {
-      order.items.forEach((item) => {
+    activeOrders.forEach((order) => {
+      (order.items || []).forEach((item) => {
         aggregatedItems.push({
           orderNumber: order.orderNumber,
           name: item.name,
           quantity: item.quantity,
           price: item.price,
-          total: item.price * item.quantity,
-          department: item.department,
-          specialInstructions: item.specialInstructions,
+          total: item.total || item.price * item.quantity,
+          department: item.department || 'KITCHEN',
+          specialInstructions: item.specialInstructions || '',
         });
       });
     });
@@ -52,8 +49,8 @@ const getTableActiveOrders = async (req, res) => {
     res.json({
       success: true,
       table,
-      ordersCount: orders.length,
-      orders,
+      ordersCount: activeOrders.length,
+      orders: activeOrders,
       aggregatedItems,
       subtotal,
       total: totalAmount,
@@ -69,31 +66,31 @@ const getTableActiveOrders = async (req, res) => {
 const getChannelActiveOrders = async (req, res) => {
   try {
     const { orderType } = req.query;
-    const filter = {
-      isSettled: false,
-      status: { $in: ['PENDING', 'APPROVED', 'PREPARING', 'READY'] },
-      isDemo: req.user?.isDemo ? true : { $ne: true },
-    };
+    const allOrders = localDataService.getOrders();
+
+    let active = allOrders.filter(
+      (o) => !o.isSettled && ['PENDING', 'APPROVED', 'PREPARING', 'READY'].includes(o.status)
+    );
 
     if (orderType && orderType !== 'ALL') {
-      filter.orderType = orderType;
+      active = active.filter((o) => o.orderType === orderType);
     } else {
-      filter.orderType = { $in: ['TAKEAWAY', 'UBEREATS', 'PICKME'] };
+      active = active.filter((o) => ['TAKEAWAY', 'UBEREATS', 'PICKME'].includes(o.orderType));
     }
 
-    const orders = await Order.find(filter).sort({ createdAt: -1 });
+    active.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
     res.json({
       success: true,
-      count: orders.length,
-      orders,
+      count: active.length,
+      orders: active,
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// @desc    Settle table or channel order(s) / Complete Sale in POS
+// @desc    Settle table or channel order(s) / Complete Sale in POS (saves to local computer storage)
 // @route   POST /api/pos/settle-table (and /api/pos/settle-orders)
 // @access  Private (Admin)
 const settleTable = async (req, res) => {
@@ -124,27 +121,28 @@ const settleTable = async (req, res) => {
     let orderType = 'DINE_IN';
 
     if (tableId) {
-      table = await Table.findById(tableId);
-      if (!table) {
-        return res.status(404).json({ success: false, message: 'Table not found' });
-      }
-      tableNameSnapshot = table.name;
-      orders = await Order.find({
-        tableId: table._id,
-        status: { $nin: ['CANCELLED', 'REJECTED'] },
-        isSettled: false,
-      });
+      try {
+        table = await Table.findById(tableId);
+      } catch {}
+      tableNameSnapshot = table ? table.name : `Table ${tableId}`;
+      const allOrders = localDataService.getOrders({ tableId });
+      orders = allOrders.filter(
+        (o) => !o.isSettled && !['CANCELLED', 'REJECTED'].includes(o.status)
+      );
     } else if (orderId || (reqOrderIds && reqOrderIds.length > 0)) {
-      const targetIds = reqOrderIds && reqOrderIds.length > 0 ? reqOrderIds : [orderId];
-      orders = await Order.find({
-        _id: { $in: targetIds },
-        isSettled: false,
-      });
+      const targetIds = new Set(
+        (reqOrderIds && reqOrderIds.length > 0 ? reqOrderIds : [orderId]).map(String)
+      );
+      const allOrders = localDataService.getOrders();
+      orders = allOrders.filter((o) => targetIds.has(String(o._id)) && !o.isSettled);
+
       if (orders.length > 0) {
-        tableNameSnapshot = orders[0].tableNameSnapshot || 'Takeaway';
+        tableNameSnapshot = orders[0].tableNameSnapshot || orders[0].tableName || 'Takeaway';
         orderType = orders[0].orderType || 'TAKEAWAY';
         if (orders[0].tableId) {
-          table = await Table.findById(orders[0].tableId);
+          try {
+            table = await Table.findById(orders[0].tableId);
+          } catch {}
         }
       }
     } else {
@@ -169,11 +167,11 @@ const settleTable = async (req, res) => {
     const remainingCharges = Array.isArray(specialNoteCharges) ? [...specialNoteCharges] : [];
 
     orders.forEach((ord) => {
-      subtotal += ord.subtotal || ord.total;
+      subtotal += ord.subtotal || ord.total || 0;
       orderIds.push(ord._id);
-      orderNumbers.push(ord.orderNumber);
+      if (ord.orderNumber) orderNumbers.push(ord.orderNumber);
 
-      ord.items.forEach((item) => {
+      (ord.items || []).forEach((item) => {
         let itemNoteAmount = 0;
         if (item.specialInstructions && remainingCharges.length > 0) {
           const cIdx = remainingCharges.findIndex(
@@ -192,7 +190,7 @@ const settleTable = async (req, res) => {
           name: item.name,
           quantity: item.quantity,
           price: item.price,
-          total: item.price * item.quantity + itemNoteAmount,
+          total: (item.price * item.quantity) + itemNoteAmount,
           department: item.department || 'KITCHEN',
           specialInstructions: item.specialInstructions || '',
           noteAmount: itemNoteAmount,
@@ -200,7 +198,6 @@ const settleTable = async (req, res) => {
       });
     });
 
-    // Add remaining special note charges (e.g. order-level special notes or custom note charges)
     const extraNotesAmount = Number(specialNotesExtra) || 0;
     remainingCharges.forEach((c) => {
       const amt = Number(c.amount) || 0;
@@ -217,7 +214,6 @@ const settleTable = async (req, res) => {
       }
     });
 
-    // Add special notes extra to overall subtotal
     subtotal += extraNotesAmount;
 
     let finalDiscount = Number(discount) || 0;
@@ -233,10 +229,10 @@ const settleTable = async (req, res) => {
     const tendered = Number(amountTendered) || finalTotal;
     const change = paymentMethod === 'CASH' ? Math.max(0, tendered - finalTotal) : 0;
 
-    const saleNumber = await getNextSaleNumber();
+    const saleNumber = localDataService.getNextSaleNumber();
 
-    // Create Sale record with permanent snapshot
-    const sale = await Sale.create({
+    // Create Sale record in local computer storage
+    const sale = localDataService.saveSale({
       saleNumber,
       orderType: orderType || (table ? 'DINE_IN' : 'TAKEAWAY'),
       tableId: table ? table._id : undefined,
@@ -255,43 +251,40 @@ const settleTable = async (req, res) => {
       amountTendered: tendered,
       changeAmount: change,
       cashierId: req.user ? req.user._id : null,
-      cashierNameSnapshot: req.user ? req.user.name : 'Admin',
+      cashierNameSnapshot: req.user ? req.user.name : 'Staff',
       isDemo: Boolean(req.user?.isDemo),
     });
 
-    // Mark all orders as COMPLETED and settled
-    await Order.updateMany(
-      { _id: { $in: orderIds } },
-      {
-        $set: {
-          status: 'COMPLETED',
-          isSettled: true,
-          completedAt: new Date(),
-          saleId: sale._id,
-        },
-      }
-    );
-
-    // Free up table back to AVAILABLE if applicable and no remaining active orders
-    if (table) {
-      const remainingOrders = await Order.countDocuments({
-        tableId: table._id,
-        isSettled: false,
-        status: { $nin: ['CANCELLED', 'REJECTED'] },
+    // Mark orders as COMPLETED and settled in local storage
+    orderIds.forEach((id) => {
+      localDataService.updateOrder(id, {
+        status: 'COMPLETED',
+        isSettled: true,
+        completedAt: new Date().toISOString(),
+        saleId: sale._id,
       });
-      if (remainingOrders === 0) {
-        table.status = 'AVAILABLE';
-        await table.save();
-        emitTableUpdated(table);
-      }
+    });
+
+    // Update MongoDB Table status back to AVAILABLE if applicable
+    if (table) {
+      try {
+        const remainingOrders = localDataService.getOrders({ tableId: table._id }).filter(
+          (o) => !o.isSettled && !['CANCELLED', 'REJECTED'].includes(o.status)
+        );
+        if (remainingOrders.length === 0) {
+          table.status = 'AVAILABLE';
+          await table.save();
+          emitTableUpdated(table);
+        }
+      } catch {}
     }
 
-    // Broadcast sale completion
+    // Broadcast sale completion via Socket
     emitSaleCompleted(sale, table ? [table] : []);
 
     res.status(201).json({
       success: true,
-      message: `Sale ${saleNumber} completed successfully.`,
+      message: `Sale ${saleNumber} completed successfully (Stored Locally).`,
       sale,
     });
   } catch (error) {
@@ -300,108 +293,51 @@ const settleTable = async (req, res) => {
   }
 };
 
-// @desc    Get Sales History with date & search filters
-// @route   GET /api/pos/sales
-// @desc    Get Sales History with date & search filters
+// @desc    Get Sales History with date & search filters (from local computer storage)
 // @route   GET /api/pos/sales
 // @access  Private (Admin, SuperAdmin)
 const getSalesHistory = async (req, res) => {
   try {
     const { timeframe, startDate, endDate, paymentMethod, search, limit = 50, page = 1 } = req.query;
 
-    const filter = {
-      isDemo: req.user?.isDemo ? true : { $ne: true },
-    };
+    let sales = localDataService.getSales({
+      timeframe,
+      startDate,
+      endDate,
+      paymentMethod,
+      search,
+    });
 
-    // Date range filter
-    const now = new Date();
-    if (timeframe === 'today') {
-      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
-      filter.createdAt = { $gte: startOfDay, $lte: endOfDay };
-    } else if (timeframe === 'yesterday') {
-      const startOfYesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
-      const endOfYesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 23, 59, 59, 999);
-      filter.createdAt = { $gte: startOfYesterday, $lte: endOfYesterday };
-    } else if (timeframe === 'week' || timeframe === 'thisWeek') {
-      const day = now.getDay();
-      const diff = now.getDate() - day + (day === 0 ? -6 : 1);
-      const startOfWeek = new Date(now.getFullYear(), now.getMonth(), diff, 0, 0, 0);
-      filter.createdAt = { $gte: startOfWeek };
-    } else if (timeframe === 'month' || timeframe === 'thisMonth') {
-      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-      filter.createdAt = { $gte: startOfMonth };
-    } else if (timeframe === 'lastMonth') {
-      const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1, 0, 0, 0);
-      const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
-      filter.createdAt = { $gte: startOfLastMonth, $lte: endOfLastMonth };
-    } else if (timeframe === 'year' || timeframe === 'thisYear') {
-      const startOfYear = new Date(now.getFullYear(), 0, 1, 0, 0, 0);
-      filter.createdAt = { $gte: startOfYear };
-    } else if (timeframe === 'lastYear') {
-      const startOfLastYear = new Date(now.getFullYear() - 1, 0, 1, 0, 0, 0);
-      const endOfLastYear = new Date(now.getFullYear() - 1, 11, 31, 23, 59, 59, 999);
-      filter.createdAt = { $gte: startOfLastYear, $lte: endOfLastYear };
-    } else if (timeframe === 'all') {
-      // No date filter - view all transactions from beginning
-    } else if (startDate || endDate) {
-      filter.createdAt = {};
-      if (startDate) {
-        const s = new Date(startDate);
-        s.setHours(0, 0, 0, 0);
-        filter.createdAt.$gte = s;
-      }
-      if (endDate) {
-        const e = new Date(endDate);
-        e.setHours(23, 59, 59, 999);
-        filter.createdAt.$lte = e;
-      }
-    }
+    sales.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-    if (paymentMethod && paymentMethod !== 'ALL') {
-      filter.paymentMethod = paymentMethod;
-    }
+    const totalCount = sales.length;
+    const totalRevenue = sales.reduce((sum, s) => sum + (s.total || 0), 0);
 
-    if (search) {
-      filter.$or = [
-        { saleNumber: { $regex: search, $options: 'i' } },
-        { tableNameSnapshot: { $regex: search, $options: 'i' } },
-      ];
-    }
-
-    const skip = (Number(page) - 1) * Number(limit);
-
-    const sales = await Sale.find(filter)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(Number(limit));
-
-    const totalCount = await Sale.countDocuments(filter);
-    const totalRevenue = (await Sale.aggregate([
-      { $match: filter },
-      { $group: { _id: null, total: { $sum: '$total' } } },
-    ]))[0]?.total || 0;
+    const lim = Number(limit);
+    const pg = Number(page);
+    const skip = (pg - 1) * lim;
+    const paginated = sales.slice(skip, skip + lim);
 
     res.json({
       success: true,
-      count: sales.length,
+      count: paginated.length,
       totalCount,
       totalRevenue,
-      page: Number(page),
-      totalPages: Math.ceil(totalCount / Number(limit)),
-      sales,
+      page: pg,
+      totalPages: Math.ceil(totalCount / lim) || 1,
+      sales: paginated,
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// @desc    Get single sale receipt by ID
+// @desc    Get single sale receipt by ID (from local computer storage)
 // @route   GET /api/pos/sales/:id
 // @access  Private (Admin, SuperAdmin)
 const getSaleById = async (req, res) => {
   try {
-    const sale = await Sale.findById(req.params.id);
+    const sale = localDataService.getSaleById(req.params.id);
     if (!sale) {
       return res.status(404).json({ success: false, message: 'Sale receipt not found' });
     }
@@ -411,7 +347,7 @@ const getSaleById = async (req, res) => {
   }
 };
 
-// @desc    Delete Sale Transaction (Super Admin Only)
+// @desc    Delete Sale Transaction (from local computer storage)
 // @route   DELETE /api/pos/sales/:id
 // @access  Private (SuperAdmin ONLY)
 const deleteSaleTransaction = async (req, res) => {
@@ -424,29 +360,20 @@ const deleteSaleTransaction = async (req, res) => {
     }
 
     const { id } = req.params;
-    const sale = await Sale.findById(id);
+    const deleted = localDataService.deleteSale(id);
 
-    if (!sale) {
+    if (!deleted) {
       return res.status(404).json({
         success: false,
         message: 'Transaction not found.',
       });
     }
 
-    // Clean up associated orders if any
-    if (sale.orderIds && sale.orderIds.length > 0) {
-      await Order.deleteMany({ _id: { $in: sale.orderIds } });
-    }
-    await Order.deleteMany({ saleId: sale._id });
-
-    // Delete the sale record itself
-    await Sale.findByIdAndDelete(id);
-
     res.json({
       success: true,
-      message: `Sale transaction ${sale.saleNumber} was permanently deleted.`,
+      message: `Sale transaction ${deleted.saleNumber || id} was permanently deleted from local storage.`,
       deletedSaleId: id,
-      saleNumber: sale.saleNumber,
+      saleNumber: deleted.saleNumber,
     });
   } catch (error) {
     console.error('Delete sale transaction error:', error);

@@ -11,7 +11,7 @@ const { protect, authorize } = require('../middleware/auth');
 
 // All expense routes require authentication and superadmin role
 router.use(protect);
-router.use(authorize('superadmin'));
+router.use(authorize('admin', 'superadmin'));
 
 router.route('/')
   .get(getExpenses)

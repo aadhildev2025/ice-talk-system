@@ -1,6 +1,6 @@
 const Table = require('../models/Table');
 const Floor = require('../models/Floor');
-const Order = require('../models/Order');
+const localDataService = require('../services/localDataService');
 const { emitTableUpdated } = require('../socket');
 
 // @desc    Get all tables with active orders status
@@ -10,11 +10,10 @@ const getTables = async (req, res) => {
   try {
     const tables = await Table.find({ isActive: true }).sort({ floor: 1, sortOrder: 1, createdAt: 1 });
 
-    // Fetch active unsettled orders
-    const activeOrders = await Order.find({
-      status: { $nin: ['CANCELLED', 'REJECTED'] },
-      isSettled: false,
-    });
+    // Fetch active unsettled orders from local computer storage
+    const activeOrders = localDataService.getOrders({ isSettled: false }).filter(
+      (o) => !['CANCELLED', 'REJECTED'].includes(o.status)
+    );
 
     // Map active orders to tables
     const tablesWithActiveOrders = tables.map((t) => {

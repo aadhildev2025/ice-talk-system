@@ -37,6 +37,7 @@ import {
   Percent,
 } from 'lucide-react';
 import QuickNoteModal from '../../components/QuickNoteModal';
+import { isDsuperUser } from '../../services/dsuperStorageService';
 
 const AdminPOS = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -44,8 +45,9 @@ const AdminPOS = () => {
   const initialChannel = searchParams.get('channel') || 'DINE_IN';
 
   const { socket } = useSocket();
-  const { printPreparationSlip, printCustomerReceipt } = usePrinter();
+  const { printPreparationSlip, printCustomerReceipt, dsuperPrintEnabled, toggleDsuperPrint, openSettings } = usePrinter();
   const { isTouchMode } = useUI();
+  const isDsuper = isDsuperUser();
 
   // Active Channel: 'DINE_IN' | 'TAKEAWAY' | 'UBEREATS' | 'PICKME'
   const [activeChannel, setActiveChannel] = useState(initialChannel);
@@ -357,7 +359,9 @@ const AdminPOS = () => {
       if (res.data.success) {
         const order = res.data.order;
         // Auto-print kitchen note slip
-        printPreparationSlip(order, true);
+        if (!isDsuper || dsuperPrintEnabled) {
+          printPreparationSlip(order, true);
+        }
 
         // Reset cart
         handleClearCart();
@@ -580,7 +584,9 @@ const AdminPOS = () => {
         const order = orderRes.data.order;
 
         // Auto-print kitchen slip
-        printPreparationSlip(order, false);
+        if (!isDsuper || dsuperPrintEnabled) {
+          printPreparationSlip(order, false);
+        }
 
         // 2. Immediately settle this order
         const settleRes = await axios.post('/api/pos/settle-orders', {
@@ -623,7 +629,9 @@ const AdminPOS = () => {
 
       if (finalSale) {
         // Trigger customer final receipt printing automatically
-        printCustomerReceipt(finalSale, true);
+        if (!isDsuper || dsuperPrintEnabled) {
+          printCustomerReceipt(finalSale, true);
+        }
 
         setShowCheckoutModal(false);
         fetchTables();
@@ -828,6 +836,15 @@ const AdminPOS = () => {
 
           <button
             type="button"
+            onClick={openSettings}
+            className="p-2 bg-[#1C1C24] hover:bg-[#252530] text-neutral-300 hover:text-white rounded-xl border border-[#2A2A38] transition-all"
+            title="Printer Selecting Options & Setup"
+          >
+            <Printer className="w-4 h-4 text-orange-400" />
+          </button>
+
+          <button
+            type="button"
             onClick={() => {
               fetchTables();
               fetchChannelOrders();
@@ -973,12 +990,12 @@ const AdminPOS = () => {
               <div className="flex-1 flex items-center justify-center p-12">
                 <div className="w-8 h-8 border-3 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
               </div>
-            ) : !tableOrdersData || tableOrdersData.ordersCount === 0 ? (
+            ) : !tableOrdersData || !tableOrdersData.orders || tableOrdersData.orders.length === 0 || tableOrdersData.ordersCount === 0 ? (
               <div className="flex-1 flex flex-col items-center justify-center p-12 text-center space-y-4">
                 <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center text-xl font-bold">
                   ✓
                 </div>
-                <h3 className="font-bold text-base text-white">Table: {selectedTable.name}</h3>
+                <h3 className="font-bold text-base text-white">Table: {selectedTable?.name || tableOrdersData?.table?.name || 'Selected Table'}</h3>
                 <p className="text-xs text-emerald-400 font-semibold">Table is Currently Available</p>
                 <button
                   type="button"
@@ -988,7 +1005,7 @@ const AdminPOS = () => {
                   className="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl shadow transition-all flex items-center gap-1.5"
                 >
                   <Plus className="w-4 h-4" />
-                  <span>Take Order for {selectedTable.name} (Menu)</span>
+                  <span>Take Order for {selectedTable?.name || tableOrdersData?.table?.name || 'Table'} (Menu)</span>
                 </button>
               </div>
             ) : (
@@ -998,14 +1015,14 @@ const AdminPOS = () => {
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="font-black text-lg text-white font-display">
-                        {tableOrdersData.table.name}
+                        {tableOrdersData.table?.name || selectedTable?.name || 'Table'}
                       </span>
                       <span className="text-[10px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30 px-2 py-0.5 rounded-full">
-                        {tableOrdersData.ordersCount} Active Order(s)
+                        {tableOrdersData.ordersCount ?? tableOrdersData.orders?.length ?? 0} Active Order(s)
                       </span>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap mt-1">
-                      {tableOrdersData.orders.map((o) => (
+                      {(tableOrdersData.orders || []).map((o) => (
                         <div key={o._id} className="flex items-center gap-1.5 bg-[#141418] px-2.5 py-0.5 rounded-lg border border-[#2B2B38] text-[11px]">
                           <span className="font-bold text-white">#{o.orderNumber}</span>
                         </div>
@@ -1016,7 +1033,7 @@ const AdminPOS = () => {
                   <div className="text-right">
                     <p className="text-[10px] text-neutral-400 uppercase font-semibold">Total Items</p>
                     <p className="font-extrabold text-sm text-white">
-                      {tableOrdersData.aggregatedItems.length} items
+                      {(tableOrdersData.aggregatedItems || []).length} items
                     </p>
                   </div>
                 </div>
@@ -1029,7 +1046,7 @@ const AdminPOS = () => {
                     <span className="text-right">Total</span>
                   </div>
 
-                  {tableOrdersData.aggregatedItems.map((it, idx) => (
+                  {(tableOrdersData.aggregatedItems || []).map((it, idx) => (
                     <div
                       key={idx}
                       className="flex justify-between items-center p-2 rounded-lg bg-[#191920] border border-[#252532] text-xs hover:bg-[#20202A] transition-colors"
@@ -1051,7 +1068,7 @@ const AdminPOS = () => {
                       </div>
 
                       <div className="w-24 text-right font-bold text-neutral-200">
-                        Rs. {it.total.toLocaleString()}
+                        Rs. {(it.total || 0).toLocaleString()}
                       </div>
                     </div>
                   ))}
@@ -1062,7 +1079,7 @@ const AdminPOS = () => {
                   <div className="flex justify-between items-center text-sm font-black pb-2 border-b border-[#2B2B38]">
                     <span className="text-neutral-300 uppercase tracking-wider">NET BILL TOTAL:</span>
                     <span className="text-2xl text-[#FF6B00] font-display">
-                      Rs. {tableOrdersData.total.toLocaleString()}
+                      Rs. {(tableOrdersData.total ?? tableOrdersData.totalAmount ?? 0).toLocaleString()}
                     </span>
                   </div>
 
@@ -1085,7 +1102,7 @@ const AdminPOS = () => {
                       }`}
                     >
                       <Receipt className="w-4 h-4" />
-                      <span>Settle & Print Receipt</span>
+                      <span>{isDsuper && !dsuperPrintEnabled ? 'Settle Payment' : 'Settle & Print Receipt'}</span>
                     </button>
                   </div>
                 </div>
@@ -1385,6 +1402,8 @@ const AdminPOS = () => {
                   Rs. {cartSubtotal.toLocaleString()}
                 </span>
               </div>
+
+
               {/* Action 1: Send to Kitchen (Auto-prints Kitchen Receipt) */}
               <button
                 type="button"
@@ -1394,8 +1413,12 @@ const AdminPOS = () => {
                   isTouchMode ? 'h-12 text-sm' : ''
                 }`}
               >
-                <Printer className="w-4 h-4 text-amber-400" />
-                <span>Send to Kitchen (Print Kitchen Slip)</span>
+                <Printer className={`w-4 h-4 ${isDsuper && !dsuperPrintEnabled ? 'text-neutral-400' : 'text-amber-400'}`} />
+                <span>
+                  {isDsuper && !dsuperPrintEnabled
+                    ? 'Send to Kitchen (No Print)'
+                    : 'Send to Kitchen (Print Kitchen Slip)'}
+                </span>
               </button>
 
               {/* Action 2: Fast Pay & Complete (Prints Final Receipt) */}
@@ -1408,7 +1431,11 @@ const AdminPOS = () => {
                 }`}
               >
                 <Receipt className="w-4 h-4" />
-                <span>Pay & Print Final Receipt</span>
+                <span>
+                  {isDsuper && !dsuperPrintEnabled
+                    ? 'Pay & Complete Order'
+                    : 'Pay & Print Final Receipt'}
+                </span>
               </button>
             </div>
           </div>
@@ -1974,7 +2001,7 @@ const AdminPOS = () => {
 
                     <div className="text-xs font-semibold text-emerald-400 flex items-center gap-1.5">
                       <CheckCircle2 className="w-4 h-4" />
-                      <span>Ready to confirm & print customer receipt</span>
+                      <span>{isDsuper && !dsuperPrintEnabled ? 'Ready to confirm payment' : 'Ready to confirm & print customer receipt'}</span>
                     </div>
                   </div>
                 )}
@@ -1994,7 +2021,7 @@ const AdminPOS = () => {
                 ) : (
                   <>
                     <Receipt className="w-5 h-5" />
-                    <span>Confirm Payment & Print Receipt</span>
+                    <span>{isDsuper && !dsuperPrintEnabled ? 'Confirm Payment' : 'Confirm Payment & Print Receipt'}</span>
                   </>
                 )}
               </button>

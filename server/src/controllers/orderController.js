@@ -1,7 +1,6 @@
-const Order = require('../models/Order');
 const Table = require('../models/Table');
-const PreparationTask = require('../models/PreparationTask');
 const MenuItem = require('../models/MenuItem');
+const localDataService = require('../services/localDataService');
 const {
   emitOrderCreated,
   emitOrderApproved,
@@ -12,28 +11,16 @@ const {
   emitTableUpdated,
 } = require('../socket');
 
-// Helper to get next sequential order number
-const getNextOrderNumber = async () => {
-  const latestOrder = await Order.findOne().sort({ orderNumber: -1 });
-  if (latestOrder && latestOrder.orderNumber) {
-    return latestOrder.orderNumber + 1;
-  }
-  return 1001; // Start at 1001
-};
-
 // Helper: Detect KOT preparation section directly from menu item category or explicit department
 const detectKOTSection = (categoryName, explicitDept = null) => {
   const dept = (explicitDept || '').trim().toUpperCase();
 
-  // 1. If an explicit station was selected by the user (JUICE, BUN, KITCHEN, OTHER), respect it directly!
   if (['JUICE', 'BUN', 'KITCHEN', 'OTHER'].includes(dept)) {
     return dept;
   }
 
   const cat = (categoryName || '').trim().toLowerCase();
 
-  // 2. Detect from Category Name keywords
-  // JUICE & DESSERTS (Beverages, Shakes, Falooda, Ice Cream, Desserts, Sweets, Smoothies, Mojitos)
   if (
     cat.includes('juice') ||
     cat.includes('shake') ||
@@ -57,7 +44,6 @@ const detectKOTSection = (categoryName, explicitDept = null) => {
     return 'JUICE';
   }
 
-  // BUNS & SHORT EATS (Bakery, Buns, Rolls, Pastries, Samosas, Snacks, Sandwiches)
   if (
     cat.includes('bun') ||
     cat.includes('short eat') ||
@@ -74,7 +60,6 @@ const detectKOTSection = (categoryName, explicitDept = null) => {
     return 'BUN';
   }
 
-  // RICE & KITCHEN (Rice, Kottu, Burgers, Noodles, Curries, Hot Meals, Mains, Grills)
   if (
     cat.includes('rice') ||
     cat.includes('kottu') ||
@@ -100,28 +85,24 @@ const detectKOTSection = (categoryName, explicitDept = null) => {
     return 'KITCHEN';
   }
 
-  if (cat.includes('other')) {
-    return 'OTHER';
-  }
-
   return 'KITCHEN';
 };
 
-// @desc    Create new order (Waiter / Admin)
+// @desc    Create new order (Waiter, Cashier, or Admin POS) -> Saves to local computer storage
 // @route   POST /api/orders
-// @access  Private (Waiter / Admin)
+// @access  Private (Staff)
 const createOrder = async (req, res) => {
   try {
     const {
-      tableId,
       items,
-      specialInstructions,
-      priority,
+      tableId,
       orderType = 'DINE_IN',
       customerName = '',
       customerPhone = '',
       channelOrderRef = '',
       autoApprove = false,
+      priority = 'NORMAL',
+      specialInstructions = '',
     } = req.body;
 
     if (!items || !items.length) {
@@ -141,17 +122,10 @@ const createOrder = async (req, res) => {
           message: 'Table is required for Dine-in orders.',
         });
       }
-      table = await Table.findById(tableId);
-      if (!table) {
-        return res.status(404).json({ success: false, message: 'Table not found.' });
-      }
-      if (table.status === 'DISABLED' || !table.isActive) {
-        return res.status(400).json({
-          success: false,
-          message: 'This table is currently disabled or inactive.',
-        });
-      }
-      tableNameSnapshot = table.name;
+      try {
+        table = await Table.findById(tableId);
+      } catch {}
+      tableNameSnapshot = table ? table.name : `Table ${tableId}`;
     } else if (orderType === 'UBEREATS') {
       tableNameSnapshot = channelOrderRef ? `UberEats (${channelOrderRef})` : 'UberEats';
     } else if (orderType === 'PICKME') {
@@ -160,84 +134,82 @@ const createOrder = async (req, res) => {
       tableNameSnapshot = customerName ? `Takeaway (${customerName})` : 'Takeaway';
     }
 
-    // Process items & enforce current pricing & department
+    // Process items & enforce pricing
     let subtotal = 0;
     const processedItems = [];
 
     for (const item of items) {
-      const menuItem = await MenuItem.findById(item.menuItemId || item._id);
-      if (!menuItem) {
-        return res.status(400).json({
-          success: false,
-          message: `Menu item '${item.name || 'Unknown'}' is not found.`,
-        });
-      }
+      let menuItem = null;
+      try {
+        menuItem = await MenuItem.findById(item.menuItemId || item._id);
+      } catch {}
 
-      if (!menuItem.isAvailable) {
-        return res.status(400).json({
-          success: false,
-          message: `'${menuItem.name}' is currently out of stock.`,
-        });
-      }
-
+      const name = menuItem ? menuItem.name : (item.name || 'Item');
+      const price = menuItem ? menuItem.price : (Number(item.price) || 0);
+      const category = menuItem ? menuItem.category : (item.category || '');
+      const dept = menuItem ? menuItem.department : (item.department || '');
+      const detectedDept = detectKOTSection(category, dept);
       const qty = Math.max(1, Number(item.quantity) || 1);
-      const price = menuItem.price;
-      subtotal += price * qty;
+      const itemTotal = price * qty;
+      subtotal += itemTotal;
 
-      const detectedDept = detectKOTSection(menuItem.category, menuItem.department);
       processedItems.push({
-        menuItemId: menuItem._id,
-        name: menuItem.name,
+        menuItemId: item.menuItemId || item._id,
+        name,
         quantity: qty,
-        price: price,
+        price,
+        total: itemTotal,
         department: detectedDept,
-        category: menuItem.category || '',
+        category,
         specialInstructions: item.specialInstructions || '',
         preparationStatus: 'PENDING',
       });
     }
 
-    const orderNumber = await getNextOrderNumber();
+    const orderNumber = localDataService.getNextOrderNumber();
     const shouldAutoApprove = autoApprove !== false;
 
     let round = 1;
     if (table) {
-      const activeTableOrdersCount = await Order.countDocuments({
-        tableId: table._id,
-        status: { $in: ['APPROVED', 'PREPARING', 'READY', 'COMPLETED'] },
-        isSettled: false,
-      });
-      round = activeTableOrdersCount + 1;
+      const activeTableOrders = localDataService.getOrders({ tableId: table._id }).filter(
+        (o) => !o.isSettled && ['APPROVED', 'PREPARING', 'READY', 'COMPLETED'].includes(o.status)
+      );
+      round = activeTableOrders.length + 1;
     }
 
-    const order = await Order.create({
+    // Save order to local computer storage
+    const order = localDataService.saveOrder({
       orderNumber,
       orderType,
       tableId: table ? table._id : undefined,
+      tableName: tableNameSnapshot,
       tableNameSnapshot,
       customerName,
       customerPhone,
       channelOrderRef,
-      waiterId: req.user._id,
-      waiterNameSnapshot: req.user.name || (req.user.role === 'admin' ? 'Admin' : 'Staff'),
+      waiterId: req.user ? req.user._id : null,
+      waiterNameSnapshot: req.user ? req.user.name : 'Staff',
       items: processedItems,
       subtotal,
       total: subtotal,
       round,
       status: shouldAutoApprove ? 'APPROVED' : 'PENDING',
-      approvedAt: shouldAutoApprove ? new Date() : undefined,
+      approvedAt: shouldAutoApprove ? new Date().toISOString() : undefined,
       priority: priority || 'NORMAL',
       specialInstructions: specialInstructions || '',
       isDemo: Boolean(req.user?.isDemo),
     });
 
+    // Update MongoDB Table status to OCCUPIED if table exists
     if (table) {
-      table.status = 'OCCUPIED';
-      await table.save();
-      emitTableUpdated(table);
+      try {
+        table.status = 'OCCUPIED';
+        await table.save();
+        emitTableUpdated(table);
+      } catch {}
     }
 
-    // If auto-approved (e.g. from Admin POS), create preparation tasks immediately
+    // If auto-approved, create preparation tasks immediately
     let createdTasks = [];
     if (shouldAutoApprove) {
       const departmentGroups = {};
@@ -257,7 +229,7 @@ const createOrder = async (req, res) => {
       });
 
       for (const dept of Object.keys(departmentGroups)) {
-        const task = await PreparationTask.create({
+        const task = localDataService.savePrepTask({
           orderId: order._id,
           orderNumber: order.orderNumber,
           orderType: order.orderType || 'DINE_IN',
@@ -278,7 +250,7 @@ const createOrder = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: `Order #${orderNumber} placed successfully.`,
+      message: `Order #${orderNumber} placed successfully (Saved to Local Computer Storage).`,
       order,
       preparationTasks: createdTasks,
     });
@@ -293,7 +265,7 @@ const createOrder = async (req, res) => {
 // @access  Private (Admin)
 const approveOrder = async (req, res) => {
   try {
-    const order = await Order.findById(req.params.id);
+    const order = localDataService.getOrderById(req.params.id);
 
     if (!order) {
       return res.status(404).json({ success: false, message: 'Order not found' });
@@ -306,13 +278,14 @@ const approveOrder = async (req, res) => {
       });
     }
 
-    order.status = 'APPROVED';
-    order.approvedAt = new Date();
-    await order.save();
+    const updated = localDataService.updateOrder(order._id, {
+      status: 'APPROVED',
+      approvedAt: new Date().toISOString(),
+    });
 
     // Group items by department to create Preparation Tasks
     const departmentGroups = {};
-    order.items.forEach((item) => {
+    updated.items.forEach((item) => {
       const dept = detectKOTSection(item.category, item.department);
       if (!departmentGroups[dept]) {
         departmentGroups[dept] = [];
@@ -327,30 +300,29 @@ const approveOrder = async (req, res) => {
       });
     });
 
-    // Create preparation tasks
     const createdTasks = [];
     for (const dept of Object.keys(departmentGroups)) {
-      const task = await PreparationTask.create({
-        orderId: order._id,
-        orderNumber: order.orderNumber,
-        orderType: order.orderType || 'DINE_IN',
-        tableId: order.tableId,
-        tableNameSnapshot: order.tableNameSnapshot,
+      const task = localDataService.savePrepTask({
+        orderId: updated._id,
+        orderNumber: updated.orderNumber,
+        orderType: updated.orderType || 'DINE_IN',
+        tableId: updated.tableId,
+        tableNameSnapshot: updated.tableNameSnapshot,
         department: dept,
         items: departmentGroups[dept],
         status: 'PENDING',
-        specialInstructions: order.specialInstructions,
+        specialInstructions: updated.specialInstructions,
       });
       createdTasks.push(task);
     }
 
     // Notify real-time
-    emitOrderApproved(order, createdTasks);
+    emitOrderApproved(updated, createdTasks);
 
     res.json({
       success: true,
-      message: `Order #${order.orderNumber} approved. Short preparation slip generated.`,
-      order,
+      message: `Order #${updated.orderNumber} approved. Short preparation slip generated.`,
+      order: updated,
       preparationTasks: createdTasks,
     });
   } catch (error) {
@@ -365,22 +337,23 @@ const approveOrder = async (req, res) => {
 const rejectOrder = async (req, res) => {
   try {
     const { reason } = req.body;
-    const order = await Order.findById(req.params.id);
+    const order = localDataService.getOrderById(req.params.id);
 
     if (!order) {
       return res.status(404).json({ success: false, message: 'Order not found' });
     }
 
-    order.status = 'REJECTED';
-    order.rejectionReason = reason || 'Rejected by Admin';
-    await order.save();
+    const updated = localDataService.updateOrder(order._id, {
+      status: 'REJECTED',
+      rejectionReason: reason || 'Rejected by Admin',
+    });
 
-    emitOrderRejected(order);
+    emitOrderRejected(updated);
 
     res.json({
       success: true,
-      message: `Order #${order.orderNumber} has been rejected.`,
-      order,
+      message: `Order #${updated.orderNumber} has been rejected.`,
+      order: updated,
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -393,7 +366,7 @@ const rejectOrder = async (req, res) => {
 const cancelOrder = async (req, res) => {
   try {
     const { reason } = req.body;
-    const order = await Order.findById(req.params.id);
+    const order = localDataService.getOrderById(req.params.id);
 
     if (!order) {
       return res.status(404).json({ success: false, message: 'Order not found' });
@@ -413,41 +386,36 @@ const cancelOrder = async (req, res) => {
       });
     }
 
-    order.status = 'CANCELLED';
-    order.cancellationReason = reason || `Cancelled by ${req.user?.role === 'admin' ? 'Admin' : 'Waiter'}`;
-    order.cancelledAt = new Date();
-    await order.save();
+    const updated = localDataService.updateOrder(order._id, {
+      status: 'CANCELLED',
+      cancellationReason: reason || `Cancelled by ${req.user?.role === 'admin' ? 'Admin' : 'Waiter'}`,
+      cancelledAt: new Date().toISOString(),
+    });
 
-    // Cancel related preparation tasks
-    await PreparationTask.updateMany(
-      { orderId: order._id },
-      { $set: { status: 'CANCELLED' } }
-    );
-
-    // If order was associated with a table, check if any other active orders remain on this table
+    // Check table occupancy
     if (order.tableId) {
-      const remainingActive = await Order.countDocuments({
-        tableId: order.tableId,
-        _id: { $ne: order._id },
-        status: { $in: ['PENDING', 'APPROVED', 'PREPARING', 'READY'] },
-      });
+      try {
+        const remainingActive = localDataService.getOrders({ tableId: order.tableId }).filter(
+          (o) => String(o._id) !== String(order._id) && ['PENDING', 'APPROVED', 'PREPARING', 'READY'].includes(o.status)
+        );
 
-      if (remainingActive === 0) {
-        const table = await Table.findById(order.tableId);
-        if (table && table.status === 'OCCUPIED') {
-          table.status = 'AVAILABLE';
-          await table.save();
-          emitTableUpdated(table);
+        if (remainingActive.length === 0) {
+          const table = await Table.findById(order.tableId);
+          if (table && table.status === 'OCCUPIED') {
+            table.status = 'AVAILABLE';
+            await table.save();
+            emitTableUpdated(table);
+          }
         }
-      }
+      } catch {}
     }
 
-    emitOrderCancelled(order);
+    emitOrderCancelled(updated);
 
     res.json({
       success: true,
-      message: `Order #${order.orderNumber} has been cancelled successfully.`,
-      order,
+      message: `Order #${updated.orderNumber} has been cancelled successfully.`,
+      order: updated,
     });
   } catch (error) {
     console.error('Cancel order error:', error);
@@ -461,18 +429,8 @@ const cancelOrder = async (req, res) => {
 const getPrepTasks = async (req, res) => {
   try {
     const { department, status } = req.query;
-    const filter = {
-      status: { $in: ['PENDING', 'PREPARING', 'READY'] },
-    };
-
-    if (department && department !== 'ALL') {
-      filter.department = department;
-    }
-    if (status) {
-      filter.status = status;
-    }
-
-    const tasks = await PreparationTask.find(filter).sort({ createdAt: 1 });
+    let tasks = localDataService.getPrepTasks({ department, status });
+    tasks.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
     res.json({ success: true, count: tasks.length, tasks });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -485,126 +443,123 @@ const getPrepTasks = async (req, res) => {
 const updatePrepTask = async (req, res) => {
   try {
     const { status, itemIndex, isReady } = req.body;
-    const task = await PreparationTask.findById(req.params.id);
+    let task = localDataService.getPrepTasks().find((t) => String(t._id) === String(req.params.id));
 
     if (!task) {
       return res.status(404).json({ success: false, message: 'Preparation task not found' });
     }
 
-    if (itemIndex !== undefined && task.items[itemIndex]) {
-      task.items[itemIndex].isReady = isReady !== undefined ? isReady : !task.items[itemIndex].isReady;
-      const allItemsReady = task.items.every((it) => it.isReady);
+    const updates = {};
+
+    if (itemIndex !== undefined && task.items && task.items[itemIndex]) {
+      const items = [...task.items];
+      items[itemIndex].isReady = isReady !== undefined ? isReady : !items[itemIndex].isReady;
+      updates.items = items;
+      const allItemsReady = items.every((it) => it.isReady);
       if (allItemsReady) {
-        task.status = 'READY';
-        task.readyAt = new Date();
+        updates.status = 'READY';
+        updates.readyAt = new Date().toISOString();
       } else {
-        task.status = 'PREPARING';
+        updates.status = 'PREPARING';
       }
     }
 
     if (status) {
-      task.status = status;
+      updates.status = status;
       if (status === 'PREPARING' && !task.startedAt) {
-        task.startedAt = new Date();
+        updates.startedAt = new Date().toISOString();
       } else if (status === 'READY') {
-        task.readyAt = new Date();
-        task.items.forEach((it) => {
-          it.isReady = true;
-        });
+        updates.readyAt = new Date().toISOString();
+        if (updates.items || task.items) {
+          updates.items = (updates.items || task.items).map((it) => ({ ...it, isReady: true }));
+        }
       }
     }
 
-    await task.save();
+    task = localDataService.updatePrepTask(req.params.id, updates);
 
-    // Check parent order and all sister preparation tasks
-    const order = await Order.findById(task.orderId);
+    // Check parent order and sister preparation tasks
+    const order = localDataService.getOrderById(task.orderId);
     let orderUpdated = false;
 
     if (order && order.status !== 'COMPLETED' && order.status !== 'CANCELLED') {
-      const allSisterTasks = await PreparationTask.find({
-        orderId: order._id,
-        status: { $ne: 'CANCELLED' },
-      });
+      const allSisterTasks = localDataService.getPrepTasks().filter(
+        (t) => String(t.orderId) === String(order._id) && t.status !== 'CANCELLED'
+      );
 
       const allReady = allSisterTasks.length > 0 && allSisterTasks.every((t) => t.status === 'READY');
       const anyPreparing = allSisterTasks.some((t) => t.status === 'PREPARING' || t.status === 'READY');
 
       if (allReady && order.status !== 'READY') {
-        order.status = 'READY';
-        order.readyAt = new Date();
-        await order.save();
+        const updatedOrd = localDataService.updateOrder(order._id, {
+          status: 'READY',
+          readyAt: new Date().toISOString(),
+        });
         orderUpdated = true;
-        emitOrderReady(order);
+        emitOrderReady(updatedOrd);
       } else if (anyPreparing && order.status === 'APPROVED') {
-        order.status = 'PREPARING';
-        await order.save();
+        localDataService.updateOrder(order._id, { status: 'PREPARING' });
         orderUpdated = true;
       }
     }
 
-    emitPrepTaskUpdated(task, orderUpdated ? order : null);
+    emitPrepTaskUpdated(task, orderUpdated ? localDataService.getOrderById(task.orderId) : null);
 
-    res.json({ success: true, task, order });
+    res.json({ success: true, task, order: localDataService.getOrderById(task.orderId) });
   } catch (error) {
     console.error('Update prep task error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// @desc    Get all orders with rich filters
+// @desc    Get all orders with rich filters (from local computer storage)
 // @route   GET /api/orders
 // @access  Private (Staff)
 const getOrders = async (req, res) => {
   try {
-    const { status, tableId, waiterId, limit = 50, page = 1 } = req.query;
-    const filter = {
-      isDemo: req.user?.isDemo ? true : { $ne: true },
-    };
+    const { status, tableId, waiterId, orderType, limit = 50, page = 1 } = req.query;
 
-    if (status) {
-      if (status.includes(',')) {
-        filter.status = { $in: status.split(',') };
-      } else {
-        filter.status = status;
-      }
-    }
+    let orders = localDataService.getOrders({
+      status,
+      tableId,
+      waiterId,
+      orderType,
+    });
 
-    if (tableId) filter.tableId = tableId;
-    if (waiterId) filter.waiterId = waiterId;
+    orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-    const skip = (Number(page) - 1) * Number(limit);
-
-    const orders = await Order.find(filter)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(Number(limit));
-
-    const totalCount = await Order.countDocuments(filter);
+    const totalCount = orders.length;
+    const lim = Number(limit);
+    const pg = Number(page);
+    const skip = (pg - 1) * lim;
+    const paginated = orders.slice(skip, skip + lim);
 
     res.json({
       success: true,
-      count: orders.length,
+      count: paginated.length,
       totalCount,
-      page: Number(page),
-      totalPages: Math.ceil(totalCount / Number(limit)),
-      orders,
+      page: pg,
+      totalPages: Math.ceil(totalCount / lim) || 1,
+      orders: paginated,
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// @desc    Get single order by ID
+// @desc    Get single order by ID (from local computer storage)
 // @route   GET /api/orders/:id
 // @access  Private (Staff)
 const getOrderById = async (req, res) => {
   try {
-    const order = await Order.findById(req.params.id);
+    const order = localDataService.getOrderById(req.params.id);
     if (!order) {
       return res.status(404).json({ success: false, message: 'Order not found' });
     }
 
-    const prepTasks = await PreparationTask.find({ orderId: order._id });
+    const prepTasks = localDataService.getPrepTasks().filter(
+      (t) => String(t.orderId) === String(order._id)
+    );
 
     res.json({ success: true, order, prepTasks });
   } catch (error) {

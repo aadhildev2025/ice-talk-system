@@ -1,133 +1,56 @@
-const Expense = require('../models/Expense');
-const User = require('../models/User');
+const localDataService = require('../services/localDataService');
 
-// Helper to construct date ranges
-const getDateFilter = (timeframe, customStart, customEnd) => {
-  const now = new Date();
-  let start, end;
-
-  if (timeframe === 'today') {
-    start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
-    end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
-  } else if (timeframe === 'yesterday') {
-    start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 0, 0, 0);
-    end = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 23, 59, 59, 999);
-  } else if (timeframe === 'thisWeek') {
-    const day = now.getDay();
-    const diff = now.getDate() - day + (day === 0 ? -6 : 1);
-    start = new Date(now.getFullYear(), now.getMonth(), diff, 0, 0, 0);
-    end = new Date();
-  } else if (timeframe === 'thisMonth') {
-    start = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0);
-    end = new Date();
-  } else if (timeframe === 'lastMonth') {
-    start = new Date(now.getFullYear(), now.getMonth() - 1, 1, 0, 0, 0);
-    end = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
-  } else if (timeframe === 'thisYear') {
-    start = new Date(now.getFullYear(), 0, 1, 0, 0, 0);
-    end = new Date();
-  } else if (timeframe === 'lastYear') {
-    start = new Date(now.getFullYear() - 1, 0, 1, 0, 0, 0);
-    end = new Date(now.getFullYear() - 1, 11, 31, 23, 59, 59, 999);
-  } else if (customStart || customEnd) {
-    if (customStart) {
-      start = new Date(customStart);
-      start.setHours(0, 0, 0, 0);
-    }
-    if (customEnd) {
-      end = new Date(customEnd);
-      end.setHours(23, 59, 59, 999);
-    }
-  }
-
-  const filter = {};
-  if (start && end) {
-    filter.$gte = start;
-    filter.$lte = end;
-  } else if (start) {
-    filter.$gte = start;
-  } else if (end) {
-    filter.$lte = end;
-  }
-  return Object.keys(filter).length > 0 ? filter : null;
-};
-
-// @desc    Get all expenses with filters & summary
+// @desc    Get all expenses with filters & summary (from local computer storage)
 // @route   GET /api/expenses
 // @access  Private (Admin, SuperAdmin)
 const getExpenses = async (req, res) => {
   try {
     const { category, timeframe, startDate, endDate, search, limit = 100, page = 1 } = req.query;
 
-    const query = {
-      isDemo: req.user?.isDemo ? true : { $ne: true },
-    };
+    let expenses = localDataService.getExpenses({
+      category,
+      timeframe,
+      startDate,
+      endDate,
+      search,
+    });
 
-    if (category && category !== 'ALL') {
-      query.category = category;
-    }
+    expenses.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-    const dateRange = getDateFilter(timeframe, startDate, endDate);
-    if (dateRange) {
-      query.date = dateRange;
-    }
+    let totalAmount = 0;
+    let salaryTotal = 0;
+    let otherExpensesTotal = 0;
 
-    if (search) {
-      query.$or = [
-        { title: { $regex: search, $options: 'i' } },
-        { recipient: { $regex: search, $options: 'i' } },
-        { receiptRef: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } },
-      ];
-    }
+    expenses.forEach((e) => {
+      const amt = Number(e.amount) || 0;
+      totalAmount += amt;
+      if (e.category === 'SALARY') {
+        salaryTotal += amt;
+      } else {
+        otherExpensesTotal += amt;
+      }
+    });
 
-    const skip = (parseInt(page) - 1) * parseInt(limit);
-    const expenses = await Expense.find(query)
-      .sort({ date: -1, createdAt: -1 })
-      .skip(skip)
-      .limit(parseInt(limit))
-      .populate('workerId', 'name username role');
-
-    const totalCount = await Expense.countDocuments(query);
-
-    // Calculate totals for filtered query
-    const stats = await Expense.aggregate([
-      { $match: query },
-      {
-        $group: {
-          _id: null,
-          totalAmount: { $sum: '$amount' },
-          salaryTotal: {
-            $sum: {
-              $cond: [{ $eq: ['$category', 'SALARY'] }, '$amount', 0],
-            },
-          },
-          otherExpensesTotal: {
-            $sum: {
-              $cond: [{ $ne: ['$category', 'SALARY'] }, '$amount', 0],
-            },
-          },
-          count: { $sum: 1 },
-        },
-      },
-    ]);
-
-    const summary = stats[0] || {
-      totalAmount: 0,
-      salaryTotal: 0,
-      otherExpensesTotal: 0,
-      count: 0,
-    };
+    const totalCount = expenses.length;
+    const lim = parseInt(limit) || 100;
+    const pg = parseInt(page) || 1;
+    const skip = (pg - 1) * lim;
+    const paginated = expenses.slice(skip, skip + lim);
 
     res.json({
       success: true,
-      data: expenses,
-      summary,
+      data: paginated,
+      summary: {
+        totalAmount,
+        salaryTotal,
+        otherExpensesTotal,
+        count: totalCount,
+      },
       pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
+        page: pg,
+        limit: lim,
         totalCount,
-        totalPages: Math.ceil(totalCount / parseInt(limit)),
+        totalPages: Math.ceil(totalCount / lim) || 1,
       },
     });
   } catch (error) {
@@ -140,7 +63,7 @@ const getExpenses = async (req, res) => {
   }
 };
 
-// @desc    Create new expense or salary record
+// @desc    Create new expense or salary record (saves to local computer storage)
 // @route   POST /api/expenses
 // @access  Private (Admin, SuperAdmin)
 const createExpense = async (req, res) => {
@@ -164,30 +87,24 @@ const createExpense = async (req, res) => {
       });
     }
 
-    const expense = new Expense({
+    const newExpense = localDataService.saveExpense({
       title: title.trim(),
       category,
       amount: Number(amount),
-      date: date ? new Date(date) : new Date(),
+      date: date ? new Date(date).toISOString() : new Date().toISOString(),
       paymentMethod: paymentMethod || 'CASH',
       recipient: recipient ? recipient.trim() : '',
       workerId: workerId || null,
       description: description ? description.trim() : '',
       receiptRef: receiptRef ? receiptRef.trim() : '',
-      recordedBy: req.user ? req.user._id : null,
-      recordedByName: req.user ? req.user.name : 'Admin',
+      recordedByName: req.user ? req.user.name : 'Staff',
       isDemo: Boolean(req.user?.isDemo),
     });
 
-    const saved = await expense.save();
-    if (saved.workerId) {
-      await saved.populate('workerId', 'name username role');
-    }
-
     res.status(201).json({
       success: true,
-      message: 'Expense recorded successfully',
-      data: saved,
+      message: 'Expense recorded successfully (Stored Locally)',
+      data: newExpense,
     });
   } catch (error) {
     console.error('Error creating expense:', error);
@@ -199,45 +116,19 @@ const createExpense = async (req, res) => {
   }
 };
 
-// @desc    Update an expense
+// @desc    Update an expense (in local computer storage)
 // @route   PUT /api/expenses/:id
 // @access  Private (Admin, SuperAdmin)
 const updateExpense = async (req, res) => {
   try {
     const { id } = req.params;
-    const {
-      title,
-      category,
-      amount,
-      date,
-      paymentMethod,
-      recipient,
-      workerId,
-      description,
-      receiptRef,
-    } = req.body;
+    const updated = localDataService.updateExpense(id, req.body);
 
-    const expense = await Expense.findById(id);
-    if (!expense) {
+    if (!updated) {
       return res.status(404).json({
         success: false,
         message: 'Expense record not found',
       });
-    }
-
-    if (title !== undefined) expense.title = title.trim();
-    if (category !== undefined) expense.category = category;
-    if (amount !== undefined) expense.amount = Number(amount);
-    if (date !== undefined) expense.date = new Date(date);
-    if (paymentMethod !== undefined) expense.paymentMethod = paymentMethod;
-    if (recipient !== undefined) expense.recipient = recipient.trim();
-    if (workerId !== undefined) expense.workerId = workerId || null;
-    if (description !== undefined) expense.description = description.trim();
-    if (receiptRef !== undefined) expense.receiptRef = receiptRef.trim();
-
-    const updated = await expense.save();
-    if (updated.workerId) {
-      await updated.populate('workerId', 'name username role');
     }
 
     res.json({
@@ -255,22 +146,13 @@ const updateExpense = async (req, res) => {
   }
 };
 
-// @desc    Delete an expense
+// @desc    Delete an expense (from local computer storage)
 // @route   DELETE /api/expenses/:id
 // @access  Private (Admin, SuperAdmin)
 const deleteExpense = async (req, res) => {
   try {
     const { id } = req.params;
-
-    const expense = await Expense.findById(id);
-    if (!expense) {
-      return res.status(404).json({
-        success: false,
-        message: 'Expense record not found',
-      });
-    }
-
-    await Expense.findByIdAndDelete(id);
+    localDataService.deleteExpense(id);
 
     res.json({
       success: true,
@@ -293,44 +175,29 @@ const deleteExpense = async (req, res) => {
 const getExpenseSummary = async (req, res) => {
   try {
     const { timeframe, startDate, endDate } = req.query;
-    const match = {
-      isDemo: req.user?.isDemo ? true : { $ne: true },
-    };
+    const expenses = localDataService.getExpenses({ timeframe, startDate, endDate });
 
-    const dateRange = getDateFilter(timeframe, startDate, endDate);
-    if (dateRange) {
-      match.date = dateRange;
-    }
+    const catMap = {};
+    let grandTotal = 0;
 
-    const byCategory = await Expense.aggregate([
-      { $match: match },
-      {
-        $group: {
-          _id: '$category',
-          total: { $sum: '$amount' },
-          count: { $sum: 1 },
-        },
-      },
-      { $sort: { total: -1 } },
-    ]);
+    expenses.forEach((e) => {
+      const cat = e.category || 'OTHER';
+      const amt = Number(e.amount) || 0;
+      catMap[cat] = (catMap[cat] || 0) + amt;
+      grandTotal += amt;
+    });
 
-    const totalStats = await Expense.aggregate([
-      { $match: match },
-      {
-        $group: {
-          _id: null,
-          grandTotal: { $sum: '$amount' },
-          totalCount: { $sum: 1 },
-        },
-      },
-    ]);
+    const byCategory = Object.entries(catMap).map(([k, v]) => ({
+      _id: k,
+      total: v,
+    })).sort((a, b) => b.total - a.total);
 
     res.json({
       success: true,
       data: {
         byCategory,
-        grandTotal: totalStats[0]?.grandTotal || 0,
-        totalCount: totalStats[0]?.totalCount || 0,
+        grandTotal,
+        totalCount: expenses.length,
       },
     });
   } catch (error) {
@@ -349,5 +216,4 @@ module.exports = {
   updateExpense,
   deleteExpense,
   getExpenseSummary,
-  getDateFilter,
 };

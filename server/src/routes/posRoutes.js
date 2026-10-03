@@ -14,8 +14,8 @@ router.get('/table/:tableId/orders', protect, getTableActiveOrders);
 router.get('/channel-orders', protect, getChannelActiveOrders);
 router.post('/settle-table', protect, authorize('admin'), settleTable);
 router.post('/settle-orders', protect, authorize('admin'), settleTable);
-router.get('/sales', protect, authorize('superadmin'), getSalesHistory);
-router.get('/sales/:id', protect, authorize('superadmin'), getSaleById);
+router.get('/sales', protect, authorize('admin', 'superadmin'), getSalesHistory);
+router.get('/sales/:id', protect, authorize('admin', 'superadmin'), getSaleById);
 router.delete('/sales/:id', protect, authorize('superadmin'), deleteSaleTransaction);
 
 module.exports = router;

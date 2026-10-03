@@ -1,0 +1,1172 @@
+[
+  {
+    "_id": "ord_1791035519077_dy0qrk",
+    "orderNumber": 1111,
+    "tableId": null,
+    "tableName": "Takeaway (Mr. Testing User)",
+    "waiterId": "6aafde7154eae2940f01752a",
+    "waiterName": "Staff",
+    "customerName": "Mr. Testing User",
+    "customerPhone": "",
+    "channelOrderRef": "",
+    "status": "COMPLETED",
+    "isSettled": true,
+    "items": [
+      {
+        "name": "Chicken Kottu",
+        "quantity": 2,
+        "price": 850,
+        "total": 1700,
+        "department": "KITCHEN",
+        "category": "",
+        "specialInstructions": "",
+        "preparationStatus": "PENDING"
+      },
+      {
+        "name": "Royal Ice Talk Falooda",
+        "quantity": 2,
+        "price": 650,
+        "total": 1300,
+        "department": "JUICE",
+        "category": "",
+        "specialInstructions": "",
+        "preparationStatus": "PENDING"
+      }
+    ],
+    "subtotal": 3000,
+    "total": 3000,
+    "specialInstructions": "",
+    "priority": "NORMAL",
+    "isDemo": false,
+    "createdAt": "2026-10-03T13:51:59.077Z",
+    "updatedAt": "2026-10-03T13:51:59.196Z",
+    "completedAt": "2026-10-03T13:51:59.194Z",
+    "saleId": "sale_1791035519193_s3imzk"
+  },
+  {
+    "_id": "ord_1791035504397_bfv6f5",
+    "orderNumber": 1110,
+    "tableId": null,
+    "tableName": "Takeaway (Mr. Testing User)",
+    "waiterId": "6aafde7154eae2940f01752a",
+    "waiterName": "Staff",
+    "customerName": "Mr. Testing User",
+    "customerPhone": "",
+    "channelOrderRef": "",
+    "status": "COMPLETED",
+    "isSettled": true,
+    "items": [
+      {
+        "name": "Chicken Kottu",
+        "quantity": 2,
+        "price": 850,
+        "total": 1700,
+        "department": "KITCHEN",
+        "category": "",
+        "specialInstructions": "",
+        "preparationStatus": "PENDING"
+      },
+      {
+        "name": "Royal Ice Talk Falooda",
+        "quantity": 2,
+        "price": 650,
+        "total": 1300,
+        "department": "JUICE",
+        "category": "",
+        "specialInstructions": "",
+        "preparationStatus": "PENDING"
+      }
+    ],
+    "subtotal": 3000,
+    "total": 3000,
+    "specialInstructions": "",
+    "priority": "NORMAL",
+    "isDemo": false,
+    "createdAt": "2026-10-03T13:51:44.397Z",
+    "updatedAt": "2026-10-03T13:51:44.530Z",
+    "completedAt": "2026-10-03T13:51:44.528Z",
+    "saleId": "sale_1791035504524_svgv3y"
+  },
+  {
+    "_id": "ord_1791035483919_lc1fyk",
+    "orderNumber": 1109,
+    "tableId": null,
+    "tableName": "Takeaway (Mr. Testing User)",
+    "waiterId": "6aafde7154eae2940f01752a",
+    "waiterName": "Staff",
+    "customerName": "Mr. Testing User",
+    "customerPhone": "",
+    "channelOrderRef": "",
+    "status": "COMPLETED",
+    "isSettled": true,
+    "items": [
+      {
+        "name": "Chicken Kottu",
+        "quantity": 2,
+        "price": 850,
+        "total": 1700,
+        "department": "KITCHEN",
+        "category": "",
+        "specialInstructions": "",
+        "preparationStatus": "PENDING"
+      },
+      {
+        "name": "Royal Ice Talk Falooda",
+        "quantity": 2,
+        "price": 650,
+        "total": 1300,
+        "department": "JUICE",
+        "category": "",
+        "specialInstructions": "",
+        "preparationStatus": "PENDING"
+      }
+    ],
+    "subtotal": 3000,
+    "total": 3000,
+    "specialInstructions": "",
+    "priority": "NORMAL",
+    "isDemo": false,
+    "createdAt": "2026-10-03T13:51:23.919Z",
+    "updatedAt": "2026-10-03T13:51:24.043Z",
+    "completedAt": "2026-10-03T13:51:24.041Z",
+    "saleId": "sale_1791035484039_6kwt6k"
+  },
+  {
+    "_id": "ord_1791034803983_0",
+    "orderNumber": 1001,
+    "tableId": null,
+    "tableName": "Family 01",
+    "orderType": "DINE_IN",
+    "customerName": "",
+    "customerPhone": "",
+    "status": "COMPLETED",
+    "isSettled": true,
+    "items": [
+      {
+        "name": "Chicken Kottu",
+        "quantity": 2,
+        "price": 850,
+        "department": "KITCHEN",
+        "total": 1700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Royal Ice Talk Falooda",
+        "quantity": 2,
+        "price": 650,
+        "department": "JUICE",
+        "total": 1300,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3000,
+    "total": 3000,
+    "specialInstructions": "",
+    "priority": "NORMAL",
+    "isDemo": true,
+    "createdAt": "2026-10-03T04:10:00.000Z",
+    "updatedAt": "2026-10-03T04:30:00.000Z"
+  },
+  {
+    "_id": "ord_1791034803983_1",
+    "orderNumber": 1002,
+    "tableId": null,
+    "tableName": "Family 02",
+    "orderType": "DINE_IN",
+    "customerName": "",
+    "customerPhone": "",
+    "status": "COMPLETED",
+    "isSettled": true,
+    "items": [
+      {
+        "name": "Cheese Chicken Kottu",
+        "quantity": 1,
+        "price": 1150,
+        "department": "KITCHEN",
+        "total": 1150,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Mango Juice",
+        "quantity": 2,
+        "price": 450,
+        "department": "JUICE",
+        "total": 900,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Chicken Bun",
+        "quantity": 2,
+        "price": 450,
+        "department": "BUN",
+        "total": 900,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 2950,
+    "total": 2950,
+    "specialInstructions": "",
+    "priority": "NORMAL",
+    "isDemo": true,
+    "createdAt": "2026-10-03T04:27:00.000Z",
+    "updatedAt": "2026-10-03T04:47:00.000Z"
+  },
+  {
+    "_id": "ord_1791034803983_2",
+    "orderNumber": 1003,
+    "tableId": null,
+    "tableName": "TAKEAWAY",
+    "orderType": "TAKEAWAY",
+    "customerName": "Guest Customer",
+    "customerPhone": "",
+    "status": "COMPLETED",
+    "isSettled": true,
+    "items": [
+      {
+        "name": "Special Mixed Fried Rice",
+        "quantity": 3,
+        "price": 1100,
+        "department": "KITCHEN",
+        "total": 3300,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Crispy Chicken Burger",
+        "quantity": 2,
+        "price": 750,
+        "department": "KITCHEN",
+        "total": 1500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Fresh Orange Juice",
+        "quantity": 3,
+        "price": 500,
+        "department": "JUICE",
+        "total": 1500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 6300,
+    "total": 6300,
+    "specialInstructions": "",
+    "priority": "NORMAL",
+    "isDemo": true,
+    "createdAt": "2026-10-03T04:44:00.000Z",
+    "updatedAt": "2026-10-03T05:04:00.000Z"
+  },
+  {
+    "_id": "ord_1791034803983_3",
+    "orderNumber": 1004,
+    "tableId": null,
+    "tableName": "VIP 01",
+    "orderType": "DINE_IN",
+    "customerName": "",
+    "customerPhone": "",
+    "status": "COMPLETED",
+    "isSettled": true,
+    "items": [
+      {
+        "name": "Seafood Nasi Goreng",
+        "quantity": 2,
+        "price": 1350,
+        "department": "KITCHEN",
+        "total": 2700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Avocado Shake",
+        "quantity": 2,
+        "price": 600,
+        "department": "JUICE",
+        "total": 1200,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3900,
+    "total": 3900,
+    "specialInstructions": "",
+    "priority": "NORMAL",
+    "isDemo": true,
+    "createdAt": "2026-10-03T06:01:00.000Z",
+    "updatedAt": "2026-10-03T06:21:00.000Z"
+  },
+  {
+    "_id": "ord_1791034803983_4",
+    "orderNumber": 1005,
+    "tableId": null,
+    "tableName": "Outdoor A",
+    "orderType": "DINE_IN",
+    "customerName": "",
+    "customerPhone": "",
+    "status": "COMPLETED",
+    "isSettled": true,
+    "items": [
+      {
+        "name": "Chicken Kottu",
+        "quantity": 3,
+        "price": 850,
+        "department": "KITCHEN",
+        "total": 2550,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Lime Juice with Mint",
+        "quantity": 2,
+        "price": 350,
+        "department": "JUICE",
+        "total": 700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Vegetable Samosa (3 pcs)",
+        "quantity": 2,
+        "price": 250,
+        "department": "BUN",
+        "total": 500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3750,
+    "total": 3750,
+    "specialInstructions": "",
+    "priority": "NORMAL",
+    "isDemo": true,
+    "createdAt": "2026-10-03T05:18:00.000Z",
+    "updatedAt": "2026-10-03T05:38:00.000Z"
+  },
+  {
+    "_id": "ord_1791034803983_5",
+    "orderNumber": 1006,
+    "tableId": null,
+    "tableName": "DELIVERY",
+    "orderType": "DELIVERY",
+    "customerName": "Guest Customer",
+    "customerPhone": "",
+    "status": "COMPLETED",
+    "isSettled": true,
+    "items": [
+      {
+        "name": "Chicken Kottu",
+        "quantity": 2,
+        "price": 850,
+        "department": "KITCHEN",
+        "total": 1700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Royal Ice Talk Falooda",
+        "quantity": 2,
+        "price": 650,
+        "department": "JUICE",
+        "total": 1300,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3000,
+    "total": 3000,
+    "specialInstructions": "",
+    "priority": "NORMAL",
+    "isDemo": true,
+    "createdAt": "2026-10-03T06:35:00.000Z",
+    "updatedAt": "2026-10-03T06:55:00.000Z"
+  },
+  {
+    "_id": "ord_1791034803983_6",
+    "orderNumber": 1007,
+    "tableId": null,
+    "tableName": "Family 01",
+    "orderType": "DINE_IN",
+    "customerName": "",
+    "customerPhone": "",
+    "status": "COMPLETED",
+    "isSettled": true,
+    "items": [
+      {
+        "name": "Cheese Chicken Kottu",
+        "quantity": 1,
+        "price": 1150,
+        "department": "KITCHEN",
+        "total": 1150,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Mango Juice",
+        "quantity": 2,
+        "price": 450,
+        "department": "JUICE",
+        "total": 900,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Chicken Bun",
+        "quantity": 2,
+        "price": 450,
+        "department": "BUN",
+        "total": 900,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 2950,
+    "total": 2950,
+    "specialInstructions": "",
+    "priority": "NORMAL",
+    "isDemo": true,
+    "createdAt": "2026-10-03T06:52:00.000Z",
+    "updatedAt": "2026-10-03T07:12:00.000Z"
+  },
+  {
+    "_id": "ord_1791034803983_7",
+    "orderNumber": 1008,
+    "tableId": null,
+    "tableName": "Family 02",
+    "orderType": "DINE_IN",
+    "customerName": "",
+    "customerPhone": "",
+    "status": "COMPLETED",
+    "isSettled": true,
+    "items": [
+      {
+        "name": "Special Mixed Fried Rice",
+        "quantity": 3,
+        "price": 1100,
+        "department": "KITCHEN",
+        "total": 3300,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Crispy Chicken Burger",
+        "quantity": 2,
+        "price": 750,
+        "department": "KITCHEN",
+        "total": 1500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Fresh Orange Juice",
+        "quantity": 3,
+        "price": 500,
+        "department": "JUICE",
+        "total": 1500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 6300,
+    "total": 6300,
+    "specialInstructions": "",
+    "priority": "NORMAL",
+    "isDemo": true,
+    "createdAt": "2026-10-03T08:09:00.000Z",
+    "updatedAt": "2026-10-03T08:29:00.000Z"
+  },
+  {
+    "_id": "ord_1791034803983_8",
+    "orderNumber": 1009,
+    "tableId": null,
+    "tableName": "TAKEAWAY",
+    "orderType": "TAKEAWAY",
+    "customerName": "Guest Customer",
+    "customerPhone": "",
+    "status": "COMPLETED",
+    "isSettled": true,
+    "items": [
+      {
+        "name": "Seafood Nasi Goreng",
+        "quantity": 2,
+        "price": 1350,
+        "department": "KITCHEN",
+        "total": 2700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Avocado Shake",
+        "quantity": 2,
+        "price": 600,
+        "department": "JUICE",
+        "total": 1200,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3900,
+    "total": 3900,
+    "specialInstructions": "",
+    "priority": "NORMAL",
+    "isDemo": true,
+    "createdAt": "2026-10-03T07:26:00.000Z",
+    "updatedAt": "2026-10-03T07:46:00.000Z"
+  },
+  {
+    "_id": "ord_1791034803983_9",
+    "orderNumber": 1010,
+    "tableId": null,
+    "tableName": "VIP 01",
+    "orderType": "DINE_IN",
+    "customerName": "",
+    "customerPhone": "",
+    "status": "COMPLETED",
+    "isSettled": true,
+    "items": [
+      {
+        "name": "Chicken Kottu",
+        "quantity": 3,
+        "price": 850,
+        "department": "KITCHEN",
+        "total": 2550,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Lime Juice with Mint",
+        "quantity": 2,
+        "price": 350,
+        "department": "JUICE",
+        "total": 700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Vegetable Samosa (3 pcs)",
+        "quantity": 2,
+        "price": 250,
+        "department": "BUN",
+        "total": 500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3750,
+    "total": 3750,
+    "specialInstructions": "",
+    "priority": "NORMAL",
+    "isDemo": true,
+    "createdAt": "2026-10-03T08:43:00.000Z",
+    "updatedAt": "2026-10-03T09:03:00.000Z"
+  },
+  {
+    "_id": "ord_1791034803983_10",
+    "orderNumber": 1011,
+    "tableId": null,
+    "tableName": "Outdoor A",
+    "orderType": "DINE_IN",
+    "customerName": "",
+    "customerPhone": "",
+    "status": "COMPLETED",
+    "isSettled": true,
+    "items": [
+      {
+        "name": "Chicken Kottu",
+        "quantity": 2,
+        "price": 850,
+        "department": "KITCHEN",
+        "total": 1700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Royal Ice Talk Falooda",
+        "quantity": 2,
+        "price": 650,
+        "department": "JUICE",
+        "total": 1300,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3000,
+    "total": 3000,
+    "specialInstructions": "",
+    "priority": "NORMAL",
+    "isDemo": true,
+    "createdAt": "2026-10-03T09:00:00.000Z",
+    "updatedAt": "2026-10-03T09:20:00.000Z"
+  },
+  {
+    "_id": "ord_1791034803983_11",
+    "orderNumber": 1012,
+    "tableId": null,
+    "tableName": "DELIVERY",
+    "orderType": "DELIVERY",
+    "customerName": "Guest Customer",
+    "customerPhone": "",
+    "status": "COMPLETED",
+    "isSettled": true,
+    "items": [
+      {
+        "name": "Cheese Chicken Kottu",
+        "quantity": 1,
+        "price": 1150,
+        "department": "KITCHEN",
+        "total": 1150,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Mango Juice",
+        "quantity": 2,
+        "price": 450,
+        "department": "JUICE",
+        "total": 900,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Chicken Bun",
+        "quantity": 2,
+        "price": 450,
+        "department": "BUN",
+        "total": 900,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 2950,
+    "total": 2950,
+    "specialInstructions": "",
+    "priority": "NORMAL",
+    "isDemo": true,
+    "createdAt": "2026-10-03T09:17:00.000Z",
+    "updatedAt": "2026-10-03T09:37:00.000Z"
+  },
+  {
+    "_id": "ord_1791034803983_12",
+    "orderNumber": 1013,
+    "tableId": null,
+    "tableName": "Family 01",
+    "orderType": "DINE_IN",
+    "customerName": "",
+    "customerPhone": "",
+    "status": "COMPLETED",
+    "isSettled": true,
+    "items": [
+      {
+        "name": "Special Mixed Fried Rice",
+        "quantity": 3,
+        "price": 1100,
+        "department": "KITCHEN",
+        "total": 3300,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Crispy Chicken Burger",
+        "quantity": 2,
+        "price": 750,
+        "department": "KITCHEN",
+        "total": 1500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Fresh Orange Juice",
+        "quantity": 3,
+        "price": 500,
+        "department": "JUICE",
+        "total": 1500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 6300,
+    "total": 6300,
+    "specialInstructions": "",
+    "priority": "NORMAL",
+    "isDemo": true,
+    "createdAt": "2026-10-03T09:34:00.000Z",
+    "updatedAt": "2026-10-03T09:54:00.000Z"
+  },
+  {
+    "_id": "ord_1791034803983_13",
+    "orderNumber": 1014,
+    "tableId": null,
+    "tableName": "Family 02",
+    "orderType": "DINE_IN",
+    "customerName": "",
+    "customerPhone": "",
+    "status": "COMPLETED",
+    "isSettled": true,
+    "items": [
+      {
+        "name": "Seafood Nasi Goreng",
+        "quantity": 2,
+        "price": 1350,
+        "department": "KITCHEN",
+        "total": 2700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Avocado Shake",
+        "quantity": 2,
+        "price": 600,
+        "department": "JUICE",
+        "total": 1200,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3900,
+    "total": 3900,
+    "specialInstructions": "",
+    "priority": "NORMAL",
+    "isDemo": true,
+    "createdAt": "2026-10-03T09:51:00.000Z",
+    "updatedAt": "2026-10-03T10:11:00.000Z"
+  },
+  {
+    "_id": "ord_1791034803983_14",
+    "orderNumber": 1015,
+    "tableId": null,
+    "tableName": "TAKEAWAY",
+    "orderType": "TAKEAWAY",
+    "customerName": "Guest Customer",
+    "customerPhone": "",
+    "status": "COMPLETED",
+    "isSettled": true,
+    "items": [
+      {
+        "name": "Chicken Kottu",
+        "quantity": 3,
+        "price": 850,
+        "department": "KITCHEN",
+        "total": 2550,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Lime Juice with Mint",
+        "quantity": 2,
+        "price": 350,
+        "department": "JUICE",
+        "total": 700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Vegetable Samosa (3 pcs)",
+        "quantity": 2,
+        "price": 250,
+        "department": "BUN",
+        "total": 500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3750,
+    "total": 3750,
+    "specialInstructions": "",
+    "priority": "NORMAL",
+    "isDemo": true,
+    "createdAt": "2026-10-03T11:08:00.000Z",
+    "updatedAt": "2026-10-03T11:28:00.000Z"
+  },
+  {
+    "_id": "ord_1791034803983_15",
+    "orderNumber": 1016,
+    "tableId": null,
+    "tableName": "VIP 01",
+    "orderType": "DINE_IN",
+    "customerName": "",
+    "customerPhone": "",
+    "status": "COMPLETED",
+    "isSettled": true,
+    "items": [
+      {
+        "name": "Chicken Kottu",
+        "quantity": 2,
+        "price": 850,
+        "department": "KITCHEN",
+        "total": 1700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Royal Ice Talk Falooda",
+        "quantity": 2,
+        "price": 650,
+        "department": "JUICE",
+        "total": 1300,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3000,
+    "total": 3000,
+    "specialInstructions": "",
+    "priority": "NORMAL",
+    "isDemo": true,
+    "createdAt": "2026-10-03T10:25:00.000Z",
+    "updatedAt": "2026-10-03T10:45:00.000Z"
+  },
+  {
+    "_id": "ord_1791034803983_16",
+    "orderNumber": 1017,
+    "tableId": null,
+    "tableName": "Outdoor A",
+    "orderType": "DINE_IN",
+    "customerName": "",
+    "customerPhone": "",
+    "status": "COMPLETED",
+    "isSettled": true,
+    "items": [
+      {
+        "name": "Cheese Chicken Kottu",
+        "quantity": 1,
+        "price": 1150,
+        "department": "KITCHEN",
+        "total": 1150,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Mango Juice",
+        "quantity": 2,
+        "price": 450,
+        "department": "JUICE",
+        "total": 900,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Chicken Bun",
+        "quantity": 2,
+        "price": 450,
+        "department": "BUN",
+        "total": 900,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 2950,
+    "total": 2950,
+    "specialInstructions": "",
+    "priority": "NORMAL",
+    "isDemo": true,
+    "createdAt": "2026-10-03T11:42:00.000Z",
+    "updatedAt": "2026-10-03T12:02:00.000Z"
+  },
+  {
+    "_id": "ord_1791034803984_17",
+    "orderNumber": 1018,
+    "tableId": null,
+    "tableName": "DELIVERY",
+    "orderType": "DELIVERY",
+    "customerName": "Guest Customer",
+    "customerPhone": "",
+    "status": "COMPLETED",
+    "isSettled": true,
+    "items": [
+      {
+        "name": "Special Mixed Fried Rice",
+        "quantity": 3,
+        "price": 1100,
+        "department": "KITCHEN",
+        "total": 3300,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Crispy Chicken Burger",
+        "quantity": 2,
+        "price": 750,
+        "department": "KITCHEN",
+        "total": 1500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Fresh Orange Juice",
+        "quantity": 3,
+        "price": 500,
+        "department": "JUICE",
+        "total": 1500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 6300,
+    "total": 6300,
+    "specialInstructions": "",
+    "priority": "NORMAL",
+    "isDemo": true,
+    "createdAt": "2026-10-03T11:59:00.000Z",
+    "updatedAt": "2026-10-03T12:19:00.000Z"
+  },
+  {
+    "_id": "ord_1791034803984_18",
+    "orderNumber": 1019,
+    "tableId": null,
+    "tableName": "Family 01",
+    "orderType": "DINE_IN",
+    "customerName": "",
+    "customerPhone": "",
+    "status": "COMPLETED",
+    "isSettled": true,
+    "items": [
+      {
+        "name": "Seafood Nasi Goreng",
+        "quantity": 2,
+        "price": 1350,
+        "department": "KITCHEN",
+        "total": 2700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Avocado Shake",
+        "quantity": 2,
+        "price": 600,
+        "department": "JUICE",
+        "total": 1200,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3900,
+    "total": 3900,
+    "specialInstructions": "",
+    "priority": "NORMAL",
+    "isDemo": true,
+    "createdAt": "2026-10-03T12:16:00.000Z",
+    "updatedAt": "2026-10-03T12:36:00.000Z"
+  },
+  {
+    "_id": "ord_1791034803984_19",
+    "orderNumber": 1020,
+    "tableId": null,
+    "tableName": "Family 02",
+    "orderType": "DINE_IN",
+    "customerName": "",
+    "customerPhone": "",
+    "status": "COMPLETED",
+    "isSettled": true,
+    "items": [
+      {
+        "name": "Chicken Kottu",
+        "quantity": 3,
+        "price": 850,
+        "department": "KITCHEN",
+        "total": 2550,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Lime Juice with Mint",
+        "quantity": 2,
+        "price": 350,
+        "department": "JUICE",
+        "total": 700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Vegetable Samosa (3 pcs)",
+        "quantity": 2,
+        "price": 250,
+        "department": "BUN",
+        "total": 500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3750,
+    "total": 3750,
+    "specialInstructions": "",
+    "priority": "NORMAL",
+    "isDemo": true,
+    "createdAt": "2026-10-03T12:33:00.000Z",
+    "updatedAt": "2026-10-03T12:53:00.000Z"
+  },
+  {
+    "_id": "ord_1791034803984_20",
+    "orderNumber": 1021,
+    "tableId": null,
+    "tableName": "TAKEAWAY",
+    "orderType": "TAKEAWAY",
+    "customerName": "Guest Customer",
+    "customerPhone": "",
+    "status": "COMPLETED",
+    "isSettled": true,
+    "items": [
+      {
+        "name": "Chicken Kottu",
+        "quantity": 2,
+        "price": 850,
+        "department": "KITCHEN",
+        "total": 1700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Royal Ice Talk Falooda",
+        "quantity": 2,
+        "price": 650,
+        "department": "JUICE",
+        "total": 1300,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3000,
+    "total": 3000,
+    "specialInstructions": "",
+    "priority": "NORMAL",
+    "isDemo": true,
+    "createdAt": "2026-10-03T13:50:00.000Z",
+    "updatedAt": "2026-10-03T14:10:00.000Z"
+  },
+  {
+    "_id": "ord_1791034803984_21",
+    "orderNumber": 1022,
+    "tableId": null,
+    "tableName": "VIP 01",
+    "orderType": "DINE_IN",
+    "customerName": "",
+    "customerPhone": "",
+    "status": "COMPLETED",
+    "isSettled": true,
+    "items": [
+      {
+        "name": "Cheese Chicken Kottu",
+        "quantity": 1,
+        "price": 1150,
+        "department": "KITCHEN",
+        "total": 1150,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Mango Juice",
+        "quantity": 2,
+        "price": 450,
+        "department": "JUICE",
+        "total": 900,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Chicken Bun",
+        "quantity": 2,
+        "price": 450,
+        "department": "BUN",
+        "total": 900,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 2950,
+    "total": 2950,
+    "specialInstructions": "",
+    "priority": "NORMAL",
+    "isDemo": true,
+    "createdAt": "2026-10-03T14:07:00.000Z",
+    "updatedAt": "2026-10-03T14:27:00.000Z"
+  },
+  {
+    "_id": "ord_1791034803984_22",
+    "orderNumber": 1023,
+    "tableId": null,
+    "tableName": "Outdoor A",
+    "orderType": "DINE_IN",
+    "customerName": "",
+    "customerPhone": "",
+    "status": "COMPLETED",
+    "isSettled": true,
+    "items": [
+      {
+        "name": "Special Mixed Fried Rice",
+        "quantity": 3,
+        "price": 1100,
+        "department": "KITCHEN",
+        "total": 3300,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Crispy Chicken Burger",
+        "quantity": 2,
+        "price": 750,
+        "department": "KITCHEN",
+        "total": 1500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Fresh Orange Juice",
+        "quantity": 3,
+        "price": 500,
+        "department": "JUICE",
+        "total": 1500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 6300,
+    "total": 6300,
+    "specialInstructions": "",
+    "priority": "NORMAL",
+    "isDemo": true,
+    "createdAt": "2026-10-03T14:24:00.000Z",
+    "updatedAt": "2026-10-03T14:44:00.000Z"
+  },
+  {
+    "_id": "ord_1791034803984_23",
+    "orderNumber": 1024,
+    "tableId": null,
+    "tableName": "DELIVERY",
+    "orderType": "DELIVERY",
+    "customerName": "Guest Customer",
+    "customerPhone": "",
+    "status": "COMPLETED",
+    "isSettled": true,
+    "items": [
+      {
+        "name": "Seafood Nasi Goreng",
+        "quantity": 2,
+        "price": 1350,
+        "department": "KITCHEN",
+        "total": 2700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Avocado Shake",
+        "quantity": 2,
+        "price": 600,
+        "department": "JUICE",
+        "total": 1200,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3900,
+    "total": 3900,
+    "specialInstructions": "",
+    "priority": "NORMAL",
+    "isDemo": true,
+    "createdAt": "2026-10-03T14:41:00.000Z",
+    "updatedAt": "2026-10-03T15:01:00.000Z"
+  }
+]

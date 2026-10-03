@@ -37,9 +37,11 @@ const PrinterSettingsModal = () => {
     toggleMultiPrinterMode,
     testPrintStation,
     isElectron,
+    dsuperPrintEnabled,
+    toggleDsuperPrint,
   } = usePrinter();
 
-  if (!settingsOpen || user?.role !== 'superadmin') return null;
+  if (!settingsOpen || (user?.role !== 'superadmin' && user?.role !== 'admin')) return null;
 
   return (
     <div
@@ -94,6 +96,54 @@ const PrinterSettingsModal = () => {
               </button>
             )}
           </div>
+
+          {/* Demo Login Printing Control (Only visible for Demo Login) */}
+          {(user?.username === 'dsuper' || Boolean(user?.isDemo)) && (
+            <div className="bg-gradient-to-r from-orange-500/10 via-amber-500/10 to-[#181820] p-4 rounded-xl border border-orange-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div
+                  className={`p-2.5 rounded-xl border ${
+                    dsuperPrintEnabled
+                      ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400'
+                      : 'bg-neutral-800/80 border-neutral-700 text-neutral-400'
+                  }`}
+                >
+                  <Printer className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <p className="font-bold text-white text-xs">Demo Receipt &amp; KOT Printing</p>
+                    <span className="px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase tracking-wider bg-orange-500/20 text-[#FF6B00] border border-orange-500/30">
+                      Demo Login
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-neutral-400 mt-0.5">
+                    {dsuperPrintEnabled
+                      ? 'Printing is ACTIVE: Clicking settle or send to kitchen triggers thermal / dialogue printing.'
+                      : 'Printing is OFF (Silent): Orders and settlements will not trigger any printer popup or paper print.'}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={toggleDsuperPrint}
+                className={`px-3.5 py-2 rounded-xl font-bold text-xs transition-all flex items-center gap-2 border shadow-sm ${
+                  dsuperPrintEnabled
+                    ? 'bg-emerald-500 hover:bg-emerald-600 border-emerald-400 text-white shadow-emerald-500/25'
+                    : 'bg-[#1C1C24] hover:bg-[#252532] border-[#343446] text-neutral-300'
+                }`}
+                title="Toggle Demo Printing"
+              >
+                <span
+                  className={`w-2.5 h-2.5 rounded-full ${
+                    dsuperPrintEnabled ? 'bg-white animate-pulse' : 'bg-neutral-500'
+                  }`}
+                ></span>
+                <span>{dsuperPrintEnabled ? 'Print: ON' : 'Print: OFF'}</span>
+              </button>
+            </div>
+          )}
 
           {/* Mode Switch: Multi-Station vs Single Master */}
           <div className="bg-[#181820] p-4 rounded-xl border border-[#2B2B38] space-y-2.5">

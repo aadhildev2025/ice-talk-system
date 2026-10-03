@@ -488,7 +488,7 @@ export const handleDsuperRequest = async (config) => {
     todaySalesList.forEach((s) => {
       (s.items || []).forEach((it) => {
         if (!itemMap[it.name]) {
-          itemMap[it.name] = { name: it.name, quantity: 0, revenue: 0 };
+          itemMap[it.name] = { name: it.name, quantity: 0, revenue: 0, department: it.department || 'KITCHEN' };
         }
         itemMap[it.name].quantity += it.quantity;
         itemMap[it.name].revenue += it.total || it.price * it.quantity;
@@ -497,7 +497,13 @@ export const handleDsuperRequest = async (config) => {
     const topItems = Object.values(itemMap)
       .sort((a, b) => b.quantity - a.quantity)
       .slice(0, 5)
-      .map((it) => ({ _id: it.name, totalQuantity: it.quantity, totalRevenue: it.revenue }));
+      .map((it) => ({
+        _id: it.name,
+        totalQty: it.quantity,
+        totalQuantity: it.quantity,
+        totalRevenue: it.revenue,
+        department: it.department,
+      }));
 
     // Occupied tables
     const occupiedTableIds = new Set(
@@ -509,13 +515,13 @@ export const handleDsuperRequest = async (config) => {
     return {
       success: true,
       today: {
-        totalSales,
+        totalSales: todaySales,
         salesCount: todaySalesCount,
         totalOrders: todayOrders.length,
         cashSales,
         cardSales,
         onlineSales,
-        totalExpenses,
+        totalExpenses: todayExpenses,
         netIncome: todaySales - todayExpenses,
       },
       orderStatusCounts: {
@@ -532,7 +538,11 @@ export const handleDsuperRequest = async (config) => {
         occupied,
         available: Math.max(0, totalTables - occupied),
       },
-      recentOrders: orders.slice(0, 6),
+      recentOrders: orders.slice(0, 6).map((o) => ({
+        ...o,
+        tableNameSnapshot: o.tableNameSnapshot || o.tableName || 'Dine-In',
+        waiterNameSnapshot: o.waiterNameSnapshot || 'Waiter',
+      })),
       topItems,
     };
   }
@@ -810,9 +820,35 @@ export const handleDsuperRequest = async (config) => {
       (o) => String(o.tableId) === String(tableId) && !o.isSettled && !['CANCELLED', 'REJECTED'].includes(o.status)
     );
     const totalAmount = active.reduce((sum, o) => sum + (o.total || 0), 0);
+    const subtotal = active.reduce((sum, o) => sum + (o.subtotal || o.total || 0), 0);
+
+    const defaultTbl = DEFAULT_TABLES.find((t) => String(t._id) === String(tableId));
+    const tableName = active[0]?.tableName || defaultTbl?.name || `Table ${tableId}`;
+    const table = defaultTbl ? { ...defaultTbl, name: tableName } : { _id: tableId, name: tableName };
+
+    const aggregatedItems = [];
+    active.forEach((order) => {
+      (order.items || []).forEach((item) => {
+        aggregatedItems.push({
+          orderNumber: order.orderNumber,
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price,
+          total: item.total || (item.price * item.quantity),
+          department: item.department || 'KITCHEN',
+          specialInstructions: item.specialInstructions || '',
+        });
+      });
+    });
+
     return {
       success: true,
+      table,
+      ordersCount: active.length,
       orders: active,
+      aggregatedItems,
+      subtotal,
+      total: totalAmount,
       totalAmount,
       activeCount: active.length,
     };
@@ -1030,86 +1066,34 @@ export const handleDsuperRequest = async (config) => {
 };
 
 /**
- * Configure Axios request interceptor for dsuper.
- * When dsuper is active, routes requests directly to localStorage mock adapter.
+ * Configure Axios response interceptor for dsuper.
+ * Requests are sent to the local host computer server by default so data is saved in computer storage.
+ * If the server is offline or unreachable, it falls back to isolated browser localStorage.
  */
 export const setupDsuperInterceptor = (axiosInstance) => {
-  axiosInstance.interceptors.request.use(async (config) => {
-    if (!isDsuperUser()) {
-      return config;
-    }
-
-    const url = (config.url || '').split('?')[0];
-
-    // Intercept transactional & analytics endpoints for dsuper
-    const shouldIntercept =
-      url.startsWith('/api/reports') ||
-      url.startsWith('/api/pos/sales') ||
-      url.startsWith('/api/pos/settle') ||
-      url.startsWith('/api/pos/channel-orders') ||
-      url.includes('/api/pos/table/') ||
-      url.startsWith('/api/expenses') ||
-      url.startsWith('/api/orders') ||
-      url === '/api/auth/users' ||
-      url === '/api/tables';
-
-    if (shouldIntercept) {
-      const originalAdapter = config.adapter || axiosInstance.defaults.adapter;
-      config.adapter = async (cfg) => {
-        // Special case: /api/tables - try remote or fallback, then decorate with dsuper active occupancy
-        if (cfg.url.startsWith('/api/tables') && (cfg.method || 'get').toLowerCase() === 'get') {
-          let tablesList = [...DEFAULT_TABLES];
-          try {
-            if (originalAdapter) {
-              const remoteRes = await originalAdapter(cfg);
-              if (remoteRes?.data?.tables) {
-                tablesList = remoteRes.data.tables;
-              }
-            }
-          } catch {
-            // Server offline, use default
+  axiosInstance.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+      // If server is unreachable or offline and dsuper is active, provide local fallback
+      if (isDsuperUser() && (!error.response || error.response.status >= 500)) {
+        try {
+          const cfg = error.config || {};
+          const mockData = await handleDsuperRequest(cfg);
+          if (mockData !== null) {
+            return {
+              data: mockData,
+              status: 200,
+              statusText: 'OK (Local Fallback)',
+              headers: { 'content-type': 'application/json' },
+              config: cfg,
+            };
           }
-
-          const orders = getDsuperOrders();
-          const activeTableIds = new Set(
-            orders
-              .filter((o) => o.tableId && !o.isSettled && !['CANCELLED', 'REJECTED'].includes(o.status))
-              .map((o) => String(o.tableId))
-          );
-
-          const decoratedTables = tablesList.map((t) => ({
-            ...t,
-            isOccupied: activeTableIds.has(String(t._id)),
-          }));
-
-          return {
-            data: { success: true, tables: decoratedTables },
-            status: 200,
-            statusText: 'OK',
-            headers: { 'content-type': 'application/json' },
-            config: cfg,
-          };
+        } catch (fbErr) {
+          console.warn('[Dsuper Fallback error]:', fbErr);
         }
-
-        const mockData = await handleDsuperRequest(cfg);
-        if (mockData !== null) {
-          return {
-            data: mockData,
-            status: 200,
-            statusText: 'OK',
-            headers: { 'content-type': 'application/json' },
-            config: cfg,
-          };
-        }
-
-        if (originalAdapter) {
-          return originalAdapter(cfg);
-        }
-        return { data: { success: true }, status: 200, statusText: 'OK', headers: {}, config: cfg };
-      };
+      }
+      return Promise.reject(error);
     }
-
-    return config;
-  });
+  );
 };
 

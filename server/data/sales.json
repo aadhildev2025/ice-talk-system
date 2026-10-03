@@ -1,0 +1,5462 @@
+[
+  {
+    "_id": "sale_1791035519193_s3imzk",
+    "saleNumber": "INV-000211",
+    "tableId": null,
+    "tableNameSnapshot": "Takeaway (Mr. Testing User)",
+    "orderType": "TAKEAWAY",
+    "orderNumbers": [
+      1111
+    ],
+    "items": [
+      {
+        "name": "Chicken Kottu",
+        "quantity": 2,
+        "price": 850,
+        "total": 1700,
+        "department": "KITCHEN",
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Royal Ice Talk Falooda",
+        "quantity": 2,
+        "price": 650,
+        "total": 1300,
+        "department": "JUICE",
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3000,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3000,
+    "paymentMethod": "CASH",
+    "paymentStatus": "PAID",
+    "amountTendered": 3000,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": false,
+    "createdAt": "2026-10-03T13:51:59.193Z",
+    "updatedAt": "2026-10-03T13:51:59.193Z"
+  },
+  {
+    "_id": "sale_1791035504524_svgv3y",
+    "saleNumber": "INV-000210",
+    "tableId": null,
+    "tableNameSnapshot": "Takeaway (Mr. Testing User)",
+    "orderType": "TAKEAWAY",
+    "orderNumbers": [
+      1110
+    ],
+    "items": [
+      {
+        "name": "Chicken Kottu",
+        "quantity": 2,
+        "price": 850,
+        "total": 1700,
+        "department": "KITCHEN",
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Royal Ice Talk Falooda",
+        "quantity": 2,
+        "price": 650,
+        "total": 1300,
+        "department": "JUICE",
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3000,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3000,
+    "paymentMethod": "CASH",
+    "paymentStatus": "PAID",
+    "amountTendered": 3000,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": false,
+    "createdAt": "2026-10-03T13:51:44.525Z",
+    "updatedAt": "2026-10-03T13:51:44.525Z"
+  },
+  {
+    "_id": "sale_1791035484039_6kwt6k",
+    "saleNumber": "INV-000209",
+    "tableId": null,
+    "tableNameSnapshot": "Takeaway (Mr. Testing User)",
+    "orderType": "TAKEAWAY",
+    "orderNumbers": [
+      1109
+    ],
+    "items": [
+      {
+        "name": "Chicken Kottu",
+        "quantity": 2,
+        "price": 850,
+        "total": 1700,
+        "department": "KITCHEN",
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Royal Ice Talk Falooda",
+        "quantity": 2,
+        "price": 650,
+        "total": 1300,
+        "department": "JUICE",
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3000,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3000,
+    "paymentMethod": "CASH",
+    "paymentStatus": "PAID",
+    "amountTendered": 3000,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": false,
+    "createdAt": "2026-10-03T13:51:24.039Z",
+    "updatedAt": "2026-10-03T13:51:24.039Z"
+  },
+  {
+    "_id": "sale_1791034803982_0",
+    "saleNumber": "INV-000101",
+    "tableId": null,
+    "tableNameSnapshot": "Family 01",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1001
+    ],
+    "items": [
+      {
+        "name": "Chicken Kottu",
+        "quantity": 2,
+        "price": 850,
+        "department": "KITCHEN",
+        "total": 1700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Royal Ice Talk Falooda",
+        "quantity": 2,
+        "price": 650,
+        "department": "JUICE",
+        "total": 1300,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3000,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3000,
+    "paymentMethod": "CASH",
+    "paymentStatus": "PAID",
+    "amountTendered": 3000,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-10-03T04:30:00.000Z",
+    "updatedAt": "2026-10-03T04:30:00.000Z"
+  },
+  {
+    "_id": "sale_1791034803983_1",
+    "saleNumber": "INV-000102",
+    "tableId": null,
+    "tableNameSnapshot": "Family 02",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1002
+    ],
+    "items": [
+      {
+        "name": "Cheese Chicken Kottu",
+        "quantity": 1,
+        "price": 1150,
+        "department": "KITCHEN",
+        "total": 1150,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Mango Juice",
+        "quantity": 2,
+        "price": 450,
+        "department": "JUICE",
+        "total": 900,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Chicken Bun",
+        "quantity": 2,
+        "price": 450,
+        "department": "BUN",
+        "total": 900,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 2950,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 2950,
+    "paymentMethod": "CASH",
+    "paymentStatus": "PAID",
+    "amountTendered": 2950,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-10-03T04:47:00.000Z",
+    "updatedAt": "2026-10-03T04:47:00.000Z"
+  },
+  {
+    "_id": "sale_1791034803983_2",
+    "saleNumber": "INV-000103",
+    "tableId": null,
+    "tableNameSnapshot": "TAKEAWAY",
+    "orderType": "TAKEAWAY",
+    "orderNumbers": [
+      1003
+    ],
+    "items": [
+      {
+        "name": "Special Mixed Fried Rice",
+        "quantity": 3,
+        "price": 1100,
+        "department": "KITCHEN",
+        "total": 3300,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Crispy Chicken Burger",
+        "quantity": 2,
+        "price": 750,
+        "department": "KITCHEN",
+        "total": 1500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Fresh Orange Juice",
+        "quantity": 3,
+        "price": 500,
+        "department": "JUICE",
+        "total": 1500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 6300,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 6300,
+    "paymentMethod": "CARD",
+    "paymentStatus": "PAID",
+    "amountTendered": 6300,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-10-03T05:04:00.000Z",
+    "updatedAt": "2026-10-03T05:04:00.000Z"
+  },
+  {
+    "_id": "sale_1791034803983_3",
+    "saleNumber": "INV-000104",
+    "tableId": null,
+    "tableNameSnapshot": "VIP 01",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1004
+    ],
+    "items": [
+      {
+        "name": "Seafood Nasi Goreng",
+        "quantity": 2,
+        "price": 1350,
+        "department": "KITCHEN",
+        "total": 2700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Avocado Shake",
+        "quantity": 2,
+        "price": 600,
+        "department": "JUICE",
+        "total": 1200,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3900,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3900,
+    "paymentMethod": "CASH",
+    "paymentStatus": "PAID",
+    "amountTendered": 3900,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-10-03T06:21:00.000Z",
+    "updatedAt": "2026-10-03T06:21:00.000Z"
+  },
+  {
+    "_id": "sale_1791034803983_4",
+    "saleNumber": "INV-000105",
+    "tableId": null,
+    "tableNameSnapshot": "Outdoor A",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1005
+    ],
+    "items": [
+      {
+        "name": "Chicken Kottu",
+        "quantity": 3,
+        "price": 850,
+        "department": "KITCHEN",
+        "total": 2550,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Lime Juice with Mint",
+        "quantity": 2,
+        "price": 350,
+        "department": "JUICE",
+        "total": 700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Vegetable Samosa (3 pcs)",
+        "quantity": 2,
+        "price": 250,
+        "department": "BUN",
+        "total": 500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3750,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3750,
+    "paymentMethod": "CARD",
+    "paymentStatus": "PAID",
+    "amountTendered": 3750,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-10-03T05:38:00.000Z",
+    "updatedAt": "2026-10-03T05:38:00.000Z"
+  },
+  {
+    "_id": "sale_1791034803983_5",
+    "saleNumber": "INV-000106",
+    "tableId": null,
+    "tableNameSnapshot": "DELIVERY",
+    "orderType": "DELIVERY",
+    "orderNumbers": [
+      1006
+    ],
+    "items": [
+      {
+        "name": "Chicken Kottu",
+        "quantity": 2,
+        "price": 850,
+        "department": "KITCHEN",
+        "total": 1700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Royal Ice Talk Falooda",
+        "quantity": 2,
+        "price": 650,
+        "department": "JUICE",
+        "total": 1300,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3000,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3000,
+    "paymentMethod": "ONLINE",
+    "paymentStatus": "PAID",
+    "amountTendered": 3000,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-10-03T06:55:00.000Z",
+    "updatedAt": "2026-10-03T06:55:00.000Z"
+  },
+  {
+    "_id": "sale_1791034803983_6",
+    "saleNumber": "INV-000107",
+    "tableId": null,
+    "tableNameSnapshot": "Family 01",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1007
+    ],
+    "items": [
+      {
+        "name": "Cheese Chicken Kottu",
+        "quantity": 1,
+        "price": 1150,
+        "department": "KITCHEN",
+        "total": 1150,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Mango Juice",
+        "quantity": 2,
+        "price": 450,
+        "department": "JUICE",
+        "total": 900,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Chicken Bun",
+        "quantity": 2,
+        "price": 450,
+        "department": "BUN",
+        "total": 900,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 2950,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 2950,
+    "paymentMethod": "CASH",
+    "paymentStatus": "PAID",
+    "amountTendered": 2950,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-10-03T07:12:00.000Z",
+    "updatedAt": "2026-10-03T07:12:00.000Z"
+  },
+  {
+    "_id": "sale_1791034803983_7",
+    "saleNumber": "INV-000108",
+    "tableId": null,
+    "tableNameSnapshot": "Family 02",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1008
+    ],
+    "items": [
+      {
+        "name": "Special Mixed Fried Rice",
+        "quantity": 3,
+        "price": 1100,
+        "department": "KITCHEN",
+        "total": 3300,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Crispy Chicken Burger",
+        "quantity": 2,
+        "price": 750,
+        "department": "KITCHEN",
+        "total": 1500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Fresh Orange Juice",
+        "quantity": 3,
+        "price": 500,
+        "department": "JUICE",
+        "total": 1500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 6300,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 6300,
+    "paymentMethod": "CASH",
+    "paymentStatus": "PAID",
+    "amountTendered": 6300,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-10-03T08:29:00.000Z",
+    "updatedAt": "2026-10-03T08:29:00.000Z"
+  },
+  {
+    "_id": "sale_1791034803983_8",
+    "saleNumber": "INV-000109",
+    "tableId": null,
+    "tableNameSnapshot": "TAKEAWAY",
+    "orderType": "TAKEAWAY",
+    "orderNumbers": [
+      1009
+    ],
+    "items": [
+      {
+        "name": "Seafood Nasi Goreng",
+        "quantity": 2,
+        "price": 1350,
+        "department": "KITCHEN",
+        "total": 2700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Avocado Shake",
+        "quantity": 2,
+        "price": 600,
+        "department": "JUICE",
+        "total": 1200,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3900,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3900,
+    "paymentMethod": "CARD",
+    "paymentStatus": "PAID",
+    "amountTendered": 3900,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-10-03T07:46:00.000Z",
+    "updatedAt": "2026-10-03T07:46:00.000Z"
+  },
+  {
+    "_id": "sale_1791034803983_9",
+    "saleNumber": "INV-000110",
+    "tableId": null,
+    "tableNameSnapshot": "VIP 01",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1010
+    ],
+    "items": [
+      {
+        "name": "Chicken Kottu",
+        "quantity": 3,
+        "price": 850,
+        "department": "KITCHEN",
+        "total": 2550,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Lime Juice with Mint",
+        "quantity": 2,
+        "price": 350,
+        "department": "JUICE",
+        "total": 700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Vegetable Samosa (3 pcs)",
+        "quantity": 2,
+        "price": 250,
+        "department": "BUN",
+        "total": 500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3750,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3750,
+    "paymentMethod": "CASH",
+    "paymentStatus": "PAID",
+    "amountTendered": 3750,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-10-03T09:03:00.000Z",
+    "updatedAt": "2026-10-03T09:03:00.000Z"
+  },
+  {
+    "_id": "sale_1791034803983_10",
+    "saleNumber": "INV-000111",
+    "tableId": null,
+    "tableNameSnapshot": "Outdoor A",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1011
+    ],
+    "items": [
+      {
+        "name": "Chicken Kottu",
+        "quantity": 2,
+        "price": 850,
+        "department": "KITCHEN",
+        "total": 1700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Royal Ice Talk Falooda",
+        "quantity": 2,
+        "price": 650,
+        "department": "JUICE",
+        "total": 1300,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3000,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3000,
+    "paymentMethod": "CARD",
+    "paymentStatus": "PAID",
+    "amountTendered": 3000,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-10-03T09:20:00.000Z",
+    "updatedAt": "2026-10-03T09:20:00.000Z"
+  },
+  {
+    "_id": "sale_1791034803983_11",
+    "saleNumber": "INV-000112",
+    "tableId": null,
+    "tableNameSnapshot": "DELIVERY",
+    "orderType": "DELIVERY",
+    "orderNumbers": [
+      1012
+    ],
+    "items": [
+      {
+        "name": "Cheese Chicken Kottu",
+        "quantity": 1,
+        "price": 1150,
+        "department": "KITCHEN",
+        "total": 1150,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Mango Juice",
+        "quantity": 2,
+        "price": 450,
+        "department": "JUICE",
+        "total": 900,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Chicken Bun",
+        "quantity": 2,
+        "price": 450,
+        "department": "BUN",
+        "total": 900,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 2950,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 2950,
+    "paymentMethod": "ONLINE",
+    "paymentStatus": "PAID",
+    "amountTendered": 2950,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-10-03T09:37:00.000Z",
+    "updatedAt": "2026-10-03T09:37:00.000Z"
+  },
+  {
+    "_id": "sale_1791034803983_12",
+    "saleNumber": "INV-000113",
+    "tableId": null,
+    "tableNameSnapshot": "Family 01",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1013
+    ],
+    "items": [
+      {
+        "name": "Special Mixed Fried Rice",
+        "quantity": 3,
+        "price": 1100,
+        "department": "KITCHEN",
+        "total": 3300,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Crispy Chicken Burger",
+        "quantity": 2,
+        "price": 750,
+        "department": "KITCHEN",
+        "total": 1500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Fresh Orange Juice",
+        "quantity": 3,
+        "price": 500,
+        "department": "JUICE",
+        "total": 1500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 6300,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 6300,
+    "paymentMethod": "CASH",
+    "paymentStatus": "PAID",
+    "amountTendered": 6300,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-10-03T09:54:00.000Z",
+    "updatedAt": "2026-10-03T09:54:00.000Z"
+  },
+  {
+    "_id": "sale_1791034803983_13",
+    "saleNumber": "INV-000114",
+    "tableId": null,
+    "tableNameSnapshot": "Family 02",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1014
+    ],
+    "items": [
+      {
+        "name": "Seafood Nasi Goreng",
+        "quantity": 2,
+        "price": 1350,
+        "department": "KITCHEN",
+        "total": 2700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Avocado Shake",
+        "quantity": 2,
+        "price": 600,
+        "department": "JUICE",
+        "total": 1200,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3900,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3900,
+    "paymentMethod": "CASH",
+    "paymentStatus": "PAID",
+    "amountTendered": 3900,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-10-03T10:11:00.000Z",
+    "updatedAt": "2026-10-03T10:11:00.000Z"
+  },
+  {
+    "_id": "sale_1791034803983_14",
+    "saleNumber": "INV-000115",
+    "tableId": null,
+    "tableNameSnapshot": "TAKEAWAY",
+    "orderType": "TAKEAWAY",
+    "orderNumbers": [
+      1015
+    ],
+    "items": [
+      {
+        "name": "Chicken Kottu",
+        "quantity": 3,
+        "price": 850,
+        "department": "KITCHEN",
+        "total": 2550,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Lime Juice with Mint",
+        "quantity": 2,
+        "price": 350,
+        "department": "JUICE",
+        "total": 700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Vegetable Samosa (3 pcs)",
+        "quantity": 2,
+        "price": 250,
+        "department": "BUN",
+        "total": 500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3750,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3750,
+    "paymentMethod": "CARD",
+    "paymentStatus": "PAID",
+    "amountTendered": 3750,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-10-03T11:28:00.000Z",
+    "updatedAt": "2026-10-03T11:28:00.000Z"
+  },
+  {
+    "_id": "sale_1791034803983_15",
+    "saleNumber": "INV-000116",
+    "tableId": null,
+    "tableNameSnapshot": "VIP 01",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1016
+    ],
+    "items": [
+      {
+        "name": "Chicken Kottu",
+        "quantity": 2,
+        "price": 850,
+        "department": "KITCHEN",
+        "total": 1700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Royal Ice Talk Falooda",
+        "quantity": 2,
+        "price": 650,
+        "department": "JUICE",
+        "total": 1300,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3000,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3000,
+    "paymentMethod": "CASH",
+    "paymentStatus": "PAID",
+    "amountTendered": 3000,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-10-03T10:45:00.000Z",
+    "updatedAt": "2026-10-03T10:45:00.000Z"
+  },
+  {
+    "_id": "sale_1791034803983_16",
+    "saleNumber": "INV-000117",
+    "tableId": null,
+    "tableNameSnapshot": "Outdoor A",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1017
+    ],
+    "items": [
+      {
+        "name": "Cheese Chicken Kottu",
+        "quantity": 1,
+        "price": 1150,
+        "department": "KITCHEN",
+        "total": 1150,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Mango Juice",
+        "quantity": 2,
+        "price": 450,
+        "department": "JUICE",
+        "total": 900,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Chicken Bun",
+        "quantity": 2,
+        "price": 450,
+        "department": "BUN",
+        "total": 900,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 2950,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 2950,
+    "paymentMethod": "CARD",
+    "paymentStatus": "PAID",
+    "amountTendered": 2950,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-10-03T12:02:00.000Z",
+    "updatedAt": "2026-10-03T12:02:00.000Z"
+  },
+  {
+    "_id": "sale_1791034803983_17",
+    "saleNumber": "INV-000118",
+    "tableId": null,
+    "tableNameSnapshot": "DELIVERY",
+    "orderType": "DELIVERY",
+    "orderNumbers": [
+      1018
+    ],
+    "items": [
+      {
+        "name": "Special Mixed Fried Rice",
+        "quantity": 3,
+        "price": 1100,
+        "department": "KITCHEN",
+        "total": 3300,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Crispy Chicken Burger",
+        "quantity": 2,
+        "price": 750,
+        "department": "KITCHEN",
+        "total": 1500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Fresh Orange Juice",
+        "quantity": 3,
+        "price": 500,
+        "department": "JUICE",
+        "total": 1500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 6300,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 6300,
+    "paymentMethod": "ONLINE",
+    "paymentStatus": "PAID",
+    "amountTendered": 6300,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-10-03T12:19:00.000Z",
+    "updatedAt": "2026-10-03T12:19:00.000Z"
+  },
+  {
+    "_id": "sale_1791034803984_18",
+    "saleNumber": "INV-000119",
+    "tableId": null,
+    "tableNameSnapshot": "Family 01",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1019
+    ],
+    "items": [
+      {
+        "name": "Seafood Nasi Goreng",
+        "quantity": 2,
+        "price": 1350,
+        "department": "KITCHEN",
+        "total": 2700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Avocado Shake",
+        "quantity": 2,
+        "price": 600,
+        "department": "JUICE",
+        "total": 1200,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3900,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3900,
+    "paymentMethod": "CASH",
+    "paymentStatus": "PAID",
+    "amountTendered": 3900,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-10-03T12:36:00.000Z",
+    "updatedAt": "2026-10-03T12:36:00.000Z"
+  },
+  {
+    "_id": "sale_1791034803984_19",
+    "saleNumber": "INV-000120",
+    "tableId": null,
+    "tableNameSnapshot": "Family 02",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1020
+    ],
+    "items": [
+      {
+        "name": "Chicken Kottu",
+        "quantity": 3,
+        "price": 850,
+        "department": "KITCHEN",
+        "total": 2550,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Lime Juice with Mint",
+        "quantity": 2,
+        "price": 350,
+        "department": "JUICE",
+        "total": 700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Vegetable Samosa (3 pcs)",
+        "quantity": 2,
+        "price": 250,
+        "department": "BUN",
+        "total": 500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3750,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3750,
+    "paymentMethod": "CASH",
+    "paymentStatus": "PAID",
+    "amountTendered": 3750,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-10-03T12:53:00.000Z",
+    "updatedAt": "2026-10-03T12:53:00.000Z"
+  },
+  {
+    "_id": "sale_1791034803984_20",
+    "saleNumber": "INV-000121",
+    "tableId": null,
+    "tableNameSnapshot": "TAKEAWAY",
+    "orderType": "TAKEAWAY",
+    "orderNumbers": [
+      1021
+    ],
+    "items": [
+      {
+        "name": "Chicken Kottu",
+        "quantity": 2,
+        "price": 850,
+        "department": "KITCHEN",
+        "total": 1700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Royal Ice Talk Falooda",
+        "quantity": 2,
+        "price": 650,
+        "department": "JUICE",
+        "total": 1300,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3000,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3000,
+    "paymentMethod": "CARD",
+    "paymentStatus": "PAID",
+    "amountTendered": 3000,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-10-03T14:10:00.000Z",
+    "updatedAt": "2026-10-03T14:10:00.000Z"
+  },
+  {
+    "_id": "sale_1791034803984_21",
+    "saleNumber": "INV-000122",
+    "tableId": null,
+    "tableNameSnapshot": "VIP 01",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1022
+    ],
+    "items": [
+      {
+        "name": "Cheese Chicken Kottu",
+        "quantity": 1,
+        "price": 1150,
+        "department": "KITCHEN",
+        "total": 1150,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Mango Juice",
+        "quantity": 2,
+        "price": 450,
+        "department": "JUICE",
+        "total": 900,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Chicken Bun",
+        "quantity": 2,
+        "price": 450,
+        "department": "BUN",
+        "total": 900,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 2950,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 2950,
+    "paymentMethod": "CASH",
+    "paymentStatus": "PAID",
+    "amountTendered": 2950,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-10-03T14:27:00.000Z",
+    "updatedAt": "2026-10-03T14:27:00.000Z"
+  },
+  {
+    "_id": "sale_1791034803984_22",
+    "saleNumber": "INV-000123",
+    "tableId": null,
+    "tableNameSnapshot": "Outdoor A",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1023
+    ],
+    "items": [
+      {
+        "name": "Special Mixed Fried Rice",
+        "quantity": 3,
+        "price": 1100,
+        "department": "KITCHEN",
+        "total": 3300,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Crispy Chicken Burger",
+        "quantity": 2,
+        "price": 750,
+        "department": "KITCHEN",
+        "total": 1500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Fresh Orange Juice",
+        "quantity": 3,
+        "price": 500,
+        "department": "JUICE",
+        "total": 1500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 6300,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 6300,
+    "paymentMethod": "CARD",
+    "paymentStatus": "PAID",
+    "amountTendered": 6300,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-10-03T14:44:00.000Z",
+    "updatedAt": "2026-10-03T14:44:00.000Z"
+  },
+  {
+    "_id": "sale_1791034803984_23",
+    "saleNumber": "INV-000124",
+    "tableId": null,
+    "tableNameSnapshot": "DELIVERY",
+    "orderType": "DELIVERY",
+    "orderNumbers": [
+      1024
+    ],
+    "items": [
+      {
+        "name": "Seafood Nasi Goreng",
+        "quantity": 2,
+        "price": 1350,
+        "department": "KITCHEN",
+        "total": 2700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Avocado Shake",
+        "quantity": 2,
+        "price": 600,
+        "department": "JUICE",
+        "total": 1200,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3900,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3900,
+    "paymentMethod": "ONLINE",
+    "paymentStatus": "PAID",
+    "amountTendered": 3900,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-10-03T15:01:00.000Z",
+    "updatedAt": "2026-10-03T15:01:00.000Z"
+  },
+  {
+    "_id": "sale_past_1_0",
+    "saleNumber": "INV-000125",
+    "tableId": null,
+    "tableNameSnapshot": "Family 02",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1025
+    ],
+    "items": [
+      {
+        "name": "Cheese Chicken Kottu",
+        "quantity": 1,
+        "price": 1150,
+        "department": "KITCHEN",
+        "total": 1150,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Mango Juice",
+        "quantity": 2,
+        "price": 450,
+        "department": "JUICE",
+        "total": 900,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Chicken Bun",
+        "quantity": 2,
+        "price": 450,
+        "department": "BUN",
+        "total": 900,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 2950,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 2950,
+    "paymentMethod": "CASH",
+    "paymentStatus": "PAID",
+    "amountTendered": 2950,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-10-03T00:40:03.981Z",
+    "updatedAt": "2026-10-03T00:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_1_1",
+    "saleNumber": "INV-000126",
+    "tableId": null,
+    "tableNameSnapshot": "TAKEAWAY",
+    "orderType": "TAKEAWAY",
+    "orderNumbers": [
+      1026
+    ],
+    "items": [
+      {
+        "name": "Special Mixed Fried Rice",
+        "quantity": 3,
+        "price": 1100,
+        "department": "KITCHEN",
+        "total": 3300,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Crispy Chicken Burger",
+        "quantity": 2,
+        "price": 750,
+        "department": "KITCHEN",
+        "total": 1500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Fresh Orange Juice",
+        "quantity": 3,
+        "price": 500,
+        "department": "JUICE",
+        "total": 1500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 6300,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 6300,
+    "paymentMethod": "CARD",
+    "paymentStatus": "PAID",
+    "amountTendered": 6300,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-10-03T03:40:03.981Z",
+    "updatedAt": "2026-10-03T03:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_1_2",
+    "saleNumber": "INV-000127",
+    "tableId": null,
+    "tableNameSnapshot": "VIP 01",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1027
+    ],
+    "items": [
+      {
+        "name": "Seafood Nasi Goreng",
+        "quantity": 2,
+        "price": 1350,
+        "department": "KITCHEN",
+        "total": 2700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Avocado Shake",
+        "quantity": 2,
+        "price": 600,
+        "department": "JUICE",
+        "total": 1200,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3900,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3900,
+    "paymentMethod": "CASH",
+    "paymentStatus": "PAID",
+    "amountTendered": 3900,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-10-03T06:40:03.981Z",
+    "updatedAt": "2026-10-03T06:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_2_0",
+    "saleNumber": "INV-000128",
+    "tableId": null,
+    "tableNameSnapshot": "TAKEAWAY",
+    "orderType": "TAKEAWAY",
+    "orderNumbers": [
+      1028
+    ],
+    "items": [
+      {
+        "name": "Special Mixed Fried Rice",
+        "quantity": 3,
+        "price": 1100,
+        "department": "KITCHEN",
+        "total": 3300,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Crispy Chicken Burger",
+        "quantity": 2,
+        "price": 750,
+        "department": "KITCHEN",
+        "total": 1500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Fresh Orange Juice",
+        "quantity": 3,
+        "price": 500,
+        "department": "JUICE",
+        "total": 1500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 6300,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 6300,
+    "paymentMethod": "CARD",
+    "paymentStatus": "PAID",
+    "amountTendered": 6300,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-10-02T00:40:03.981Z",
+    "updatedAt": "2026-10-02T00:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_2_1",
+    "saleNumber": "INV-000129",
+    "tableId": null,
+    "tableNameSnapshot": "VIP 01",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1029
+    ],
+    "items": [
+      {
+        "name": "Seafood Nasi Goreng",
+        "quantity": 2,
+        "price": 1350,
+        "department": "KITCHEN",
+        "total": 2700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Avocado Shake",
+        "quantity": 2,
+        "price": 600,
+        "department": "JUICE",
+        "total": 1200,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3900,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3900,
+    "paymentMethod": "CASH",
+    "paymentStatus": "PAID",
+    "amountTendered": 3900,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-10-02T03:40:03.981Z",
+    "updatedAt": "2026-10-02T03:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_2_2",
+    "saleNumber": "INV-000130",
+    "tableId": null,
+    "tableNameSnapshot": "Outdoor A",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1030
+    ],
+    "items": [
+      {
+        "name": "Chicken Kottu",
+        "quantity": 3,
+        "price": 850,
+        "department": "KITCHEN",
+        "total": 2550,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Lime Juice with Mint",
+        "quantity": 2,
+        "price": 350,
+        "department": "JUICE",
+        "total": 700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Vegetable Samosa (3 pcs)",
+        "quantity": 2,
+        "price": 250,
+        "department": "BUN",
+        "total": 500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3750,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3750,
+    "paymentMethod": "CARD",
+    "paymentStatus": "PAID",
+    "amountTendered": 3750,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-10-02T06:40:03.981Z",
+    "updatedAt": "2026-10-02T06:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_2_3",
+    "saleNumber": "INV-000131",
+    "tableId": null,
+    "tableNameSnapshot": "DELIVERY",
+    "orderType": "DELIVERY",
+    "orderNumbers": [
+      1031
+    ],
+    "items": [
+      {
+        "name": "Chicken Kottu",
+        "quantity": 2,
+        "price": 850,
+        "department": "KITCHEN",
+        "total": 1700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Royal Ice Talk Falooda",
+        "quantity": 2,
+        "price": 650,
+        "department": "JUICE",
+        "total": 1300,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3000,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3000,
+    "paymentMethod": "ONLINE",
+    "paymentStatus": "PAID",
+    "amountTendered": 3000,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-10-02T09:40:03.981Z",
+    "updatedAt": "2026-10-02T09:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_3_0",
+    "saleNumber": "INV-000132",
+    "tableId": null,
+    "tableNameSnapshot": "VIP 01",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1032
+    ],
+    "items": [
+      {
+        "name": "Seafood Nasi Goreng",
+        "quantity": 2,
+        "price": 1350,
+        "department": "KITCHEN",
+        "total": 2700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Avocado Shake",
+        "quantity": 2,
+        "price": 600,
+        "department": "JUICE",
+        "total": 1200,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3900,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3900,
+    "paymentMethod": "CASH",
+    "paymentStatus": "PAID",
+    "amountTendered": 3900,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-10-01T00:40:03.981Z",
+    "updatedAt": "2026-10-01T00:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_3_1",
+    "saleNumber": "INV-000133",
+    "tableId": null,
+    "tableNameSnapshot": "Outdoor A",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1033
+    ],
+    "items": [
+      {
+        "name": "Chicken Kottu",
+        "quantity": 3,
+        "price": 850,
+        "department": "KITCHEN",
+        "total": 2550,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Lime Juice with Mint",
+        "quantity": 2,
+        "price": 350,
+        "department": "JUICE",
+        "total": 700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Vegetable Samosa (3 pcs)",
+        "quantity": 2,
+        "price": 250,
+        "department": "BUN",
+        "total": 500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3750,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3750,
+    "paymentMethod": "CARD",
+    "paymentStatus": "PAID",
+    "amountTendered": 3750,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-10-01T03:40:03.981Z",
+    "updatedAt": "2026-10-01T03:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_4_0",
+    "saleNumber": "INV-000134",
+    "tableId": null,
+    "tableNameSnapshot": "Outdoor A",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1034
+    ],
+    "items": [
+      {
+        "name": "Chicken Kottu",
+        "quantity": 3,
+        "price": 850,
+        "department": "KITCHEN",
+        "total": 2550,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Lime Juice with Mint",
+        "quantity": 2,
+        "price": 350,
+        "department": "JUICE",
+        "total": 700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Vegetable Samosa (3 pcs)",
+        "quantity": 2,
+        "price": 250,
+        "department": "BUN",
+        "total": 500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3750,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3750,
+    "paymentMethod": "CARD",
+    "paymentStatus": "PAID",
+    "amountTendered": 3750,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-30T00:40:03.981Z",
+    "updatedAt": "2026-09-30T00:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_4_1",
+    "saleNumber": "INV-000135",
+    "tableId": null,
+    "tableNameSnapshot": "DELIVERY",
+    "orderType": "DELIVERY",
+    "orderNumbers": [
+      1035
+    ],
+    "items": [
+      {
+        "name": "Chicken Kottu",
+        "quantity": 2,
+        "price": 850,
+        "department": "KITCHEN",
+        "total": 1700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Royal Ice Talk Falooda",
+        "quantity": 2,
+        "price": 650,
+        "department": "JUICE",
+        "total": 1300,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3000,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3000,
+    "paymentMethod": "ONLINE",
+    "paymentStatus": "PAID",
+    "amountTendered": 3000,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-30T03:40:03.981Z",
+    "updatedAt": "2026-09-30T03:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_4_2",
+    "saleNumber": "INV-000136",
+    "tableId": null,
+    "tableNameSnapshot": "Family 01",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1036
+    ],
+    "items": [
+      {
+        "name": "Cheese Chicken Kottu",
+        "quantity": 1,
+        "price": 1150,
+        "department": "KITCHEN",
+        "total": 1150,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Mango Juice",
+        "quantity": 2,
+        "price": 450,
+        "department": "JUICE",
+        "total": 900,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Chicken Bun",
+        "quantity": 2,
+        "price": 450,
+        "department": "BUN",
+        "total": 900,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 2950,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 2950,
+    "paymentMethod": "CASH",
+    "paymentStatus": "PAID",
+    "amountTendered": 2950,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-30T06:40:03.981Z",
+    "updatedAt": "2026-09-30T06:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_5_0",
+    "saleNumber": "INV-000137",
+    "tableId": null,
+    "tableNameSnapshot": "DELIVERY",
+    "orderType": "DELIVERY",
+    "orderNumbers": [
+      1037
+    ],
+    "items": [
+      {
+        "name": "Chicken Kottu",
+        "quantity": 2,
+        "price": 850,
+        "department": "KITCHEN",
+        "total": 1700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Royal Ice Talk Falooda",
+        "quantity": 2,
+        "price": 650,
+        "department": "JUICE",
+        "total": 1300,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3000,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3000,
+    "paymentMethod": "ONLINE",
+    "paymentStatus": "PAID",
+    "amountTendered": 3000,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-29T00:40:03.981Z",
+    "updatedAt": "2026-09-29T00:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_5_1",
+    "saleNumber": "INV-000138",
+    "tableId": null,
+    "tableNameSnapshot": "Family 01",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1038
+    ],
+    "items": [
+      {
+        "name": "Cheese Chicken Kottu",
+        "quantity": 1,
+        "price": 1150,
+        "department": "KITCHEN",
+        "total": 1150,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Mango Juice",
+        "quantity": 2,
+        "price": 450,
+        "department": "JUICE",
+        "total": 900,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Chicken Bun",
+        "quantity": 2,
+        "price": 450,
+        "department": "BUN",
+        "total": 900,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 2950,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 2950,
+    "paymentMethod": "CASH",
+    "paymentStatus": "PAID",
+    "amountTendered": 2950,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-29T03:40:03.981Z",
+    "updatedAt": "2026-09-29T03:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_5_2",
+    "saleNumber": "INV-000139",
+    "tableId": null,
+    "tableNameSnapshot": "Family 02",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1039
+    ],
+    "items": [
+      {
+        "name": "Special Mixed Fried Rice",
+        "quantity": 3,
+        "price": 1100,
+        "department": "KITCHEN",
+        "total": 3300,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Crispy Chicken Burger",
+        "quantity": 2,
+        "price": 750,
+        "department": "KITCHEN",
+        "total": 1500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Fresh Orange Juice",
+        "quantity": 3,
+        "price": 500,
+        "department": "JUICE",
+        "total": 1500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 6300,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 6300,
+    "paymentMethod": "CASH",
+    "paymentStatus": "PAID",
+    "amountTendered": 6300,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-29T06:40:03.981Z",
+    "updatedAt": "2026-09-29T06:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_5_3",
+    "saleNumber": "INV-000140",
+    "tableId": null,
+    "tableNameSnapshot": "TAKEAWAY",
+    "orderType": "TAKEAWAY",
+    "orderNumbers": [
+      1040
+    ],
+    "items": [
+      {
+        "name": "Seafood Nasi Goreng",
+        "quantity": 2,
+        "price": 1350,
+        "department": "KITCHEN",
+        "total": 2700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Avocado Shake",
+        "quantity": 2,
+        "price": 600,
+        "department": "JUICE",
+        "total": 1200,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3900,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3900,
+    "paymentMethod": "CARD",
+    "paymentStatus": "PAID",
+    "amountTendered": 3900,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-29T09:40:03.981Z",
+    "updatedAt": "2026-09-29T09:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_6_0",
+    "saleNumber": "INV-000141",
+    "tableId": null,
+    "tableNameSnapshot": "Family 01",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1041
+    ],
+    "items": [
+      {
+        "name": "Cheese Chicken Kottu",
+        "quantity": 1,
+        "price": 1150,
+        "department": "KITCHEN",
+        "total": 1150,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Mango Juice",
+        "quantity": 2,
+        "price": 450,
+        "department": "JUICE",
+        "total": 900,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Chicken Bun",
+        "quantity": 2,
+        "price": 450,
+        "department": "BUN",
+        "total": 900,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 2950,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 2950,
+    "paymentMethod": "CASH",
+    "paymentStatus": "PAID",
+    "amountTendered": 2950,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-28T00:40:03.981Z",
+    "updatedAt": "2026-09-28T00:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_6_1",
+    "saleNumber": "INV-000142",
+    "tableId": null,
+    "tableNameSnapshot": "Family 02",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1042
+    ],
+    "items": [
+      {
+        "name": "Special Mixed Fried Rice",
+        "quantity": 3,
+        "price": 1100,
+        "department": "KITCHEN",
+        "total": 3300,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Crispy Chicken Burger",
+        "quantity": 2,
+        "price": 750,
+        "department": "KITCHEN",
+        "total": 1500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Fresh Orange Juice",
+        "quantity": 3,
+        "price": 500,
+        "department": "JUICE",
+        "total": 1500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 6300,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 6300,
+    "paymentMethod": "CASH",
+    "paymentStatus": "PAID",
+    "amountTendered": 6300,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-28T03:40:03.981Z",
+    "updatedAt": "2026-09-28T03:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_7_0",
+    "saleNumber": "INV-000143",
+    "tableId": null,
+    "tableNameSnapshot": "Family 02",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1043
+    ],
+    "items": [
+      {
+        "name": "Special Mixed Fried Rice",
+        "quantity": 3,
+        "price": 1100,
+        "department": "KITCHEN",
+        "total": 3300,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Crispy Chicken Burger",
+        "quantity": 2,
+        "price": 750,
+        "department": "KITCHEN",
+        "total": 1500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Fresh Orange Juice",
+        "quantity": 3,
+        "price": 500,
+        "department": "JUICE",
+        "total": 1500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 6300,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 6300,
+    "paymentMethod": "CASH",
+    "paymentStatus": "PAID",
+    "amountTendered": 6300,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-27T00:40:03.981Z",
+    "updatedAt": "2026-09-27T00:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_7_1",
+    "saleNumber": "INV-000144",
+    "tableId": null,
+    "tableNameSnapshot": "TAKEAWAY",
+    "orderType": "TAKEAWAY",
+    "orderNumbers": [
+      1044
+    ],
+    "items": [
+      {
+        "name": "Seafood Nasi Goreng",
+        "quantity": 2,
+        "price": 1350,
+        "department": "KITCHEN",
+        "total": 2700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Avocado Shake",
+        "quantity": 2,
+        "price": 600,
+        "department": "JUICE",
+        "total": 1200,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3900,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3900,
+    "paymentMethod": "CARD",
+    "paymentStatus": "PAID",
+    "amountTendered": 3900,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-27T03:40:03.981Z",
+    "updatedAt": "2026-09-27T03:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_7_2",
+    "saleNumber": "INV-000145",
+    "tableId": null,
+    "tableNameSnapshot": "VIP 01",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1045
+    ],
+    "items": [
+      {
+        "name": "Chicken Kottu",
+        "quantity": 3,
+        "price": 850,
+        "department": "KITCHEN",
+        "total": 2550,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Lime Juice with Mint",
+        "quantity": 2,
+        "price": 350,
+        "department": "JUICE",
+        "total": 700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Vegetable Samosa (3 pcs)",
+        "quantity": 2,
+        "price": 250,
+        "department": "BUN",
+        "total": 500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3750,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3750,
+    "paymentMethod": "CASH",
+    "paymentStatus": "PAID",
+    "amountTendered": 3750,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-27T06:40:03.981Z",
+    "updatedAt": "2026-09-27T06:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_8_0",
+    "saleNumber": "INV-000146",
+    "tableId": null,
+    "tableNameSnapshot": "TAKEAWAY",
+    "orderType": "TAKEAWAY",
+    "orderNumbers": [
+      1046
+    ],
+    "items": [
+      {
+        "name": "Seafood Nasi Goreng",
+        "quantity": 2,
+        "price": 1350,
+        "department": "KITCHEN",
+        "total": 2700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Avocado Shake",
+        "quantity": 2,
+        "price": 600,
+        "department": "JUICE",
+        "total": 1200,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3900,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3900,
+    "paymentMethod": "CARD",
+    "paymentStatus": "PAID",
+    "amountTendered": 3900,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-26T00:40:03.981Z",
+    "updatedAt": "2026-09-26T00:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_8_1",
+    "saleNumber": "INV-000147",
+    "tableId": null,
+    "tableNameSnapshot": "VIP 01",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1047
+    ],
+    "items": [
+      {
+        "name": "Chicken Kottu",
+        "quantity": 3,
+        "price": 850,
+        "department": "KITCHEN",
+        "total": 2550,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Lime Juice with Mint",
+        "quantity": 2,
+        "price": 350,
+        "department": "JUICE",
+        "total": 700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Vegetable Samosa (3 pcs)",
+        "quantity": 2,
+        "price": 250,
+        "department": "BUN",
+        "total": 500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3750,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3750,
+    "paymentMethod": "CASH",
+    "paymentStatus": "PAID",
+    "amountTendered": 3750,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-26T03:40:03.981Z",
+    "updatedAt": "2026-09-26T03:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_8_2",
+    "saleNumber": "INV-000148",
+    "tableId": null,
+    "tableNameSnapshot": "Outdoor A",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1048
+    ],
+    "items": [
+      {
+        "name": "Chicken Kottu",
+        "quantity": 2,
+        "price": 850,
+        "department": "KITCHEN",
+        "total": 1700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Royal Ice Talk Falooda",
+        "quantity": 2,
+        "price": 650,
+        "department": "JUICE",
+        "total": 1300,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3000,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3000,
+    "paymentMethod": "CARD",
+    "paymentStatus": "PAID",
+    "amountTendered": 3000,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-26T06:40:03.981Z",
+    "updatedAt": "2026-09-26T06:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_8_3",
+    "saleNumber": "INV-000149",
+    "tableId": null,
+    "tableNameSnapshot": "DELIVERY",
+    "orderType": "DELIVERY",
+    "orderNumbers": [
+      1049
+    ],
+    "items": [
+      {
+        "name": "Cheese Chicken Kottu",
+        "quantity": 1,
+        "price": 1150,
+        "department": "KITCHEN",
+        "total": 1150,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Mango Juice",
+        "quantity": 2,
+        "price": 450,
+        "department": "JUICE",
+        "total": 900,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Chicken Bun",
+        "quantity": 2,
+        "price": 450,
+        "department": "BUN",
+        "total": 900,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 2950,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 2950,
+    "paymentMethod": "ONLINE",
+    "paymentStatus": "PAID",
+    "amountTendered": 2950,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-26T09:40:03.981Z",
+    "updatedAt": "2026-09-26T09:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_9_0",
+    "saleNumber": "INV-000150",
+    "tableId": null,
+    "tableNameSnapshot": "VIP 01",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1050
+    ],
+    "items": [
+      {
+        "name": "Chicken Kottu",
+        "quantity": 3,
+        "price": 850,
+        "department": "KITCHEN",
+        "total": 2550,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Lime Juice with Mint",
+        "quantity": 2,
+        "price": 350,
+        "department": "JUICE",
+        "total": 700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Vegetable Samosa (3 pcs)",
+        "quantity": 2,
+        "price": 250,
+        "department": "BUN",
+        "total": 500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3750,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3750,
+    "paymentMethod": "CASH",
+    "paymentStatus": "PAID",
+    "amountTendered": 3750,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-25T00:40:03.981Z",
+    "updatedAt": "2026-09-25T00:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_9_1",
+    "saleNumber": "INV-000151",
+    "tableId": null,
+    "tableNameSnapshot": "Outdoor A",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1051
+    ],
+    "items": [
+      {
+        "name": "Chicken Kottu",
+        "quantity": 2,
+        "price": 850,
+        "department": "KITCHEN",
+        "total": 1700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Royal Ice Talk Falooda",
+        "quantity": 2,
+        "price": 650,
+        "department": "JUICE",
+        "total": 1300,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3000,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3000,
+    "paymentMethod": "CARD",
+    "paymentStatus": "PAID",
+    "amountTendered": 3000,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-25T03:40:03.981Z",
+    "updatedAt": "2026-09-25T03:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_10_0",
+    "saleNumber": "INV-000152",
+    "tableId": null,
+    "tableNameSnapshot": "Outdoor A",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1052
+    ],
+    "items": [
+      {
+        "name": "Chicken Kottu",
+        "quantity": 2,
+        "price": 850,
+        "department": "KITCHEN",
+        "total": 1700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Royal Ice Talk Falooda",
+        "quantity": 2,
+        "price": 650,
+        "department": "JUICE",
+        "total": 1300,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3000,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3000,
+    "paymentMethod": "CARD",
+    "paymentStatus": "PAID",
+    "amountTendered": 3000,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-24T00:40:03.981Z",
+    "updatedAt": "2026-09-24T00:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_10_1",
+    "saleNumber": "INV-000153",
+    "tableId": null,
+    "tableNameSnapshot": "DELIVERY",
+    "orderType": "DELIVERY",
+    "orderNumbers": [
+      1053
+    ],
+    "items": [
+      {
+        "name": "Cheese Chicken Kottu",
+        "quantity": 1,
+        "price": 1150,
+        "department": "KITCHEN",
+        "total": 1150,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Mango Juice",
+        "quantity": 2,
+        "price": 450,
+        "department": "JUICE",
+        "total": 900,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Chicken Bun",
+        "quantity": 2,
+        "price": 450,
+        "department": "BUN",
+        "total": 900,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 2950,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 2950,
+    "paymentMethod": "ONLINE",
+    "paymentStatus": "PAID",
+    "amountTendered": 2950,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-24T03:40:03.981Z",
+    "updatedAt": "2026-09-24T03:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_10_2",
+    "saleNumber": "INV-000154",
+    "tableId": null,
+    "tableNameSnapshot": "Family 01",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1054
+    ],
+    "items": [
+      {
+        "name": "Special Mixed Fried Rice",
+        "quantity": 3,
+        "price": 1100,
+        "department": "KITCHEN",
+        "total": 3300,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Crispy Chicken Burger",
+        "quantity": 2,
+        "price": 750,
+        "department": "KITCHEN",
+        "total": 1500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Fresh Orange Juice",
+        "quantity": 3,
+        "price": 500,
+        "department": "JUICE",
+        "total": 1500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 6300,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 6300,
+    "paymentMethod": "CASH",
+    "paymentStatus": "PAID",
+    "amountTendered": 6300,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-24T06:40:03.981Z",
+    "updatedAt": "2026-09-24T06:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_11_0",
+    "saleNumber": "INV-000155",
+    "tableId": null,
+    "tableNameSnapshot": "DELIVERY",
+    "orderType": "DELIVERY",
+    "orderNumbers": [
+      1055
+    ],
+    "items": [
+      {
+        "name": "Cheese Chicken Kottu",
+        "quantity": 1,
+        "price": 1150,
+        "department": "KITCHEN",
+        "total": 1150,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Mango Juice",
+        "quantity": 2,
+        "price": 450,
+        "department": "JUICE",
+        "total": 900,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Chicken Bun",
+        "quantity": 2,
+        "price": 450,
+        "department": "BUN",
+        "total": 900,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 2950,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 2950,
+    "paymentMethod": "ONLINE",
+    "paymentStatus": "PAID",
+    "amountTendered": 2950,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-23T00:40:03.981Z",
+    "updatedAt": "2026-09-23T00:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_11_1",
+    "saleNumber": "INV-000156",
+    "tableId": null,
+    "tableNameSnapshot": "Family 01",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1056
+    ],
+    "items": [
+      {
+        "name": "Special Mixed Fried Rice",
+        "quantity": 3,
+        "price": 1100,
+        "department": "KITCHEN",
+        "total": 3300,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Crispy Chicken Burger",
+        "quantity": 2,
+        "price": 750,
+        "department": "KITCHEN",
+        "total": 1500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Fresh Orange Juice",
+        "quantity": 3,
+        "price": 500,
+        "department": "JUICE",
+        "total": 1500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 6300,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 6300,
+    "paymentMethod": "CASH",
+    "paymentStatus": "PAID",
+    "amountTendered": 6300,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-23T03:40:03.981Z",
+    "updatedAt": "2026-09-23T03:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_11_2",
+    "saleNumber": "INV-000157",
+    "tableId": null,
+    "tableNameSnapshot": "Family 02",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1057
+    ],
+    "items": [
+      {
+        "name": "Seafood Nasi Goreng",
+        "quantity": 2,
+        "price": 1350,
+        "department": "KITCHEN",
+        "total": 2700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Avocado Shake",
+        "quantity": 2,
+        "price": 600,
+        "department": "JUICE",
+        "total": 1200,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3900,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3900,
+    "paymentMethod": "CASH",
+    "paymentStatus": "PAID",
+    "amountTendered": 3900,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-23T06:40:03.981Z",
+    "updatedAt": "2026-09-23T06:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_11_3",
+    "saleNumber": "INV-000158",
+    "tableId": null,
+    "tableNameSnapshot": "TAKEAWAY",
+    "orderType": "TAKEAWAY",
+    "orderNumbers": [
+      1058
+    ],
+    "items": [
+      {
+        "name": "Chicken Kottu",
+        "quantity": 3,
+        "price": 850,
+        "department": "KITCHEN",
+        "total": 2550,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Lime Juice with Mint",
+        "quantity": 2,
+        "price": 350,
+        "department": "JUICE",
+        "total": 700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Vegetable Samosa (3 pcs)",
+        "quantity": 2,
+        "price": 250,
+        "department": "BUN",
+        "total": 500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3750,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3750,
+    "paymentMethod": "CARD",
+    "paymentStatus": "PAID",
+    "amountTendered": 3750,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-23T09:40:03.981Z",
+    "updatedAt": "2026-09-23T09:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_12_0",
+    "saleNumber": "INV-000159",
+    "tableId": null,
+    "tableNameSnapshot": "Family 01",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1059
+    ],
+    "items": [
+      {
+        "name": "Special Mixed Fried Rice",
+        "quantity": 3,
+        "price": 1100,
+        "department": "KITCHEN",
+        "total": 3300,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Crispy Chicken Burger",
+        "quantity": 2,
+        "price": 750,
+        "department": "KITCHEN",
+        "total": 1500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Fresh Orange Juice",
+        "quantity": 3,
+        "price": 500,
+        "department": "JUICE",
+        "total": 1500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 6300,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 6300,
+    "paymentMethod": "CASH",
+    "paymentStatus": "PAID",
+    "amountTendered": 6300,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-22T00:40:03.981Z",
+    "updatedAt": "2026-09-22T00:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_12_1",
+    "saleNumber": "INV-000160",
+    "tableId": null,
+    "tableNameSnapshot": "Family 02",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1060
+    ],
+    "items": [
+      {
+        "name": "Seafood Nasi Goreng",
+        "quantity": 2,
+        "price": 1350,
+        "department": "KITCHEN",
+        "total": 2700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Avocado Shake",
+        "quantity": 2,
+        "price": 600,
+        "department": "JUICE",
+        "total": 1200,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3900,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3900,
+    "paymentMethod": "CASH",
+    "paymentStatus": "PAID",
+    "amountTendered": 3900,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-22T03:40:03.981Z",
+    "updatedAt": "2026-09-22T03:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_13_0",
+    "saleNumber": "INV-000161",
+    "tableId": null,
+    "tableNameSnapshot": "Family 02",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1061
+    ],
+    "items": [
+      {
+        "name": "Seafood Nasi Goreng",
+        "quantity": 2,
+        "price": 1350,
+        "department": "KITCHEN",
+        "total": 2700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Avocado Shake",
+        "quantity": 2,
+        "price": 600,
+        "department": "JUICE",
+        "total": 1200,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3900,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3900,
+    "paymentMethod": "CASH",
+    "paymentStatus": "PAID",
+    "amountTendered": 3900,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-21T00:40:03.981Z",
+    "updatedAt": "2026-09-21T00:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_13_1",
+    "saleNumber": "INV-000162",
+    "tableId": null,
+    "tableNameSnapshot": "TAKEAWAY",
+    "orderType": "TAKEAWAY",
+    "orderNumbers": [
+      1062
+    ],
+    "items": [
+      {
+        "name": "Chicken Kottu",
+        "quantity": 3,
+        "price": 850,
+        "department": "KITCHEN",
+        "total": 2550,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Lime Juice with Mint",
+        "quantity": 2,
+        "price": 350,
+        "department": "JUICE",
+        "total": 700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Vegetable Samosa (3 pcs)",
+        "quantity": 2,
+        "price": 250,
+        "department": "BUN",
+        "total": 500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3750,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3750,
+    "paymentMethod": "CARD",
+    "paymentStatus": "PAID",
+    "amountTendered": 3750,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-21T03:40:03.981Z",
+    "updatedAt": "2026-09-21T03:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_13_2",
+    "saleNumber": "INV-000163",
+    "tableId": null,
+    "tableNameSnapshot": "VIP 01",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1063
+    ],
+    "items": [
+      {
+        "name": "Chicken Kottu",
+        "quantity": 2,
+        "price": 850,
+        "department": "KITCHEN",
+        "total": 1700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Royal Ice Talk Falooda",
+        "quantity": 2,
+        "price": 650,
+        "department": "JUICE",
+        "total": 1300,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3000,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3000,
+    "paymentMethod": "CASH",
+    "paymentStatus": "PAID",
+    "amountTendered": 3000,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-21T06:40:03.981Z",
+    "updatedAt": "2026-09-21T06:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_14_0",
+    "saleNumber": "INV-000164",
+    "tableId": null,
+    "tableNameSnapshot": "TAKEAWAY",
+    "orderType": "TAKEAWAY",
+    "orderNumbers": [
+      1064
+    ],
+    "items": [
+      {
+        "name": "Chicken Kottu",
+        "quantity": 3,
+        "price": 850,
+        "department": "KITCHEN",
+        "total": 2550,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Lime Juice with Mint",
+        "quantity": 2,
+        "price": 350,
+        "department": "JUICE",
+        "total": 700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Vegetable Samosa (3 pcs)",
+        "quantity": 2,
+        "price": 250,
+        "department": "BUN",
+        "total": 500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3750,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3750,
+    "paymentMethod": "CARD",
+    "paymentStatus": "PAID",
+    "amountTendered": 3750,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-20T00:40:03.981Z",
+    "updatedAt": "2026-09-20T00:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_14_1",
+    "saleNumber": "INV-000165",
+    "tableId": null,
+    "tableNameSnapshot": "VIP 01",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1065
+    ],
+    "items": [
+      {
+        "name": "Chicken Kottu",
+        "quantity": 2,
+        "price": 850,
+        "department": "KITCHEN",
+        "total": 1700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Royal Ice Talk Falooda",
+        "quantity": 2,
+        "price": 650,
+        "department": "JUICE",
+        "total": 1300,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3000,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3000,
+    "paymentMethod": "CASH",
+    "paymentStatus": "PAID",
+    "amountTendered": 3000,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-20T03:40:03.981Z",
+    "updatedAt": "2026-09-20T03:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_14_2",
+    "saleNumber": "INV-000166",
+    "tableId": null,
+    "tableNameSnapshot": "Outdoor A",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1066
+    ],
+    "items": [
+      {
+        "name": "Cheese Chicken Kottu",
+        "quantity": 1,
+        "price": 1150,
+        "department": "KITCHEN",
+        "total": 1150,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Mango Juice",
+        "quantity": 2,
+        "price": 450,
+        "department": "JUICE",
+        "total": 900,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Chicken Bun",
+        "quantity": 2,
+        "price": 450,
+        "department": "BUN",
+        "total": 900,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 2950,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 2950,
+    "paymentMethod": "CARD",
+    "paymentStatus": "PAID",
+    "amountTendered": 2950,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-20T06:40:03.981Z",
+    "updatedAt": "2026-09-20T06:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_14_3",
+    "saleNumber": "INV-000167",
+    "tableId": null,
+    "tableNameSnapshot": "DELIVERY",
+    "orderType": "DELIVERY",
+    "orderNumbers": [
+      1067
+    ],
+    "items": [
+      {
+        "name": "Special Mixed Fried Rice",
+        "quantity": 3,
+        "price": 1100,
+        "department": "KITCHEN",
+        "total": 3300,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Crispy Chicken Burger",
+        "quantity": 2,
+        "price": 750,
+        "department": "KITCHEN",
+        "total": 1500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Fresh Orange Juice",
+        "quantity": 3,
+        "price": 500,
+        "department": "JUICE",
+        "total": 1500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 6300,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 6300,
+    "paymentMethod": "ONLINE",
+    "paymentStatus": "PAID",
+    "amountTendered": 6300,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-20T09:40:03.981Z",
+    "updatedAt": "2026-09-20T09:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_15_0",
+    "saleNumber": "INV-000168",
+    "tableId": null,
+    "tableNameSnapshot": "VIP 01",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1068
+    ],
+    "items": [
+      {
+        "name": "Chicken Kottu",
+        "quantity": 2,
+        "price": 850,
+        "department": "KITCHEN",
+        "total": 1700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Royal Ice Talk Falooda",
+        "quantity": 2,
+        "price": 650,
+        "department": "JUICE",
+        "total": 1300,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3000,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3000,
+    "paymentMethod": "CASH",
+    "paymentStatus": "PAID",
+    "amountTendered": 3000,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-19T00:40:03.981Z",
+    "updatedAt": "2026-09-19T00:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_15_1",
+    "saleNumber": "INV-000169",
+    "tableId": null,
+    "tableNameSnapshot": "Outdoor A",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1069
+    ],
+    "items": [
+      {
+        "name": "Cheese Chicken Kottu",
+        "quantity": 1,
+        "price": 1150,
+        "department": "KITCHEN",
+        "total": 1150,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Mango Juice",
+        "quantity": 2,
+        "price": 450,
+        "department": "JUICE",
+        "total": 900,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Chicken Bun",
+        "quantity": 2,
+        "price": 450,
+        "department": "BUN",
+        "total": 900,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 2950,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 2950,
+    "paymentMethod": "CARD",
+    "paymentStatus": "PAID",
+    "amountTendered": 2950,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-19T03:40:03.981Z",
+    "updatedAt": "2026-09-19T03:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_16_0",
+    "saleNumber": "INV-000170",
+    "tableId": null,
+    "tableNameSnapshot": "Outdoor A",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1070
+    ],
+    "items": [
+      {
+        "name": "Cheese Chicken Kottu",
+        "quantity": 1,
+        "price": 1150,
+        "department": "KITCHEN",
+        "total": 1150,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Mango Juice",
+        "quantity": 2,
+        "price": 450,
+        "department": "JUICE",
+        "total": 900,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Chicken Bun",
+        "quantity": 2,
+        "price": 450,
+        "department": "BUN",
+        "total": 900,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 2950,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 2950,
+    "paymentMethod": "CARD",
+    "paymentStatus": "PAID",
+    "amountTendered": 2950,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-18T00:40:03.981Z",
+    "updatedAt": "2026-09-18T00:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_16_1",
+    "saleNumber": "INV-000171",
+    "tableId": null,
+    "tableNameSnapshot": "DELIVERY",
+    "orderType": "DELIVERY",
+    "orderNumbers": [
+      1071
+    ],
+    "items": [
+      {
+        "name": "Special Mixed Fried Rice",
+        "quantity": 3,
+        "price": 1100,
+        "department": "KITCHEN",
+        "total": 3300,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Crispy Chicken Burger",
+        "quantity": 2,
+        "price": 750,
+        "department": "KITCHEN",
+        "total": 1500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Fresh Orange Juice",
+        "quantity": 3,
+        "price": 500,
+        "department": "JUICE",
+        "total": 1500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 6300,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 6300,
+    "paymentMethod": "ONLINE",
+    "paymentStatus": "PAID",
+    "amountTendered": 6300,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-18T03:40:03.981Z",
+    "updatedAt": "2026-09-18T03:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_16_2",
+    "saleNumber": "INV-000172",
+    "tableId": null,
+    "tableNameSnapshot": "Family 01",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1072
+    ],
+    "items": [
+      {
+        "name": "Seafood Nasi Goreng",
+        "quantity": 2,
+        "price": 1350,
+        "department": "KITCHEN",
+        "total": 2700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Avocado Shake",
+        "quantity": 2,
+        "price": 600,
+        "department": "JUICE",
+        "total": 1200,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3900,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3900,
+    "paymentMethod": "CASH",
+    "paymentStatus": "PAID",
+    "amountTendered": 3900,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-18T06:40:03.981Z",
+    "updatedAt": "2026-09-18T06:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_17_0",
+    "saleNumber": "INV-000173",
+    "tableId": null,
+    "tableNameSnapshot": "DELIVERY",
+    "orderType": "DELIVERY",
+    "orderNumbers": [
+      1073
+    ],
+    "items": [
+      {
+        "name": "Special Mixed Fried Rice",
+        "quantity": 3,
+        "price": 1100,
+        "department": "KITCHEN",
+        "total": 3300,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Crispy Chicken Burger",
+        "quantity": 2,
+        "price": 750,
+        "department": "KITCHEN",
+        "total": 1500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Fresh Orange Juice",
+        "quantity": 3,
+        "price": 500,
+        "department": "JUICE",
+        "total": 1500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 6300,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 6300,
+    "paymentMethod": "ONLINE",
+    "paymentStatus": "PAID",
+    "amountTendered": 6300,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-17T00:40:03.981Z",
+    "updatedAt": "2026-09-17T00:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_17_1",
+    "saleNumber": "INV-000174",
+    "tableId": null,
+    "tableNameSnapshot": "Family 01",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1074
+    ],
+    "items": [
+      {
+        "name": "Seafood Nasi Goreng",
+        "quantity": 2,
+        "price": 1350,
+        "department": "KITCHEN",
+        "total": 2700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Avocado Shake",
+        "quantity": 2,
+        "price": 600,
+        "department": "JUICE",
+        "total": 1200,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3900,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3900,
+    "paymentMethod": "CASH",
+    "paymentStatus": "PAID",
+    "amountTendered": 3900,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-17T03:40:03.981Z",
+    "updatedAt": "2026-09-17T03:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_17_2",
+    "saleNumber": "INV-000175",
+    "tableId": null,
+    "tableNameSnapshot": "Family 02",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1075
+    ],
+    "items": [
+      {
+        "name": "Chicken Kottu",
+        "quantity": 3,
+        "price": 850,
+        "department": "KITCHEN",
+        "total": 2550,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Lime Juice with Mint",
+        "quantity": 2,
+        "price": 350,
+        "department": "JUICE",
+        "total": 700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Vegetable Samosa (3 pcs)",
+        "quantity": 2,
+        "price": 250,
+        "department": "BUN",
+        "total": 500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3750,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3750,
+    "paymentMethod": "CASH",
+    "paymentStatus": "PAID",
+    "amountTendered": 3750,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-17T06:40:03.981Z",
+    "updatedAt": "2026-09-17T06:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_17_3",
+    "saleNumber": "INV-000176",
+    "tableId": null,
+    "tableNameSnapshot": "TAKEAWAY",
+    "orderType": "TAKEAWAY",
+    "orderNumbers": [
+      1076
+    ],
+    "items": [
+      {
+        "name": "Chicken Kottu",
+        "quantity": 2,
+        "price": 850,
+        "department": "KITCHEN",
+        "total": 1700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Royal Ice Talk Falooda",
+        "quantity": 2,
+        "price": 650,
+        "department": "JUICE",
+        "total": 1300,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3000,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3000,
+    "paymentMethod": "CARD",
+    "paymentStatus": "PAID",
+    "amountTendered": 3000,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-17T09:40:03.981Z",
+    "updatedAt": "2026-09-17T09:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_18_0",
+    "saleNumber": "INV-000177",
+    "tableId": null,
+    "tableNameSnapshot": "Family 01",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1077
+    ],
+    "items": [
+      {
+        "name": "Seafood Nasi Goreng",
+        "quantity": 2,
+        "price": 1350,
+        "department": "KITCHEN",
+        "total": 2700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Avocado Shake",
+        "quantity": 2,
+        "price": 600,
+        "department": "JUICE",
+        "total": 1200,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3900,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3900,
+    "paymentMethod": "CASH",
+    "paymentStatus": "PAID",
+    "amountTendered": 3900,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-16T00:40:03.981Z",
+    "updatedAt": "2026-09-16T00:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_18_1",
+    "saleNumber": "INV-000178",
+    "tableId": null,
+    "tableNameSnapshot": "Family 02",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1078
+    ],
+    "items": [
+      {
+        "name": "Chicken Kottu",
+        "quantity": 3,
+        "price": 850,
+        "department": "KITCHEN",
+        "total": 2550,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Lime Juice with Mint",
+        "quantity": 2,
+        "price": 350,
+        "department": "JUICE",
+        "total": 700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Vegetable Samosa (3 pcs)",
+        "quantity": 2,
+        "price": 250,
+        "department": "BUN",
+        "total": 500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3750,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3750,
+    "paymentMethod": "CASH",
+    "paymentStatus": "PAID",
+    "amountTendered": 3750,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-16T03:40:03.981Z",
+    "updatedAt": "2026-09-16T03:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_19_0",
+    "saleNumber": "INV-000179",
+    "tableId": null,
+    "tableNameSnapshot": "Family 02",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1079
+    ],
+    "items": [
+      {
+        "name": "Chicken Kottu",
+        "quantity": 3,
+        "price": 850,
+        "department": "KITCHEN",
+        "total": 2550,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Lime Juice with Mint",
+        "quantity": 2,
+        "price": 350,
+        "department": "JUICE",
+        "total": 700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Vegetable Samosa (3 pcs)",
+        "quantity": 2,
+        "price": 250,
+        "department": "BUN",
+        "total": 500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3750,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3750,
+    "paymentMethod": "CASH",
+    "paymentStatus": "PAID",
+    "amountTendered": 3750,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-15T00:40:03.981Z",
+    "updatedAt": "2026-09-15T00:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_19_1",
+    "saleNumber": "INV-000180",
+    "tableId": null,
+    "tableNameSnapshot": "TAKEAWAY",
+    "orderType": "TAKEAWAY",
+    "orderNumbers": [
+      1080
+    ],
+    "items": [
+      {
+        "name": "Chicken Kottu",
+        "quantity": 2,
+        "price": 850,
+        "department": "KITCHEN",
+        "total": 1700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Royal Ice Talk Falooda",
+        "quantity": 2,
+        "price": 650,
+        "department": "JUICE",
+        "total": 1300,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3000,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3000,
+    "paymentMethod": "CARD",
+    "paymentStatus": "PAID",
+    "amountTendered": 3000,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-15T03:40:03.981Z",
+    "updatedAt": "2026-09-15T03:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_19_2",
+    "saleNumber": "INV-000181",
+    "tableId": null,
+    "tableNameSnapshot": "VIP 01",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1081
+    ],
+    "items": [
+      {
+        "name": "Cheese Chicken Kottu",
+        "quantity": 1,
+        "price": 1150,
+        "department": "KITCHEN",
+        "total": 1150,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Mango Juice",
+        "quantity": 2,
+        "price": 450,
+        "department": "JUICE",
+        "total": 900,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Chicken Bun",
+        "quantity": 2,
+        "price": 450,
+        "department": "BUN",
+        "total": 900,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 2950,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 2950,
+    "paymentMethod": "CASH",
+    "paymentStatus": "PAID",
+    "amountTendered": 2950,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-15T06:40:03.981Z",
+    "updatedAt": "2026-09-15T06:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_20_0",
+    "saleNumber": "INV-000182",
+    "tableId": null,
+    "tableNameSnapshot": "TAKEAWAY",
+    "orderType": "TAKEAWAY",
+    "orderNumbers": [
+      1082
+    ],
+    "items": [
+      {
+        "name": "Chicken Kottu",
+        "quantity": 2,
+        "price": 850,
+        "department": "KITCHEN",
+        "total": 1700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Royal Ice Talk Falooda",
+        "quantity": 2,
+        "price": 650,
+        "department": "JUICE",
+        "total": 1300,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3000,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3000,
+    "paymentMethod": "CARD",
+    "paymentStatus": "PAID",
+    "amountTendered": 3000,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-14T00:40:03.981Z",
+    "updatedAt": "2026-09-14T00:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_20_1",
+    "saleNumber": "INV-000183",
+    "tableId": null,
+    "tableNameSnapshot": "VIP 01",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1083
+    ],
+    "items": [
+      {
+        "name": "Cheese Chicken Kottu",
+        "quantity": 1,
+        "price": 1150,
+        "department": "KITCHEN",
+        "total": 1150,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Mango Juice",
+        "quantity": 2,
+        "price": 450,
+        "department": "JUICE",
+        "total": 900,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Chicken Bun",
+        "quantity": 2,
+        "price": 450,
+        "department": "BUN",
+        "total": 900,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 2950,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 2950,
+    "paymentMethod": "CASH",
+    "paymentStatus": "PAID",
+    "amountTendered": 2950,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-14T03:40:03.981Z",
+    "updatedAt": "2026-09-14T03:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_20_2",
+    "saleNumber": "INV-000184",
+    "tableId": null,
+    "tableNameSnapshot": "Outdoor A",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1084
+    ],
+    "items": [
+      {
+        "name": "Special Mixed Fried Rice",
+        "quantity": 3,
+        "price": 1100,
+        "department": "KITCHEN",
+        "total": 3300,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Crispy Chicken Burger",
+        "quantity": 2,
+        "price": 750,
+        "department": "KITCHEN",
+        "total": 1500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Fresh Orange Juice",
+        "quantity": 3,
+        "price": 500,
+        "department": "JUICE",
+        "total": 1500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 6300,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 6300,
+    "paymentMethod": "CARD",
+    "paymentStatus": "PAID",
+    "amountTendered": 6300,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-14T06:40:03.981Z",
+    "updatedAt": "2026-09-14T06:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_20_3",
+    "saleNumber": "INV-000185",
+    "tableId": null,
+    "tableNameSnapshot": "DELIVERY",
+    "orderType": "DELIVERY",
+    "orderNumbers": [
+      1085
+    ],
+    "items": [
+      {
+        "name": "Seafood Nasi Goreng",
+        "quantity": 2,
+        "price": 1350,
+        "department": "KITCHEN",
+        "total": 2700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Avocado Shake",
+        "quantity": 2,
+        "price": 600,
+        "department": "JUICE",
+        "total": 1200,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3900,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3900,
+    "paymentMethod": "ONLINE",
+    "paymentStatus": "PAID",
+    "amountTendered": 3900,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-14T09:40:03.981Z",
+    "updatedAt": "2026-09-14T09:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_21_0",
+    "saleNumber": "INV-000186",
+    "tableId": null,
+    "tableNameSnapshot": "VIP 01",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1086
+    ],
+    "items": [
+      {
+        "name": "Cheese Chicken Kottu",
+        "quantity": 1,
+        "price": 1150,
+        "department": "KITCHEN",
+        "total": 1150,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Mango Juice",
+        "quantity": 2,
+        "price": 450,
+        "department": "JUICE",
+        "total": 900,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Chicken Bun",
+        "quantity": 2,
+        "price": 450,
+        "department": "BUN",
+        "total": 900,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 2950,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 2950,
+    "paymentMethod": "CASH",
+    "paymentStatus": "PAID",
+    "amountTendered": 2950,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-13T00:40:03.981Z",
+    "updatedAt": "2026-09-13T00:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_21_1",
+    "saleNumber": "INV-000187",
+    "tableId": null,
+    "tableNameSnapshot": "Outdoor A",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1087
+    ],
+    "items": [
+      {
+        "name": "Special Mixed Fried Rice",
+        "quantity": 3,
+        "price": 1100,
+        "department": "KITCHEN",
+        "total": 3300,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Crispy Chicken Burger",
+        "quantity": 2,
+        "price": 750,
+        "department": "KITCHEN",
+        "total": 1500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Fresh Orange Juice",
+        "quantity": 3,
+        "price": 500,
+        "department": "JUICE",
+        "total": 1500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 6300,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 6300,
+    "paymentMethod": "CARD",
+    "paymentStatus": "PAID",
+    "amountTendered": 6300,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-13T03:40:03.981Z",
+    "updatedAt": "2026-09-13T03:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_22_0",
+    "saleNumber": "INV-000188",
+    "tableId": null,
+    "tableNameSnapshot": "Outdoor A",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1088
+    ],
+    "items": [
+      {
+        "name": "Special Mixed Fried Rice",
+        "quantity": 3,
+        "price": 1100,
+        "department": "KITCHEN",
+        "total": 3300,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Crispy Chicken Burger",
+        "quantity": 2,
+        "price": 750,
+        "department": "KITCHEN",
+        "total": 1500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Fresh Orange Juice",
+        "quantity": 3,
+        "price": 500,
+        "department": "JUICE",
+        "total": 1500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 6300,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 6300,
+    "paymentMethod": "CARD",
+    "paymentStatus": "PAID",
+    "amountTendered": 6300,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-12T00:40:03.981Z",
+    "updatedAt": "2026-09-12T00:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_22_1",
+    "saleNumber": "INV-000189",
+    "tableId": null,
+    "tableNameSnapshot": "DELIVERY",
+    "orderType": "DELIVERY",
+    "orderNumbers": [
+      1089
+    ],
+    "items": [
+      {
+        "name": "Seafood Nasi Goreng",
+        "quantity": 2,
+        "price": 1350,
+        "department": "KITCHEN",
+        "total": 2700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Avocado Shake",
+        "quantity": 2,
+        "price": 600,
+        "department": "JUICE",
+        "total": 1200,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3900,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3900,
+    "paymentMethod": "ONLINE",
+    "paymentStatus": "PAID",
+    "amountTendered": 3900,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-12T03:40:03.981Z",
+    "updatedAt": "2026-09-12T03:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_22_2",
+    "saleNumber": "INV-000190",
+    "tableId": null,
+    "tableNameSnapshot": "Family 01",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1090
+    ],
+    "items": [
+      {
+        "name": "Chicken Kottu",
+        "quantity": 3,
+        "price": 850,
+        "department": "KITCHEN",
+        "total": 2550,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Lime Juice with Mint",
+        "quantity": 2,
+        "price": 350,
+        "department": "JUICE",
+        "total": 700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Vegetable Samosa (3 pcs)",
+        "quantity": 2,
+        "price": 250,
+        "department": "BUN",
+        "total": 500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3750,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3750,
+    "paymentMethod": "CASH",
+    "paymentStatus": "PAID",
+    "amountTendered": 3750,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-12T06:40:03.981Z",
+    "updatedAt": "2026-09-12T06:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_23_0",
+    "saleNumber": "INV-000191",
+    "tableId": null,
+    "tableNameSnapshot": "DELIVERY",
+    "orderType": "DELIVERY",
+    "orderNumbers": [
+      1091
+    ],
+    "items": [
+      {
+        "name": "Seafood Nasi Goreng",
+        "quantity": 2,
+        "price": 1350,
+        "department": "KITCHEN",
+        "total": 2700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Avocado Shake",
+        "quantity": 2,
+        "price": 600,
+        "department": "JUICE",
+        "total": 1200,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3900,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3900,
+    "paymentMethod": "ONLINE",
+    "paymentStatus": "PAID",
+    "amountTendered": 3900,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-11T00:40:03.981Z",
+    "updatedAt": "2026-09-11T00:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_23_1",
+    "saleNumber": "INV-000192",
+    "tableId": null,
+    "tableNameSnapshot": "Family 01",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1092
+    ],
+    "items": [
+      {
+        "name": "Chicken Kottu",
+        "quantity": 3,
+        "price": 850,
+        "department": "KITCHEN",
+        "total": 2550,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Lime Juice with Mint",
+        "quantity": 2,
+        "price": 350,
+        "department": "JUICE",
+        "total": 700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Vegetable Samosa (3 pcs)",
+        "quantity": 2,
+        "price": 250,
+        "department": "BUN",
+        "total": 500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3750,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3750,
+    "paymentMethod": "CASH",
+    "paymentStatus": "PAID",
+    "amountTendered": 3750,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-11T03:40:03.981Z",
+    "updatedAt": "2026-09-11T03:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_23_2",
+    "saleNumber": "INV-000193",
+    "tableId": null,
+    "tableNameSnapshot": "Family 02",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1093
+    ],
+    "items": [
+      {
+        "name": "Chicken Kottu",
+        "quantity": 2,
+        "price": 850,
+        "department": "KITCHEN",
+        "total": 1700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Royal Ice Talk Falooda",
+        "quantity": 2,
+        "price": 650,
+        "department": "JUICE",
+        "total": 1300,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3000,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3000,
+    "paymentMethod": "CASH",
+    "paymentStatus": "PAID",
+    "amountTendered": 3000,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-11T06:40:03.981Z",
+    "updatedAt": "2026-09-11T06:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_23_3",
+    "saleNumber": "INV-000194",
+    "tableId": null,
+    "tableNameSnapshot": "TAKEAWAY",
+    "orderType": "TAKEAWAY",
+    "orderNumbers": [
+      1094
+    ],
+    "items": [
+      {
+        "name": "Cheese Chicken Kottu",
+        "quantity": 1,
+        "price": 1150,
+        "department": "KITCHEN",
+        "total": 1150,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Mango Juice",
+        "quantity": 2,
+        "price": 450,
+        "department": "JUICE",
+        "total": 900,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Chicken Bun",
+        "quantity": 2,
+        "price": 450,
+        "department": "BUN",
+        "total": 900,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 2950,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 2950,
+    "paymentMethod": "CARD",
+    "paymentStatus": "PAID",
+    "amountTendered": 2950,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-11T09:40:03.981Z",
+    "updatedAt": "2026-09-11T09:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_24_0",
+    "saleNumber": "INV-000195",
+    "tableId": null,
+    "tableNameSnapshot": "Family 01",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1095
+    ],
+    "items": [
+      {
+        "name": "Chicken Kottu",
+        "quantity": 3,
+        "price": 850,
+        "department": "KITCHEN",
+        "total": 2550,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Lime Juice with Mint",
+        "quantity": 2,
+        "price": 350,
+        "department": "JUICE",
+        "total": 700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Vegetable Samosa (3 pcs)",
+        "quantity": 2,
+        "price": 250,
+        "department": "BUN",
+        "total": 500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3750,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3750,
+    "paymentMethod": "CASH",
+    "paymentStatus": "PAID",
+    "amountTendered": 3750,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-10T00:40:03.981Z",
+    "updatedAt": "2026-09-10T00:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_24_1",
+    "saleNumber": "INV-000196",
+    "tableId": null,
+    "tableNameSnapshot": "Family 02",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1096
+    ],
+    "items": [
+      {
+        "name": "Chicken Kottu",
+        "quantity": 2,
+        "price": 850,
+        "department": "KITCHEN",
+        "total": 1700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Royal Ice Talk Falooda",
+        "quantity": 2,
+        "price": 650,
+        "department": "JUICE",
+        "total": 1300,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3000,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3000,
+    "paymentMethod": "CASH",
+    "paymentStatus": "PAID",
+    "amountTendered": 3000,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-10T03:40:03.981Z",
+    "updatedAt": "2026-09-10T03:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_25_0",
+    "saleNumber": "INV-000197",
+    "tableId": null,
+    "tableNameSnapshot": "Family 02",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1097
+    ],
+    "items": [
+      {
+        "name": "Chicken Kottu",
+        "quantity": 2,
+        "price": 850,
+        "department": "KITCHEN",
+        "total": 1700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Royal Ice Talk Falooda",
+        "quantity": 2,
+        "price": 650,
+        "department": "JUICE",
+        "total": 1300,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3000,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3000,
+    "paymentMethod": "CASH",
+    "paymentStatus": "PAID",
+    "amountTendered": 3000,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-09T00:40:03.981Z",
+    "updatedAt": "2026-09-09T00:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_25_1",
+    "saleNumber": "INV-000198",
+    "tableId": null,
+    "tableNameSnapshot": "TAKEAWAY",
+    "orderType": "TAKEAWAY",
+    "orderNumbers": [
+      1098
+    ],
+    "items": [
+      {
+        "name": "Cheese Chicken Kottu",
+        "quantity": 1,
+        "price": 1150,
+        "department": "KITCHEN",
+        "total": 1150,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Mango Juice",
+        "quantity": 2,
+        "price": 450,
+        "department": "JUICE",
+        "total": 900,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Chicken Bun",
+        "quantity": 2,
+        "price": 450,
+        "department": "BUN",
+        "total": 900,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 2950,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 2950,
+    "paymentMethod": "CARD",
+    "paymentStatus": "PAID",
+    "amountTendered": 2950,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-09T03:40:03.981Z",
+    "updatedAt": "2026-09-09T03:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_25_2",
+    "saleNumber": "INV-000199",
+    "tableId": null,
+    "tableNameSnapshot": "VIP 01",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1099
+    ],
+    "items": [
+      {
+        "name": "Special Mixed Fried Rice",
+        "quantity": 3,
+        "price": 1100,
+        "department": "KITCHEN",
+        "total": 3300,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Crispy Chicken Burger",
+        "quantity": 2,
+        "price": 750,
+        "department": "KITCHEN",
+        "total": 1500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Fresh Orange Juice",
+        "quantity": 3,
+        "price": 500,
+        "department": "JUICE",
+        "total": 1500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 6300,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 6300,
+    "paymentMethod": "CASH",
+    "paymentStatus": "PAID",
+    "amountTendered": 6300,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-09T06:40:03.981Z",
+    "updatedAt": "2026-09-09T06:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_26_0",
+    "saleNumber": "INV-000200",
+    "tableId": null,
+    "tableNameSnapshot": "TAKEAWAY",
+    "orderType": "TAKEAWAY",
+    "orderNumbers": [
+      1100
+    ],
+    "items": [
+      {
+        "name": "Cheese Chicken Kottu",
+        "quantity": 1,
+        "price": 1150,
+        "department": "KITCHEN",
+        "total": 1150,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Mango Juice",
+        "quantity": 2,
+        "price": 450,
+        "department": "JUICE",
+        "total": 900,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Chicken Bun",
+        "quantity": 2,
+        "price": 450,
+        "department": "BUN",
+        "total": 900,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 2950,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 2950,
+    "paymentMethod": "CARD",
+    "paymentStatus": "PAID",
+    "amountTendered": 2950,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-08T00:40:03.981Z",
+    "updatedAt": "2026-09-08T00:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_26_1",
+    "saleNumber": "INV-000201",
+    "tableId": null,
+    "tableNameSnapshot": "VIP 01",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1101
+    ],
+    "items": [
+      {
+        "name": "Special Mixed Fried Rice",
+        "quantity": 3,
+        "price": 1100,
+        "department": "KITCHEN",
+        "total": 3300,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Crispy Chicken Burger",
+        "quantity": 2,
+        "price": 750,
+        "department": "KITCHEN",
+        "total": 1500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Fresh Orange Juice",
+        "quantity": 3,
+        "price": 500,
+        "department": "JUICE",
+        "total": 1500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 6300,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 6300,
+    "paymentMethod": "CASH",
+    "paymentStatus": "PAID",
+    "amountTendered": 6300,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-08T03:40:03.981Z",
+    "updatedAt": "2026-09-08T03:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_26_2",
+    "saleNumber": "INV-000202",
+    "tableId": null,
+    "tableNameSnapshot": "Outdoor A",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1102
+    ],
+    "items": [
+      {
+        "name": "Seafood Nasi Goreng",
+        "quantity": 2,
+        "price": 1350,
+        "department": "KITCHEN",
+        "total": 2700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Avocado Shake",
+        "quantity": 2,
+        "price": 600,
+        "department": "JUICE",
+        "total": 1200,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3900,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3900,
+    "paymentMethod": "CARD",
+    "paymentStatus": "PAID",
+    "amountTendered": 3900,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-08T06:40:03.981Z",
+    "updatedAt": "2026-09-08T06:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_26_3",
+    "saleNumber": "INV-000203",
+    "tableId": null,
+    "tableNameSnapshot": "DELIVERY",
+    "orderType": "DELIVERY",
+    "orderNumbers": [
+      1103
+    ],
+    "items": [
+      {
+        "name": "Chicken Kottu",
+        "quantity": 3,
+        "price": 850,
+        "department": "KITCHEN",
+        "total": 2550,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Lime Juice with Mint",
+        "quantity": 2,
+        "price": 350,
+        "department": "JUICE",
+        "total": 700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Vegetable Samosa (3 pcs)",
+        "quantity": 2,
+        "price": 250,
+        "department": "BUN",
+        "total": 500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3750,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3750,
+    "paymentMethod": "ONLINE",
+    "paymentStatus": "PAID",
+    "amountTendered": 3750,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-08T09:40:03.981Z",
+    "updatedAt": "2026-09-08T09:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_27_0",
+    "saleNumber": "INV-000204",
+    "tableId": null,
+    "tableNameSnapshot": "VIP 01",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1104
+    ],
+    "items": [
+      {
+        "name": "Special Mixed Fried Rice",
+        "quantity": 3,
+        "price": 1100,
+        "department": "KITCHEN",
+        "total": 3300,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Crispy Chicken Burger",
+        "quantity": 2,
+        "price": 750,
+        "department": "KITCHEN",
+        "total": 1500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Fresh Orange Juice",
+        "quantity": 3,
+        "price": 500,
+        "department": "JUICE",
+        "total": 1500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 6300,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 6300,
+    "paymentMethod": "CASH",
+    "paymentStatus": "PAID",
+    "amountTendered": 6300,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-07T00:40:03.981Z",
+    "updatedAt": "2026-09-07T00:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_27_1",
+    "saleNumber": "INV-000205",
+    "tableId": null,
+    "tableNameSnapshot": "Outdoor A",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1105
+    ],
+    "items": [
+      {
+        "name": "Seafood Nasi Goreng",
+        "quantity": 2,
+        "price": 1350,
+        "department": "KITCHEN",
+        "total": 2700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Avocado Shake",
+        "quantity": 2,
+        "price": 600,
+        "department": "JUICE",
+        "total": 1200,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3900,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3900,
+    "paymentMethod": "CARD",
+    "paymentStatus": "PAID",
+    "amountTendered": 3900,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-07T03:40:03.981Z",
+    "updatedAt": "2026-09-07T03:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_28_0",
+    "saleNumber": "INV-000206",
+    "tableId": null,
+    "tableNameSnapshot": "Outdoor A",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1106
+    ],
+    "items": [
+      {
+        "name": "Seafood Nasi Goreng",
+        "quantity": 2,
+        "price": 1350,
+        "department": "KITCHEN",
+        "total": 2700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Avocado Shake",
+        "quantity": 2,
+        "price": 600,
+        "department": "JUICE",
+        "total": 1200,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3900,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3900,
+    "paymentMethod": "CARD",
+    "paymentStatus": "PAID",
+    "amountTendered": 3900,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-06T00:40:03.981Z",
+    "updatedAt": "2026-09-06T00:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_28_1",
+    "saleNumber": "INV-000207",
+    "tableId": null,
+    "tableNameSnapshot": "DELIVERY",
+    "orderType": "DELIVERY",
+    "orderNumbers": [
+      1107
+    ],
+    "items": [
+      {
+        "name": "Chicken Kottu",
+        "quantity": 3,
+        "price": 850,
+        "department": "KITCHEN",
+        "total": 2550,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Lime Juice with Mint",
+        "quantity": 2,
+        "price": 350,
+        "department": "JUICE",
+        "total": 700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Vegetable Samosa (3 pcs)",
+        "quantity": 2,
+        "price": 250,
+        "department": "BUN",
+        "total": 500,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3750,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3750,
+    "paymentMethod": "ONLINE",
+    "paymentStatus": "PAID",
+    "amountTendered": 3750,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-06T03:40:03.981Z",
+    "updatedAt": "2026-09-06T03:40:03.981Z"
+  },
+  {
+    "_id": "sale_past_28_2",
+    "saleNumber": "INV-000208",
+    "tableId": null,
+    "tableNameSnapshot": "Family 01",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1108
+    ],
+    "items": [
+      {
+        "name": "Chicken Kottu",
+        "quantity": 2,
+        "price": 850,
+        "department": "KITCHEN",
+        "total": 1700,
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Royal Ice Talk Falooda",
+        "quantity": 2,
+        "price": 650,
+        "department": "JUICE",
+        "total": 1300,
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 3000,
+    "discount": 0,
+    "discountPercentage": 0,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 3000,
+    "paymentMethod": "CASH",
+    "paymentStatus": "PAID",
+    "amountTendered": 3000,
+    "changeAmount": 0,
+    "cashierNameSnapshot": "Manager Admin",
+    "isDemo": true,
+    "createdAt": "2026-09-06T06:40:03.981Z",
+    "updatedAt": "2026-09-06T06:40:03.981Z"
+  }
+]

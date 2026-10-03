@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { detectKOTSection } from '../utils/kotRouting';
+import { isDsuperUser } from '../services/dsuperStorageService';
 
 const PrinterContext = createContext();
 
@@ -16,6 +17,19 @@ export const PrinterProvider = ({ children }) => {
   const [juicePrinter, setJuicePrinter] = useState(() => localStorage.getItem('icetalk_juice_printer') || '');
   const [bunPrinter, setBunPrinter] = useState(() => localStorage.getItem('icetalk_bun_printer') || '');
   const [multiPrinterMode, setMultiPrinterMode] = useState(() => localStorage.getItem('icetalk_multiprinter_mode') === 'true');
+
+  // Demo dsuper printing toggle - by default OFF (silent) so clicking does not trigger window.print
+  const [dsuperPrintEnabled, setDsuperPrintEnabled] = useState(
+    () => localStorage.getItem('icetalk_dsuper_print') === 'true'
+  );
+
+  const toggleDsuperPrint = () => {
+    setDsuperPrintEnabled((prev) => {
+      const next = !prev;
+      localStorage.setItem('icetalk_dsuper_print', String(next));
+      return next;
+    });
+  };
 
   const [settingsOpen, setSettingsOpen] = useState(false);
 
@@ -79,6 +93,11 @@ export const PrinterProvider = ({ children }) => {
 
   // Direct silent thermal print to a specified target printer
   const executeSilentPrintTo = async (targetPrinterName, targetWidth = null) => {
+    const isDemoDsuper = isDsuperUser();
+    if (isDemoDsuper && !dsuperPrintEnabled) {
+      return;
+    }
+
     await new Promise((resolve) => setTimeout(resolve, 150));
 
     const receiptEl = document.getElementById('printable-receipt-area');
@@ -120,6 +139,16 @@ export const PrinterProvider = ({ children }) => {
   // Supports multi-printer split routing:
   // If multiPrinterMode is ON and department is not passed, it can print separate slips to station printers!
   const printPreparationSlip = async (order, isAutoTrigger = false, department = null) => {
+    const isDemoDsuper = isDsuperUser();
+    if (isDemoDsuper && !dsuperPrintEnabled) {
+      setPrintData({
+        type: 'PREPARATION_SLIP',
+        data: order,
+        department,
+      });
+      return;
+    }
+
     if (!isAutoTrigger || autoPrintEnabled) {
       if (multiPrinterMode && !department) {
         // Multi-printer routing: automatically detect active stations from item categories
@@ -175,12 +204,17 @@ export const PrinterProvider = ({ children }) => {
 
   // Print customer tax receipt
   const printCustomerReceipt = (sale, isAutoTrigger = false) => {
-    const targetPrinter = billPrinter || selectedPrinter;
     setPrintData({
       type: 'CUSTOMER_RECEIPT',
       data: sale,
     });
 
+    const isDemoDsuper = isDsuperUser();
+    if (isDemoDsuper && !dsuperPrintEnabled) {
+      return;
+    }
+
+    const targetPrinter = billPrinter || selectedPrinter;
     if (!isAutoTrigger || autoPrintEnabled) {
       setTimeout(() => {
         executeSilentPrintTo(targetPrinter);
@@ -239,6 +273,9 @@ export const PrinterProvider = ({ children }) => {
         multiPrinterMode,
         updateStationPrinter,
         toggleMultiPrinterMode,
+        dsuperPrintEnabled,
+        setDsuperPrintEnabled,
+        toggleDsuperPrint,
         settingsOpen,
         openSettings: () => setSettingsOpen(true),
         closeSettings: () => setSettingsOpen(false),

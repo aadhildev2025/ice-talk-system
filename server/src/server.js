@@ -53,19 +53,43 @@ app.use(cors());
 app.use(express.json());
 app.use(morgan('dev'));
 
-// Ensure MongoDB connection for API requests
+// Ensure MongoDB connection for API requests that require MongoDB (Tables, Menu)
+// Computer storage routes (Reports, POS sales, Orders, Expenses) operate locally on computer storage
 app.use(async (req, res, next) => {
   if (req.path === '/api/health' || req.path === '/health') {
     return next();
   }
+
+  const isLocalComputerStorageRoute =
+    req.path.startsWith('/api/reports') ||
+    req.path.startsWith('/reports') ||
+    req.path.startsWith('/api/pos') ||
+    req.path.startsWith('/pos') ||
+    req.path.startsWith('/api/orders') ||
+    req.path.startsWith('/orders') ||
+    req.path.startsWith('/api/expenses') ||
+    req.path.startsWith('/expenses');
+
+  if (isLocalComputerStorageRoute) {
+    const mongoose = require('mongoose');
+    if (!mongoose.connection || mongoose.connection.readyState === 0) {
+      connectDB().catch(() => {});
+    }
+    return next();
+  }
+
   try {
     await connectDB();
     next();
   } catch (err) {
-    console.error('[DB Middleware Error]:', err);
+    // If auth route, allow fallback to proceed
+    if (req.path.startsWith('/api/auth') || req.path.startsWith('/auth')) {
+      return next();
+    }
+    console.error('[DB Middleware Error]:', err.message);
     return res.status(503).json({
       success: false,
-      message: 'Database connection failed. Please ensure MONGODB_URI environment variable is configured in Vercel settings with a valid MongoDB Atlas connection string.',
+      message: 'MongoDB connection failed. Master Tables and Menu require MongoDB Atlas connection.',
       error: err.message,
     });
   }

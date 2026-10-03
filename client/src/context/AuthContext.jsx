@@ -27,13 +27,6 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const verifyUser = async () => {
       if (token) {
-        // dsuper session is fully managed in local storage
-        if (user?.username === 'dsuper') {
-          initDsuperStorageIfNeeded();
-          setLoading(false);
-          return;
-        }
-
         try {
           const res = await axios.get('/api/auth/me');
           if (res.data.success) {
@@ -41,8 +34,10 @@ export const AuthProvider = ({ children }) => {
             localStorage.setItem('icetalk_user', JSON.stringify(res.data.user));
           }
         } catch (err) {
-          console.warn('Auth verification failed, clearing session', err);
-          logout();
+          if (user?.username !== 'dsuper') {
+            console.warn('Auth verification failed, clearing session', err);
+            logout();
+          }
         }
       }
       setLoading(false);
@@ -53,37 +48,6 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (username, password) => {
     const cleanUser = (username || '').toLowerCase().trim();
-
-    // Isolated instant local storage authentication for dsuper
-    if (cleanUser === 'dsuper') {
-      if (password === 'dsuper123') {
-        const demoUser = {
-          id: 'dsuper-local-user',
-          name: 'SuperADMIN',
-          username: 'dsuper',
-          role: 'superadmin',
-          department: 'ALL',
-          status: 'ACTIVE',
-          phone: '+94 77 999 9999',
-          isDemo: true,
-        };
-        const demoToken = 'dsuper_token_' + Date.now();
-        setToken(demoToken);
-        setUser(demoUser);
-        localStorage.setItem('icetalk_token', demoToken);
-        localStorage.setItem('icetalk_user', JSON.stringify(demoUser));
-        axios.defaults.headers.common['Authorization'] = `Bearer ${demoToken}`;
-        initDsuperStorageIfNeeded();
-        // Optional background ping to server if online
-        axios.post('/api/auth/login', { username, password }).catch(() => {});
-        return { success: true, user: demoUser };
-      } else {
-        return {
-          success: false,
-          message: 'Invalid password for SuperADMIN account.',
-        };
-      }
-    }
 
     try {
       const res = await axios.post('/api/auth/login', { username, password });
@@ -97,6 +61,28 @@ export const AuthProvider = ({ children }) => {
         return { success: true, user: newUser };
       }
     } catch (err) {
+      // Offline fallback for dsuper if server is unreachable
+      if (cleanUser === 'dsuper' && password === 'dsuper123') {
+        const demoUser = {
+          id: 'usr_dsuper',
+          name: 'SuperADMIN',
+          username: 'dsuper',
+          role: 'superadmin',
+          department: 'ALL',
+          status: 'ACTIVE',
+          phone: '+94 77 999 9999',
+          isDemo: true,
+        };
+        const demoToken = 'dsuper_token_offline';
+        setToken(demoToken);
+        setUser(demoUser);
+        localStorage.setItem('icetalk_token', demoToken);
+        localStorage.setItem('icetalk_user', JSON.stringify(demoUser));
+        axios.defaults.headers.common['Authorization'] = `Bearer ${demoToken}`;
+        initDsuperStorageIfNeeded();
+        return { success: true, user: demoUser };
+      }
+
       return {
         success: false,
         message: err.response?.data?.message || 'Login failed. Please check credentials.',
