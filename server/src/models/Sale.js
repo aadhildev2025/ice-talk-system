@@ -40,11 +40,23 @@ const saleSchema = new mongoose.Schema(
         price: Number,
         total: Number,
         department: String,
+        specialInstructions: {
+          type: String,
+          default: '',
+        },
+        noteAmount: {
+          type: Number,
+          default: 0,
+        },
       },
     ],
     subtotal: {
       type: Number,
       required: true,
+    },
+    specialNotesTotal: {
+      type: Number,
+      default: 0,
     },
     tax: {
       type: Number,
@@ -88,6 +100,11 @@ const saleSchema = new mongoose.Schema(
     cashierNameSnapshot: {
       type: String,
       default: 'Admin',
+    },
+    isDemo: {
+      type: Boolean,
+      default: false,
+      index: true,
     },
   },
   { timestamps: true }

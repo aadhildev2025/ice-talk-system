@@ -51,8 +51,8 @@ const Navbar = () => {
 
       {/* Center Controls: Live Status */}
       <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-        {/* Native Hardware Printer Status & Settings (Admin / Super Admin) */}
-        {(user?.role === 'admin' || user?.role === 'superadmin') && (
+        {/* Native Hardware Printer Status & Settings (Super Admin Only) */}
+        {user?.role === 'superadmin' && (
           <button
             onClick={openSettings}
             className="flex items-center gap-1.5 bg-[#1C1C24] hover:bg-[#252532] text-neutral-300 hover:text-white px-3 py-1 rounded-xl border border-[#2B2B38] text-xs font-bold transition-all shadow-sm"
@@ -90,7 +90,7 @@ const Navbar = () => {
             <UserIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
           </div>
           <div className="text-left hidden md:block">
-            <p className="text-xs font-semibold text-white leading-none truncate max-w-[90px]">{user?.name || 'Staff'}</p>
+            <p className="text-xs font-semibold text-white leading-none truncate max-w-[130px]">{user?.name || 'Staff'}</p>
             <p className="text-[10px] text-neutral-400 leading-tight capitalize">{user?.role}</p>
           </div>
           <div className="shrink-0">

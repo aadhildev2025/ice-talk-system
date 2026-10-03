@@ -8,7 +8,7 @@ const {
 const { protect, authorize } = require('../middleware/auth');
 
 router.get('/dashboard', protect, authorize('admin'), getDashboardMetrics);
-router.get('/analytics', protect, authorize('admin'), getDetailedReports);
-router.get('/profit-loss', protect, authorize('admin'), getProfitLossReport);
+router.get('/analytics', protect, authorize('superadmin'), getDetailedReports);
+router.get('/profit-loss', protect, authorize('superadmin'), getProfitLossReport);
 
 module.exports = router;

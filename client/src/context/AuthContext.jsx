@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
+import { initDsuperStorageIfNeeded } from '../services/dsuperStorageService';
 
 // Set base API URL if configured in environment (e.g. Vercel / Cloud deployment)
 if (import.meta.env.VITE_API_URL) {
@@ -26,6 +27,13 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const verifyUser = async () => {
       if (token) {
+        // dsuper session is fully managed in local storage
+        if (user?.username === 'dsuper') {
+          initDsuperStorageIfNeeded();
+          setLoading(false);
+          return;
+        }
+
         try {
           const res = await axios.get('/api/auth/me');
           if (res.data.success) {
@@ -44,6 +52,39 @@ export const AuthProvider = ({ children }) => {
   }, [token]);
 
   const login = async (username, password) => {
+    const cleanUser = (username || '').toLowerCase().trim();
+
+    // Isolated instant local storage authentication for dsuper
+    if (cleanUser === 'dsuper') {
+      if (password === 'dsuper123') {
+        const demoUser = {
+          id: 'dsuper-local-user',
+          name: 'SuperADMIN',
+          username: 'dsuper',
+          role: 'superadmin',
+          department: 'ALL',
+          status: 'ACTIVE',
+          phone: '+94 77 999 9999',
+          isDemo: true,
+        };
+        const demoToken = 'dsuper_token_' + Date.now();
+        setToken(demoToken);
+        setUser(demoUser);
+        localStorage.setItem('icetalk_token', demoToken);
+        localStorage.setItem('icetalk_user', JSON.stringify(demoUser));
+        axios.defaults.headers.common['Authorization'] = `Bearer ${demoToken}`;
+        initDsuperStorageIfNeeded();
+        // Optional background ping to server if online
+        axios.post('/api/auth/login', { username, password }).catch(() => {});
+        return { success: true, user: demoUser };
+      } else {
+        return {
+          success: false,
+          message: 'Invalid password for SuperADMIN account.',
+        };
+      }
+    }
+
     try {
       const res = await axios.post('/api/auth/login', { username, password });
       if (res.data.success) {

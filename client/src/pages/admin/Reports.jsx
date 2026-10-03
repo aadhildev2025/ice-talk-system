@@ -410,6 +410,11 @@ const Reports = () => {
                                 : ''}
                             </div>
                           )}
+                          {Number(sale.tax || 0) > 0 && (
+                            <div className="text-[10px] text-orange-400 font-semibold">
+                              VAT: +Rs.{Number(sale.tax).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </div>
+                          )}
                         </td>
                         <td className="p-3.5 text-right whitespace-nowrap">
                           <div className="flex items-center justify-end gap-1.5">

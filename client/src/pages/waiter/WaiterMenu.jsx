@@ -46,7 +46,6 @@ const WaiterMenu = () => {
   const [orderSuccess, setOrderSuccess] = useState(null);
 
   // Quick note modal state
-  const [showOrderNoteModal, setShowOrderNoteModal] = useState(false);
   const [editingCartItem, setEditingCartItem] = useState(null);
 
   const fetchMenuAndTables = async () => {
@@ -599,6 +598,29 @@ const WaiterMenu = () => {
                         </span>
                       </div>
 
+                      {/* Item Special Note Badge or Add Button */}
+                      {item.specialInstructions ? (
+                        <div className="flex items-center justify-between text-[11px] bg-amber-500/10 border border-amber-500/20 text-amber-300 rounded px-2 py-0.5">
+                          <span className="italic truncate max-w-[190px]">* {item.specialInstructions}</span>
+                          <button
+                            type="button"
+                            onClick={() => setEditingCartItem(item)}
+                            className="text-[10px] text-amber-400 hover:text-white font-bold ml-1"
+                          >
+                            Edit
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setEditingCartItem(item)}
+                          className="text-[10px] text-neutral-400 hover:text-amber-400 flex items-center gap-1 font-medium transition-colors"
+                        >
+                          <FileText className="w-3 h-3 text-neutral-500" />
+                          + Note
+                        </button>
+                      )}
+
                       <div className="flex items-center justify-between pt-1 border-t border-neutral-800">
                         <span className="text-[11px] text-neutral-400">
                           Rs. {item.price.toLocaleString()} ea
@@ -639,36 +661,6 @@ const WaiterMenu = () => {
 
             {/* Drawer Footer & Submit Button */}
             <div className="p-4 bg-[#1C1C24] border-t border-[#2B2B38] space-y-3">
-              {/* Special Note Button before confirming order */}
-              <button
-                type="button"
-                onClick={() => setShowOrderNoteModal(true)}
-                className={`w-full py-2.5 px-3.5 rounded-xl font-bold text-xs flex items-center justify-between border transition-all ${
-                  orderInstructions
-                    ? 'bg-amber-500/15 text-amber-300 border-amber-500/50 shadow-md'
-                    : 'bg-[#141418] hover:bg-[#252530] text-neutral-300 hover:text-white border-[#2A2A38] hover:border-orange-500/50'
-                }`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-orange-500/15 text-[#FF6B00] flex items-center justify-center">
-                    <FileText className="w-4 h-4" />
-                  </div>
-                  <div className="text-left">
-                    <span className="font-bold text-xs block leading-none">Special Note</span>
-                    <span className="text-[10px] text-neutral-400 mt-1 block max-w-[200px] truncate">
-                      {orderInstructions || 'Tap to add quick notes or custom notes'}
-                    </span>
-                  </div>
-                </div>
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg border ${
-                  orderInstructions
-                    ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
-                    : 'bg-[#1C1C24] text-[#FF6B00] border-orange-500/30'
-                }`}>
-                  {orderInstructions ? 'Edit' : '+ Add'}
-                </span>
-              </button>
-
               <div className="flex justify-between items-center text-sm font-black">
                 <span className="text-neutral-300">TOTAL BILL:</span>
                 <span className="text-2xl text-[#FF6B00] font-display">
@@ -701,31 +693,14 @@ const WaiterMenu = () => {
         <QuickNoteModal
           isOpen={Boolean(editingCartItem)}
           item={editingCartItem}
-          initialNote={editingCartItem.specialInstructions || ''}
-          title={`Special Note: ${editingCartItem.name}`}
+          initialNote={editingCartItem?.specialInstructions || ''}
+          title={`Special Note: ${editingCartItem?.name}`}
           onClose={() => setEditingCartItem(null)}
           onSkip={() => handleSaveCartItemNote('')}
           onSave={(note) => handleSaveCartItemNote(note)}
         />
       )}
 
-      {/* Quick Note Modal: For overall order special note */}
-      {showOrderNoteModal && (
-        <QuickNoteModal
-          isOpen={showOrderNoteModal}
-          initialNote={orderInstructions}
-          title="Overall Order Special Note"
-          onClose={() => setShowOrderNoteModal(false)}
-          onSkip={() => {
-            setOrderInstructions('');
-            setShowOrderNoteModal(false);
-          }}
-          onSave={(note) => {
-            setOrderInstructions(note);
-            setShowOrderNoteModal(false);
-          }}
-        />
-      )}
 
       {/* Success Modal */}
       {orderSuccess && (

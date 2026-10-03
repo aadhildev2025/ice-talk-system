@@ -157,18 +157,50 @@ const PrintModal = () => {
             {/* Items */}
             <div style={{ margin: '6px 0' }}>
               {kotItems.map((item, idx) => (
-                <div key={idx} style={{ marginBottom: '6px' }}>
-                  <div style={{ fontSize: '14.5px', fontWeight: '700', textTransform: 'uppercase', lineHeight: '1.25' }}>
+                <div key={idx} style={{ marginBottom: '8px' }}>
+                  <div style={{ fontSize: '15px', fontWeight: '800', textTransform: 'uppercase', lineHeight: '1.25' }}>
                     {item.quantity} x {item.name?.toUpperCase()}
                   </div>
                   {item.specialInstructions && (
-                    <div style={{ fontSize: '12px', fontStyle: 'italic', paddingLeft: '10px', color: '#111' }}>
-                      * {item.specialInstructions}
+                    <div
+                      style={{
+                        marginTop: '3px',
+                        marginBottom: '3px',
+                        marginLeft: '6px',
+                        padding: '2px 8px',
+                        border: '2px solid #000',
+                        borderRadius: '3px',
+                        fontSize: '13.5px',
+                        fontWeight: '900',
+                        letterSpacing: '0.5px',
+                        textTransform: 'uppercase',
+                        lineHeight: '1.3',
+                        display: 'inline-block',
+                      }}
+                    >
+                      *** NOTE: {item.specialInstructions.toUpperCase()} ***
                     </div>
                   )}
                 </div>
               ))}
             </div>
+
+            {/* Overall Order Note if present */}
+            {data.specialInstructions && (
+              <div
+                style={{
+                  margin: '8px 0',
+                  padding: '4px 8px',
+                  border: '2px dashed #000',
+                  fontSize: '13px',
+                  fontWeight: '900',
+                  textTransform: 'uppercase',
+                  lineHeight: '1.3',
+                }}
+              >
+                ORDER NOTE: {data.specialInstructions.toUpperCase()}
+              </div>
+            )}
 
             {/* Dashed line */}
             <div style={{ borderTop: '1px dashed #000', margin: '6px 0' }}></div>
@@ -252,7 +284,7 @@ const PrintModal = () => {
             {/* Item List */}
             <div style={{ margin: '6px 0' }}>
               {data.items?.map((it, idx) => {
-                const itemTotal = it.total || Number(it.price) * Number(it.quantity);
+                const itemTotal = it.total != null ? Number(it.total) : Number(it.price) * Number(it.quantity) + Number(it.noteAmount || 0);
                 return (
                   <div key={idx} style={{ marginBottom: '6px' }}>
                     <div style={{ fontSize: '13.5px', fontWeight: '700', textTransform: 'uppercase', lineHeight: '1.2' }}>
@@ -261,6 +293,7 @@ const PrintModal = () => {
                     {it.specialInstructions && (
                       <div style={{ fontSize: '11px', fontStyle: 'italic', paddingLeft: '8px', color: '#111' }}>
                         * {it.specialInstructions}
+                        {Number(it.noteAmount) > 0 && ` (+Rs. ${formatCurrency(it.noteAmount)})`}
                       </div>
                     )}
                     <div
@@ -296,7 +329,7 @@ const PrintModal = () => {
             {/* Totals Section */}
             {(() => {
               const itemsSubtotal = (data.items || []).reduce(
-                (sum, it) => sum + Number(it.price || 0) * Number(it.quantity || 1),
+                (sum, it) => sum + (it.total != null ? Number(it.total) : Number(it.price || 0) * Number(it.quantity || 1) + Number(it.noteAmount || 0)),
                 0
               );
               const subtotalAmt =
@@ -320,7 +353,10 @@ const PrintModal = () => {
                 }
               }
 
+              const vatAmt = Number(data.tax || data.vat || 0);
               const hasDiscount = discountAmt > 0;
+              const hasVat = vatAmt > 0;
+
               let pctLabel = '';
               if (pctVal > 0) {
                 pctLabel = pctVal % 1 === 0 ? pctVal.toFixed(0) : pctVal.toFixed(1);
@@ -328,7 +364,7 @@ const PrintModal = () => {
 
               return (
                 <div style={{ fontSize: '13px', margin: '6px 0' }}>
-                  {hasDiscount && (
+                  {(hasDiscount || hasVat) && (
                     <>
                       <div
                         style={{
@@ -343,19 +379,37 @@ const PrintModal = () => {
                         <span>Rs.{formatCurrency(subtotalAmt)}</span>
                       </div>
 
-                      <div
-                        style={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                          fontSize: '13px',
-                          fontWeight: '600',
-                          marginBottom: '3px',
-                        }}
-                      >
-                        <span>Discount{pctLabel ? ` (${pctLabel}%)` : ''}:</span>
-                        <span>- Rs.{formatCurrency(discountAmt)}</span>
-                      </div>
+                      {hasDiscount && (
+                        <div
+                          style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            fontSize: '13px',
+                            fontWeight: '600',
+                            marginBottom: '3px',
+                          }}
+                        >
+                          <span>Discount{pctLabel ? ` (${pctLabel}%)` : ''}:</span>
+                          <span>- Rs.{formatCurrency(discountAmt)}</span>
+                        </div>
+                      )}
+
+                      {hasVat && (
+                        <div
+                          style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            fontSize: '13px',
+                            fontWeight: '600',
+                            marginBottom: '3px',
+                          }}
+                        >
+                          <span>VAT (18%):</span>
+                          <span>+ Rs.{formatCurrency(vatAmt)}</span>
+                        </div>
+                      )}
 
                       <div style={{ borderTop: '1px dashed #000', margin: '4px 0' }}></div>
                     </>
@@ -372,7 +426,7 @@ const PrintModal = () => {
                       margin: '4px 0',
                     }}
                   >
-                    <span>{hasDiscount ? 'NET TOTAL:' : 'TOTAL:'}</span>
+                    <span>{(hasDiscount || hasVat) ? 'NET TOTAL:' : 'TOTAL:'}</span>
                     <span>Rs.{formatCurrency(data.total || data.grandTotal)}</span>
                   </div>
 

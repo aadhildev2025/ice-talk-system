@@ -1,5 +1,6 @@
 import React from 'react';
 import { usePrinter } from '../context/PrinterContext';
+import { useAuth } from '../context/AuthContext';
 import {
   Printer,
   X,
@@ -15,6 +16,7 @@ import {
 } from 'lucide-react';
 
 const PrinterSettingsModal = () => {
+  const { user } = useAuth();
   const {
     settingsOpen,
     closeSettings,
@@ -37,11 +39,17 @@ const PrinterSettingsModal = () => {
     isElectron,
   } = usePrinter();
 
-  if (!settingsOpen) return null;
+  if (!settingsOpen || user?.role !== 'superadmin') return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-[#141419] border border-[#24242E] rounded-2xl w-full max-w-xl overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+    <div
+      onClick={closeSettings}
+      className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 cursor-pointer"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="bg-[#141419] border border-[#24242E] rounded-2xl w-full max-w-xl overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-150 cursor-default"
+      >
         {/* Modal Header */}
         <div className="p-4 bg-[#181820] border-b border-[#24242E] flex justify-between items-center">
           <div className="flex items-center gap-2.5">

@@ -89,7 +89,6 @@ const AdminPOS = () => {
   const [orderPriority, setOrderPriority] = useState('NORMAL');
 
   // Quick note modal state
-  const [showOrderNoteModal, setShowOrderNoteModal] = useState(false);
   const [editingCartItem, setEditingCartItem] = useState(null);
 
   // Checkout / Billing states
@@ -99,6 +98,8 @@ const AdminPOS = () => {
   const [amountTendered, setAmountTendered] = useState('');
   const [discount, setDiscount] = useState(0);
   const [discountPercent, setDiscountPercent] = useState('');
+  const [isVatEnabled, setIsVatEnabled] = useState(false);
+  const [noteAmounts, setNoteAmounts] = useState({});
   const [submittingAction, setSubmittingAction] = useState(false);
 
   // Load Menu and Categories
@@ -378,6 +379,8 @@ const AdminPOS = () => {
     setDiscountPercent('');
     setPaymentMethod('CASH');
     setAmountTendered('');
+    setIsVatEnabled(false);
+    setNoteAmounts({});
 
     if (target === 'CHANNEL_ORDER' && orderData) {
       setSelectedChannelOrder(orderData);
@@ -385,11 +388,93 @@ const AdminPOS = () => {
     setShowCheckoutModal(true);
   };
 
+  // Collect all active special notes for the current checkout target
+  const activeSpecialNotes = useMemo(() => {
+    const list = [];
+    if (!showCheckoutModal) return list;
+
+    if (checkoutTarget === 'CART') {
+      cart.forEach((item, idx) => {
+        if (item.specialInstructions && item.specialInstructions.trim()) {
+          list.push({
+            id: `cart_item_${item.cartId || idx}`,
+            type: 'ITEM',
+            name: item.name,
+            note: item.specialInstructions.trim(),
+            quantity: item.quantity,
+            cartId: item.cartId,
+          });
+        }
+      });
+      if (orderInstructions && orderInstructions.trim()) {
+        list.push({
+          id: 'cart_order_note',
+          type: 'ORDER',
+          name: 'Order Special Note',
+          note: orderInstructions.trim(),
+        });
+      }
+    } else if (checkoutTarget === 'TABLE') {
+      if (tableOrdersData) {
+        const items = tableOrdersData.aggregatedItems || [];
+        items.forEach((item, idx) => {
+          if (item.specialInstructions && item.specialInstructions.trim()) {
+            list.push({
+              id: `table_item_${idx}`,
+              type: 'ITEM',
+              name: item.name,
+              note: item.specialInstructions.trim(),
+              quantity: item.quantity,
+              orderNumber: item.orderNumber,
+            });
+          }
+        });
+
+        const orders = tableOrdersData.orders || [];
+        orders.forEach((ord) => {
+          if (ord.specialInstructions && ord.specialInstructions.trim()) {
+            list.push({
+              id: `table_order_${ord._id}`,
+              type: 'ORDER',
+              name: `Order #${ord.orderNumber} Note`,
+              note: ord.specialInstructions.trim(),
+            });
+          }
+        });
+      }
+    } else if (checkoutTarget === 'CHANNEL_ORDER') {
+      if (selectedChannelOrder) {
+        const items = selectedChannelOrder.items || [];
+        items.forEach((item, idx) => {
+          if (item.specialInstructions && item.specialInstructions.trim()) {
+            list.push({
+              id: `channel_item_${idx}`,
+              type: 'ITEM',
+              name: item.name,
+              note: item.specialInstructions.trim(),
+              quantity: item.quantity,
+            });
+          }
+        });
+        if (selectedChannelOrder.specialInstructions && selectedChannelOrder.specialInstructions.trim()) {
+          list.push({
+            id: 'channel_order_note',
+            type: 'ORDER',
+            name: 'Order Special Note',
+            note: selectedChannelOrder.specialInstructions.trim(),
+          });
+        }
+      }
+    }
+
+    return list;
+  }, [showCheckoutModal, checkoutTarget, cart, orderInstructions, tableOrdersData, selectedChannelOrder]);
+
   // Handlers for optional discount percentage and amount
   const handleDiscountPercentChange = (val, subtotalVal) => {
     setDiscountPercent(val);
     const num = parseFloat(val);
-    if (!isNaN(num) && num > 0) {
+    if (!isNaN(num) && num > 0 && subtotalVal > 0) {
       const calculated = Math.round(((subtotalVal * num) / 100) * 100) / 100;
       setDiscount(Math.min(subtotalVal, calculated));
     } else {
@@ -397,16 +482,50 @@ const AdminPOS = () => {
     }
   };
 
-  const handleQuickPercent = (pct, subtotalVal) => {
-    if (pct === 0) {
-      setDiscount(0);
-      setDiscountPercent('');
-    } else {
+  const handleDiscountAmountChange = (val, subtotalVal) => {
+    setDiscount(val);
+    const num = parseFloat(val);
+    if (!isNaN(num) && num > 0 && subtotalVal > 0) {
+      const pct = Math.round(((Math.min(subtotalVal, num) / subtotalVal) * 100) * 10) / 10;
       setDiscountPercent(String(pct));
-      const calculated = Math.round(((subtotalVal * pct) / 100) * 100) / 100;
-      setDiscount(Math.min(subtotalVal, calculated));
+    } else {
+      setDiscountPercent('');
     }
   };
+
+
+
+  // Compute checkout modal calculations
+  const checkoutBaseSubtotal =
+    checkoutTarget === 'CART'
+      ? cartSubtotal
+      : checkoutTarget === 'TABLE'
+      ? tableOrdersData?.subtotal || tableOrdersData?.total || 0
+      : selectedChannelOrder?.subtotal || selectedChannelOrder?.total || 0;
+
+  const specialNotesExtraTotal = activeSpecialNotes.reduce((sum, n) => {
+    const amt = parseFloat(noteAmounts[n.id]) || 0;
+    return sum + Math.max(0, amt);
+  }, 0);
+
+  const checkoutSubtotal = checkoutBaseSubtotal + specialNotesExtraTotal;
+
+  const pctNum = parseFloat(discountPercent) || 0;
+  let finalCalculatedDiscount = Number(discount) || 0;
+  if (pctNum > 0 && finalCalculatedDiscount === 0 && checkoutSubtotal > 0) {
+    finalCalculatedDiscount = Math.round(((checkoutSubtotal * pctNum) / 100) * 100) / 100;
+  }
+
+  const checkoutTaxableAmount = Math.max(0, checkoutSubtotal - finalCalculatedDiscount);
+  const checkoutVatAmount = isVatEnabled
+    ? Math.round(((checkoutTaxableAmount * 18) / 100) * 100) / 100
+    : 0;
+
+  const checkoutGrandTotal = Math.max(0, checkoutTaxableAmount + checkoutVatAmount);
+  const tenderedNum = Number(amountTendered);
+  const isTenderedEntered = amountTendered !== '' && !isNaN(tenderedNum);
+  const checkoutBalance = isTenderedEntered ? tenderedNum - checkoutGrandTotal : 0;
+  const checkoutChange = paymentMethod === 'CASH' ? Math.max(0, checkoutBalance) : 0;
 
   // Action: Complete Payment & Settle Sale (Prints Final Customer Receipt)
   const handleCompletePayment = async () => {
@@ -414,20 +533,30 @@ const AdminPOS = () => {
     try {
       let finalSale = null;
 
-      const currentSubtotal =
-        checkoutTarget === 'CART'
-          ? cartSubtotal
-          : checkoutTarget === 'TABLE'
-          ? (tableOrdersData?.total || 0)
-          : (selectedChannelOrder?.total || 0);
+      const specialNoteCharges = activeSpecialNotes
+        .filter((sn) => (parseFloat(noteAmounts[sn.id]) || 0) > 0)
+        .map((sn) => ({
+          id: sn.id,
+          type: sn.type,
+          name: sn.name,
+          note: sn.note,
+          quantity: sn.quantity || 1,
+          amount: parseFloat(noteAmounts[sn.id]) || 0,
+          cartId: sn.cartId,
+        }));
 
-      const pctNum = parseFloat(discountPercent) || 0;
-      let finalDiscount = Number(discount) || 0;
-      if (pctNum > 0 && finalDiscount === 0 && currentSubtotal > 0) {
-        finalDiscount = Math.round(((currentSubtotal * pctNum) / 100) * 100) / 100;
-      }
-      const grandTotal = Math.max(0, currentSubtotal - finalDiscount);
-      const tendered = Number(amountTendered) || grandTotal;
+      const finalDiscount = finalCalculatedDiscount;
+      const tendered = Number(amountTendered) || checkoutGrandTotal;
+
+      const settlementPayload = {
+        paymentMethod,
+        amountTendered: tendered,
+        discount: finalDiscount,
+        discountPercentage: pctNum,
+        tax: checkoutVatAmount,
+        specialNotesExtra: specialNotesExtraTotal,
+        specialNoteCharges,
+      };
 
       if (checkoutTarget === 'CART') {
         // 1. First create the approved order
@@ -456,10 +585,7 @@ const AdminPOS = () => {
         // 2. Immediately settle this order
         const settleRes = await axios.post('/api/pos/settle-orders', {
           orderId: order._id,
-          paymentMethod,
-          amountTendered: tendered,
-          discount: finalDiscount,
-          discountPercentage: pctNum,
+          ...settlementPayload,
         });
 
         if (settleRes.data.success) {
@@ -472,10 +598,7 @@ const AdminPOS = () => {
 
         const res = await axios.post('/api/pos/settle-table', {
           tableId: selectedTable._id,
-          paymentMethod,
-          amountTendered: tendered,
-          discount: finalDiscount,
-          discountPercentage: pctNum,
+          ...settlementPayload,
         });
 
         if (res.data.success) {
@@ -489,10 +612,7 @@ const AdminPOS = () => {
 
         const res = await axios.post('/api/pos/settle-orders', {
           orderId: selectedChannelOrder._id,
-          paymentMethod,
-          amountTendered: tendered,
-          discount: finalDiscount,
-          discountPercentage: pctNum,
+          ...settlementPayload,
         });
 
         if (res.data.success) {
@@ -516,32 +636,41 @@ const AdminPOS = () => {
     }
   };
 
-  // Compute checkout modal calculations
-  const checkoutSubtotal =
-    checkoutTarget === 'CART'
-      ? cartSubtotal
-      : checkoutTarget === 'TABLE'
-      ? tableOrdersData?.total || 0
-      : selectedChannelOrder?.total || 0;
-
-  const checkoutGrandTotal = Math.max(0, checkoutSubtotal - Number(discount));
-  const tenderedNum = Number(amountTendered);
-  const isTenderedEntered = amountTendered !== '' && !isNaN(tenderedNum);
-  const checkoutBalance = isTenderedEntered ? tenderedNum - checkoutGrandTotal : 0;
-  const checkoutChange = paymentMethod === 'CASH' ? Math.max(0, checkoutBalance) : 0;
-
-  // Numpad key helper for Touch Screen Mode
+  // Numberpad key press handler for payment settlement
   const handleNumpadPress = (val) => {
     if (val === 'CLEAR') {
       setAmountTendered('');
     } else if (val === 'BACK') {
-      setAmountTendered((prev) => String(prev).slice(0, -1));
+      setAmountTendered((prev) => {
+        const str = String(prev || '').trim();
+        return str.length > 1 ? str.slice(0, -1) : '';
+      });
     } else if (val === 'EXACT') {
       setAmountTendered(String(checkoutGrandTotal));
     } else if (typeof val === 'number' && val >= 100) {
-      setAmountTendered(String((Number(amountTendered) || 0) + val));
+      setAmountTendered((prev) => {
+        const current = parseFloat(prev) || 0;
+        return String(current + val);
+      });
+    } else if (val === '00') {
+      setAmountTendered((prev) => {
+        const str = String(prev || '').trim();
+        if (!str || str === '0') return '0';
+        return str + '00';
+      });
+    } else if (val === '.') {
+      setAmountTendered((prev) => {
+        const str = String(prev || '').trim();
+        if (str.includes('.')) return str;
+        return str ? str + '.' : '0.';
+      });
     } else {
-      setAmountTendered((prev) => String(prev || '') + String(val));
+      // Single digit 0-9
+      setAmountTendered((prev) => {
+        const str = String(prev || '').trim();
+        if (str === '0') return String(val);
+        return str + String(val);
+      });
     }
   };
 
@@ -910,6 +1039,11 @@ const AdminPOS = () => {
                         <p className="text-[10px] text-neutral-400">
                           Order #{it.orderNumber} • {it.department}
                         </p>
+                        {it.specialInstructions && (
+                          <div className="mt-1 inline-flex items-center gap-1 text-[10px] font-bold text-amber-300 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded">
+                            📝 {it.specialInstructions}
+                          </div>
+                        )}
                       </div>
 
                       <div className="w-12 text-center font-extrabold text-neutral-300">
@@ -1114,9 +1248,9 @@ const AdminPOS = () => {
           </div>
 
           {/* Cart & Quick Order Panel (4 Cols) */}
-          <div className="lg:col-span-4 bg-[#141418] border border-[#24242E] rounded-2xl p-4 flex flex-col justify-between space-y-4">
+          <div className="lg:col-span-4 bg-[#141418] border border-[#24242E] rounded-2xl p-4 flex flex-col">
             {/* Cart Header */}
-            <div className="flex justify-between items-center pb-2 border-b border-[#24242E]">
+            <div className="flex justify-between items-center pb-2.5 border-b border-[#24242E]">
               <div className="flex items-center gap-2">
                 <ShoppingBag className="w-4 h-4 text-[#FF6B00]" />
                 <h3 className="font-black text-sm text-white">ORDER CART</h3>
@@ -1132,8 +1266,8 @@ const AdminPOS = () => {
               )}
             </div>
 
-            {/* Customer / Order Ref Inputs */}
-            <div className="space-y-2 bg-[#1C1C24] p-2.5 rounded-xl border border-[#2B2B38] text-xs">
+            {/* Customer / Order Ref Input */}
+            <div className="mt-2.5 mb-2.5">
               <input
                 type="text"
                 placeholder={
@@ -1151,18 +1285,16 @@ const AdminPOS = () => {
                   setCustomerName(e.target.value);
                   setChannelOrderRef(e.target.value);
                 }}
-                className={`w-full bg-[#141418] border border-[#2A2A38] focus:border-[#FF6B00] rounded-lg px-2.5 text-xs text-white placeholder-neutral-500 outline-none ${
-                  isTouchMode ? 'py-2.5 text-sm' : 'py-1.5'
+                className={`w-full bg-[#1C1C24] border border-[#2A2A38] focus:border-[#FF6B00] rounded-xl px-3 text-xs text-white placeholder-neutral-500 outline-none font-medium ${
+                  isTouchMode ? 'py-2.5 text-sm' : 'py-2'
                 }`}
               />
-
-
             </div>
 
             {/* Cart Items List */}
-            <div className="flex-1 overflow-y-auto max-h-[300px] space-y-2 pr-1">
+            <div className="flex-1 overflow-y-auto space-y-2 pr-1 min-h-[160px] max-h-[380px]">
               {cart.length === 0 ? (
-                <div className="py-12 text-center text-neutral-500 space-y-2">
+                <div className="py-6 text-center text-neutral-500 space-y-1">
                   <p className="text-xs font-semibold">Cart is empty</p>
                   <p className="text-[11px] text-neutral-600">
                     Tap items on the menu to build the order.
@@ -1180,6 +1312,29 @@ const AdminPOS = () => {
                         Rs. {(item.price * item.quantity).toLocaleString()}
                       </span>
                     </div>
+
+                    {/* Special note on item if present or Add note button */}
+                    {item.specialInstructions ? (
+                      <div className="flex items-center justify-between text-[11px] bg-amber-500/10 border border-amber-500/20 text-amber-300 rounded px-2 py-0.5">
+                        <span className="italic truncate max-w-[200px]">📝 * {item.specialInstructions}</span>
+                        <button
+                          type="button"
+                          onClick={() => setEditingCartItem(item)}
+                          className="text-[10px] text-amber-400 hover:text-white font-bold ml-1"
+                        >
+                          Edit
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setEditingCartItem(item)}
+                        className="text-[10px] text-neutral-400 hover:text-amber-400 flex items-center gap-1 font-medium transition-colors"
+                      >
+                        <FileText className="w-3 h-3 text-neutral-500" />
+                        + Add item note
+                      </button>
+                    )}
 
                     <div className="flex justify-between items-center pt-1 border-t border-neutral-800">
                       <div className="flex items-center gap-1.5">
@@ -1230,40 +1385,6 @@ const AdminPOS = () => {
                   Rs. {cartSubtotal.toLocaleString()}
                 </span>
               </div>
-
-              {/* Special Note Button before confirming order */}
-              <button
-                type="button"
-                disabled={cart.length === 0}
-                onClick={() => setShowOrderNoteModal(true)}
-                className={`w-full py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-between border transition-all ${
-                  isTouchMode ? 'h-11 text-sm' : ''
-                } ${
-                  orderInstructions
-                    ? 'bg-amber-500/15 text-amber-300 border-amber-500/50 shadow-sm'
-                    : 'bg-[#141418] hover:bg-[#20202A] text-neutral-300 hover:text-white border-[#2A2A38] hover:border-orange-500/40'
-                } disabled:opacity-40 disabled:cursor-not-allowed`}
-              >
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-md bg-orange-500/15 text-[#FF6B00] flex items-center justify-center">
-                    <FileText className="w-3.5 h-3.5" />
-                  </div>
-                  <div className="text-left">
-                    <span className="font-bold text-xs block leading-tight">Special Note</span>
-                    <span className="text-[10px] text-neutral-400 block max-w-[180px] truncate">
-                      {orderInstructions || 'Add quick or custom notes'}
-                    </span>
-                  </div>
-                </div>
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
-                  orderInstructions
-                    ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
-                    : 'bg-[#1C1C24] text-[#FF6B00] border-orange-500/30'
-                }`}>
-                  {orderInstructions ? 'Edit' : '+ Add'}
-                </span>
-              </button>
-
               {/* Action 1: Send to Kitchen (Auto-prints Kitchen Receipt) */}
               <button
                 type="button"
@@ -1346,15 +1467,27 @@ const AdminPOS = () => {
 
                   <div className="space-y-1 max-h-32 overflow-y-auto text-xs pr-1">
                     {ord.items.map((it, i) => (
-                      <div key={i} className="flex justify-between text-neutral-300">
-                        <span>
-                          {it.quantity}x {it.name}
-                        </span>
-                        <span className="font-semibold text-neutral-400">
-                          Rs. {(it.price * it.quantity).toLocaleString()}
-                        </span>
+                      <div key={i} className="text-neutral-300">
+                        <div className="flex justify-between">
+                          <span>
+                            {it.quantity}x {it.name}
+                          </span>
+                          <span className="font-semibold text-neutral-400">
+                            Rs. {(it.price * it.quantity).toLocaleString()}
+                          </span>
+                        </div>
+                        {it.specialInstructions && (
+                          <div className="text-[10px] font-bold text-amber-300 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded inline-block mt-0.5 ml-2">
+                            📝 {it.specialInstructions}
+                          </div>
+                        )}
                       </div>
                     ))}
+                    {ord.specialInstructions && (
+                      <div className="text-[11px] text-amber-300 italic bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20 mt-1">
+                        Note: {ord.specialInstructions}
+                      </div>
+                    )}
                   </div>
 
                   <div className="pt-2 border-t border-neutral-800 flex justify-between items-center">
@@ -1382,11 +1515,13 @@ const AdminPOS = () => {
 
       {/* CHECKOUT & FAST SETTLEMENT MODAL (Responsive & Fits in Screen) */}
       {showCheckoutModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
+        <div
+          onClick={() => setShowCheckoutModal(false)}
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm animate-fadeIn"
+        >
           <div
-            className={`bg-[#17171C] border border-[#2B2B38] rounded-2xl w-full p-4 sm:p-5 shadow-2xl overflow-y-auto max-h-[95vh] transition-all ${
-              paymentMethod === 'CASH' && isTouchMode ? 'max-w-2xl lg:max-w-3xl' : 'max-w-lg'
-            }`}
+            onClick={(e) => e.stopPropagation()}
+            className="bg-[#17171C] border border-[#2B2B38] rounded-2xl w-full max-w-4xl lg:max-w-5xl p-4 sm:p-6 shadow-2xl overflow-y-auto max-h-[96vh] transition-all"
           >
             {/* Modal Header */}
             <div className="flex justify-between items-center pb-2.5 border-b border-[#2B2B38] mb-3">
@@ -1403,32 +1538,120 @@ const AdminPOS = () => {
               </button>
             </div>
 
-            {/* Main Content Grid: 2 Columns on desktop when Cash + Touch Numpad, 1 Column otherwise */}
-            <div
-              className={`grid gap-3 sm:gap-4 ${
-                paymentMethod === 'CASH' && isTouchMode ? 'grid-cols-1 md:grid-cols-2 items-start' : 'grid-cols-1'
-              }`}
-            >
+            {/* Main Content Grid: 2 Columns on desktop/tablet, 1 Column on mobile */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6 items-start">
               {/* LEFT COLUMN: Bill Summary, Discount, Net Total, Payment Method */}
               <div className="space-y-3">
+                {/* Special Notes & Extra Amounts (Shown ONLY if special notes are added in menu) */}
+                {activeSpecialNotes.length > 0 && (
+                  <div className="bg-[#141418] p-2.5 sm:p-3 rounded-xl border border-amber-500/30 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 text-amber-300 font-bold text-xs">
+                        <FileText className="w-3.5 h-3.5 text-amber-400" />
+                        <span>Special Notes Extra Charges</span>
+                      </div>
+                      <span className="text-[10px] text-neutral-400">Optional customization charge</span>
+                    </div>
+
+                    <div className="space-y-2 max-h-36 overflow-y-auto pr-1">
+                      {activeSpecialNotes.map((sn) => (
+                        <div
+                          key={sn.id}
+                          className="p-2 rounded-lg bg-[#1C1C24] border border-[#2B2B38] flex items-center justify-between gap-2 text-xs"
+                        >
+                          <div className="flex-1 min-w-0 pr-1">
+                            <span className="font-bold text-white block truncate">{sn.name}</span>
+                            <span className="text-[11px] text-amber-300 font-medium italic block truncate">
+                              * "{sn.note}"
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-1.5 flex-shrink-0">
+                            <span className="text-[11px] text-neutral-400 font-bold">Rs.</span>
+                            <input
+                              type="number"
+                              min="0"
+                              step="any"
+                              placeholder="0"
+                              value={noteAmounts[sn.id] || ''}
+                              onWheel={(e) => e.target.blur()}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setNoteAmounts((prev) => ({
+                                  ...prev,
+                                  [sn.id]: val,
+                                }));
+                              }}
+                              className="w-20 bg-[#141418] border border-[#2E2E3E] focus:border-amber-400 rounded-lg px-2 py-1 text-right text-xs font-bold text-white outline-none"
+                            />
+                            <div className="flex gap-1">
+                              {[50, 100].map((amt) => (
+                                <button
+                                  key={amt}
+                                  type="button"
+                                  onClick={() => {
+                                    setNoteAmounts((prev) => ({
+                                      ...prev,
+                                      [sn.id]: String(amt),
+                                    }));
+                                  }}
+                                  className="px-1.5 py-1 bg-[#262634] hover:bg-[#343444] text-[10px] text-neutral-300 rounded font-bold transition-colors"
+                                >
+                                  +{amt}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {specialNotesExtraTotal > 0 && (
+                      <div className="flex justify-between items-center text-[11px] text-amber-400 font-bold pt-1 border-t border-dashed border-amber-500/20">
+                        <span>Total Notes Extra:</span>
+                        <span>+ Rs. {specialNotesExtraTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Bill Summary */}
                 <div className="bg-[#1C1C24] p-3 rounded-xl border border-[#2B2B38] space-y-2 text-xs">
                   <div className="flex justify-between items-center text-neutral-400">
-                    <span className="font-medium">Subtotal:</span>
-                    <span className="font-bold text-white text-sm">Rs. {checkoutSubtotal.toLocaleString()}</span>
+                    <span className="font-medium">Items Subtotal:</span>
+                    <span className="font-bold text-white text-sm">Rs. {checkoutBaseSubtotal.toLocaleString()}</span>
                   </div>
 
-                  {/* Optional Discount Section */}
-                  <div className="bg-[#141418] p-2 rounded-xl border border-[#2A2A38] space-y-1.5">
+                  {specialNotesExtraTotal > 0 && (
+                    <div className="flex justify-between items-center text-amber-400 font-medium">
+                      <span>Special Notes Extra:</span>
+                      <span className="font-bold">
+                        + Rs. {specialNotesExtraTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                  )}
+
+                  {specialNotesExtraTotal > 0 && (
+                    <div className="flex justify-between items-center text-neutral-300 font-medium pt-1 border-t border-[#2A2A38]">
+                      <span>Adjusted Subtotal:</span>
+                      <span className="font-bold text-white">Rs. {checkoutSubtotal.toLocaleString()}</span>
+                    </div>
+                  )}
+
+                  {/* Optional Discount Section: Both Percentage (%) and Fixed Amount (Rs.) */}
+                  <div className="bg-[#141418] p-2.5 sm:p-3 rounded-xl border border-[#2A2A38] space-y-2">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5 text-neutral-300 font-bold text-[11px]">
+                      <div className="flex items-center gap-1.5 text-neutral-300 font-bold text-xs">
                         <Percent className="w-3.5 h-3.5 text-[#FF6B00]" />
-                        <span>Discount (Optional)</span>
+                        <span>Discount (Percentage & Amount)</span>
                       </div>
-                      {Number(discount) > 0 && (
+                      {(Number(discount) > 0 || Number(discountPercent) > 0) && (
                         <button
                           type="button"
-                          onClick={() => handleQuickPercent(0, checkoutSubtotal)}
+                          onClick={() => {
+                            setDiscount(0);
+                            setDiscountPercent('');
+                          }}
                           className="text-[10px] text-red-400 hover:text-red-300 font-bold hover:underline"
                         >
                           Clear
@@ -1436,62 +1659,97 @@ const AdminPOS = () => {
                       )}
                     </div>
 
-                    {/* Quick % Preset Buttons */}
-                    <div className="grid grid-cols-5 gap-1 text-[11px]">
-                      {[0, 5, 10, 15, 20].map((pct) => {
-                        const isSelected =
-                          (pct === 0 && Number(discount) === 0) ||
-                          (pct > 0 && Number(discountPercent) === pct);
-                        return (
-                          <button
-                            key={pct}
-                            type="button"
-                            onClick={() => handleQuickPercent(pct, checkoutSubtotal)}
-                            className={`py-1 rounded-lg font-bold transition-all text-center ${
-                              isSelected
-                                ? 'bg-[#FF6B00] text-white shadow-sm shadow-orange-500/30'
-                                : 'bg-[#1F1F28] hover:bg-[#2A2A38] text-neutral-300 border border-[#2D2D3B]'
-                            }`}
-                          >
-                            {pct === 0 ? 'None' : `${pct}%`}
-                          </button>
-                        );
-                      })}
-                    </div>
+                    {/* Dual Inputs: Percentage (%) and Amount (Rs.) Side by Side */}
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-[10px] font-bold text-neutral-400 uppercase mb-1">
+                          Discount (%)
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="number"
+                            min="0"
+                            max="100"
+                            step="any"
+                            placeholder="0"
+                            value={discountPercent}
+                            onWheel={(e) => e.target.blur()}
+                            onChange={(e) => handleDiscountPercentChange(e.target.value, checkoutSubtotal)}
+                            className="w-full bg-[#1C1C24] border border-[#2D2D3B] focus:border-[#FF6B00] rounded-lg pl-2 pr-6 py-1.5 text-right text-xs text-white outline-none font-bold"
+                          />
+                          <span className="absolute right-2 top-1.5 text-neutral-400 text-xs font-bold pointer-events-none">
+                            %
+                          </span>
+                        </div>
+                      </div>
 
-                    {/* Single Input for Custom % */}
-                    <div className="flex items-center justify-between gap-2 pt-0.5">
-                      <label className="text-[10px] text-neutral-400 font-medium whitespace-nowrap">
-                        Discount (%):
-                      </label>
-                      <div className="relative flex-1 max-w-[130px]">
-                        <input
-                          type="number"
-                          min="0"
-                          max="100"
-                          step="any"
-                          placeholder="e.g. 10"
-                          value={discountPercent}
-                          onWheel={(e) => e.target.blur()}
-                          onChange={(e) => handleDiscountPercentChange(e.target.value, checkoutSubtotal)}
-                          className="w-full bg-[#1C1C24] border border-[#2D2D3B] focus:border-[#FF6B00] rounded-lg pl-2 pr-6 py-1 text-right text-xs text-white outline-none font-bold"
-                        />
-                        <span className="absolute right-2.5 top-1 text-neutral-400 text-xs font-bold pointer-events-none">
-                          %
-                        </span>
+                      <div>
+                        <label className="block text-[10px] font-bold text-neutral-400 uppercase mb-1">
+                          Discount (Rs.)
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="number"
+                            min="0"
+                            max={checkoutSubtotal}
+                            step="any"
+                            placeholder="0.00"
+                            value={discount || ''}
+                            onWheel={(e) => e.target.blur()}
+                            onChange={(e) => handleDiscountAmountChange(e.target.value, checkoutSubtotal)}
+                            className="w-full bg-[#1C1C24] border border-[#2D2D3B] focus:border-[#FF6B00] rounded-lg pl-7 pr-2 py-1.5 text-right text-xs text-white outline-none font-bold"
+                          />
+                          <span className="absolute left-2 top-1.5 text-neutral-400 text-xs font-bold pointer-events-none">
+                            Rs.
+                          </span>
+                        </div>
                       </div>
                     </div>
 
+
+                    {/* Applied Discount Breakdown */}
                     {Number(discount) > 0 && (
                       <div className="flex justify-between items-center text-[11px] text-emerald-400 font-medium pt-1 border-t border-dashed border-[#2A2A38]">
                         <span>Discount Applied:</span>
                         <span className="font-bold">
                           - Rs. {Number(discount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                          {discountPercent ? ` (${discountPercent}%)` : ''}
+                          {discountPercent ? ` (${Number(discountPercent) % 1 === 0 ? Number(discountPercent).toFixed(0) : Number(discountPercent).toFixed(1)}%)` : ''}
                         </span>
                       </div>
                     )}
                   </div>
+
+                  {/* Optional VAT (18%) Section */}
+                  <div className="bg-[#141418] p-2 rounded-xl border border-[#2A2A38]">
+                    <label className="flex items-center justify-between cursor-pointer select-none">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={isVatEnabled}
+                          onChange={(e) => setIsVatEnabled(e.target.checked)}
+                          className="w-4 h-4 rounded text-[#FF6B00] bg-[#1C1C24] border-[#3A3A4A] focus:ring-0 cursor-pointer accent-[#FF6B00]"
+                        />
+                        <div>
+                          <span className="text-xs font-bold text-white block">Add VAT (18%)</span>
+                          <span className="text-[10px] text-neutral-400 block">Optional government tax</span>
+                        </div>
+                      </div>
+                      {isVatEnabled && (
+                        <span className="text-xs font-bold text-[#FF6B00]">
+                          + Rs. {checkoutVatAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
+                      )}
+                    </label>
+                  </div>
+
+                  {isVatEnabled && checkoutVatAmount > 0 && (
+                    <div className="flex justify-between items-center text-[11px] text-orange-400 font-medium pt-0.5">
+                      <span>VAT (18% applied):</span>
+                      <span className="font-bold">
+                        + Rs. {checkoutVatAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                  )}
 
                   <div className="flex justify-between items-center pt-1.5 border-t border-neutral-800 text-sm font-black">
                     <span className="text-neutral-300 text-xs sm:text-sm">NET GRAND TOTAL:</span>
@@ -1547,13 +1805,16 @@ const AdminPOS = () => {
                     </button>
                   </div>
                 </div>
+              </div>
 
-                {/* If CASH but NOT touch numpad: show Tendered/Balance + chips here */}
-                {paymentMethod === 'CASH' && !isTouchMode && (
-                  <div className="space-y-2">
-                    <div className="grid grid-cols-2 gap-2 bg-[#1C1C24] p-2.5 rounded-xl border border-[#2B2B38] text-xs">
+              {/* RIGHT COLUMN: Amount Tendered, Balance & Numberpad (Always visible when paying) */}
+              <div className="space-y-3">
+                {paymentMethod === 'CASH' ? (
+                  <>
+                    {/* Amount Tendered & Balance Cards */}
+                    <div className="grid grid-cols-2 gap-2.5 bg-[#141418] p-3 rounded-xl border border-[#2B2B38]">
                       <div>
-                        <label className="block text-[10px] font-bold text-neutral-400 uppercase mb-1">
+                        <label className="block text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
                           Amount Tendered (Rs.)
                         </label>
                         <input
@@ -1564,181 +1825,160 @@ const AdminPOS = () => {
                           onFocus={(e) => e.target.select()}
                           onChange={(e) => setAmountTendered(e.target.value)}
                           placeholder={`e.g. ${checkoutGrandTotal}`}
-                          className="w-full bg-[#141418] border border-[#2E2E3E] focus:border-[#FF6B00] rounded-lg px-2.5 py-1 text-sm font-bold text-white outline-none"
+                          className="w-full bg-[#1C1C24] border border-[#2E2E3E] focus:border-[#FF6B00] rounded-xl px-3 py-2 text-base sm:text-lg font-black text-white outline-none text-right transition-colors"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-[10px] font-bold text-neutral-400 uppercase mb-1">
+                        <label className="block text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
                           Balance (Rs.)
                         </label>
-                        <input
-                          type="text"
-                          readOnly
-                          value={
-                            !isTenderedEntered
-                              ? `Rs. 0`
-                              : checkoutBalance >= 0
-                              ? `Rs. ${checkoutBalance.toLocaleString()}`
-                              : `- Rs. ${Math.abs(checkoutBalance).toLocaleString()} (Due)`
-                          }
-                          className={`w-full bg-[#141418] border rounded-lg px-2.5 py-1 text-sm font-black outline-none cursor-default ${
+                        <div
+                          className={`w-full bg-[#1C1C24] border rounded-xl px-3 py-2 text-base sm:text-lg font-black text-right flex items-center justify-end ${
                             !isTenderedEntered || checkoutBalance >= 0
                               ? 'border-[#2E2E3E] text-emerald-400'
                               : 'border-red-500/50 text-red-400'
                           }`}
-                        />
+                        >
+                          {!isTenderedEntered
+                            ? 'Rs. 0'
+                            : checkoutBalance >= 0
+                            ? `Rs. ${checkoutBalance.toLocaleString()}`
+                            : `- Rs. ${Math.abs(checkoutBalance).toLocaleString()} (Due)`}
+                        </div>
                       </div>
                     </div>
 
-                    {/* Quick Cash Chips */}
-                    <div className="flex flex-wrap items-center gap-1.5 text-xs font-bold">
-                      <button
-                        type="button"
-                        onClick={() => setAmountTendered(String(checkoutGrandTotal))}
-                        className="py-1 px-2.5 bg-[#262634] hover:bg-[#343444] rounded-lg text-emerald-400 font-bold border border-[#2E2E3E] transition-all text-[11px]"
-                      >
-                        Exact (Rs. {checkoutGrandTotal.toLocaleString()})
-                      </button>
-                      {[1000, 2000, 5000].map((amt) => (
-                        <button
-                          key={amt}
-                          type="button"
-                          onClick={() => setAmountTendered(String(amt))}
-                          className="py-1 px-2.5 bg-[#262634] hover:bg-[#343444] rounded-lg text-white border border-[#2E2E3E] transition-all text-[11px]"
-                        >
-                          Rs. {amt.toLocaleString()}
-                        </button>
-                      ))}
-                      {amountTendered !== '' && (
+                    {/* Touch & Click Numberpad Container */}
+                    <div className="bg-[#141418] p-3 rounded-xl border border-[#2B2B38] space-y-2">
+                      {/* Top Quick Cash Denominations */}
+                      <div className="grid grid-cols-4 gap-1.5 text-xs font-bold">
                         <button
                           type="button"
-                          onClick={() => setAmountTendered('')}
-                          className="py-1 px-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg border border-red-500/30 transition-all text-[11px]"
+                          onClick={() => handleNumpadPress('EXACT')}
+                          className="py-2 bg-[#252534] hover:bg-[#323244] active:scale-95 rounded-xl text-emerald-400 border border-emerald-500/30 font-black text-xs transition-all shadow-sm"
                         >
-                          Clear
+                          Exact ({checkoutGrandTotal})
                         </button>
+                        <button
+                          type="button"
+                          onClick={() => handleNumpadPress(500)}
+                          className="py-2 bg-[#20202C] hover:bg-[#2C2C3C] active:scale-95 rounded-xl text-white border border-[#2F2F40] font-bold text-xs transition-all"
+                        >
+                          +500
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleNumpadPress(1000)}
+                          className="py-2 bg-[#20202C] hover:bg-[#2C2C3C] active:scale-95 rounded-xl text-white border border-[#2F2F40] font-bold text-xs transition-all"
+                        >
+                          +1000
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleNumpadPress(5000)}
+                          className="py-2 bg-[#20202C] hover:bg-[#2C2C3C] active:scale-95 rounded-xl text-white border border-[#2F2F40] font-bold text-xs transition-all"
+                        >
+                          +5000
+                        </button>
+                      </div>
+
+                      {/* Main Keypad Numeric Grid (1-9, C, 0, Back) */}
+                      <div className="grid grid-cols-3 gap-1.5 text-base font-bold text-white">
+                        {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
+                          <button
+                            key={num}
+                            type="button"
+                            onClick={() => handleNumpadPress(num)}
+                            className="py-2.5 sm:py-3 bg-[#1C1C24] hover:bg-[#2A2A38] active:bg-[#FF6B00] active:text-white rounded-xl shadow-sm border border-[#2D2D3E] text-base sm:text-lg font-black transition-all active:scale-95 select-none"
+                          >
+                            {num}
+                          </button>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={() => handleNumpadPress('CLEAR')}
+                          className="py-2.5 sm:py-3 bg-rose-500/15 hover:bg-rose-500/25 active:scale-95 text-rose-400 rounded-xl border border-rose-500/30 text-xs sm:text-sm font-black transition-all select-none"
+                        >
+                          CLEAR
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleNumpadPress(0)}
+                          className="py-2.5 sm:py-3 bg-[#1C1C24] hover:bg-[#2A2A38] active:bg-[#FF6B00] active:text-white rounded-xl shadow-sm border border-[#2D2D3E] text-base sm:text-lg font-black transition-all active:scale-95 select-none"
+                        >
+                          0
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleNumpadPress('BACK')}
+                          className="py-2.5 sm:py-3 bg-[#22222E] hover:bg-[#2E2E3E] active:scale-95 text-neutral-300 rounded-xl border border-[#323244] flex items-center justify-center transition-all select-none"
+                        >
+                          <Delete className="w-5 h-5 text-neutral-300" />
+                        </button>
+                      </div>
+
+                      {/* Additional Keypad Row (00, dot, Exact) */}
+                      <div className="grid grid-cols-3 gap-1.5 text-sm font-bold text-white">
+                        <button
+                          type="button"
+                          onClick={() => handleNumpadPress('00')}
+                          className="py-2 bg-[#1C1C24] hover:bg-[#2A2A38] active:scale-95 text-neutral-300 rounded-xl border border-[#2D2D3E] font-bold text-sm transition-all select-none"
+                        >
+                          00
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleNumpadPress('.')}
+                          className="py-2 bg-[#1C1C24] hover:bg-[#2A2A38] active:scale-95 text-neutral-300 rounded-xl border border-[#2D2D3E] font-bold text-base transition-all select-none"
+                        >
+                          .
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleNumpadPress('EXACT')}
+                          className="py-2 bg-emerald-500/15 hover:bg-emerald-500/25 active:scale-95 text-emerald-400 rounded-xl border border-emerald-500/30 font-black text-xs uppercase tracking-wider transition-all select-none"
+                        >
+                          Exact Bill
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  /* When Card or Online */
+                  <div className="bg-[#141418] p-5 rounded-2xl border border-[#2B2B38] space-y-4 text-center h-full flex flex-col justify-center items-center">
+                    <div className="w-16 h-16 rounded-2xl bg-[#1C1C24] border border-[#2E2E3E] flex items-center justify-center text-3xl">
+                      {paymentMethod === 'CARD' ? (
+                        <CreditCard className="w-8 h-8 text-blue-400" />
+                      ) : (
+                        <Globe className="w-8 h-8 text-purple-400" />
                       )}
+                    </div>
+                    <div className="space-y-1">
+                      <h4 className="font-black text-base text-white">
+                        {paymentMethod === 'CARD' ? 'Credit / Debit Card' : 'Online / QR Payment'}
+                      </h4>
+                      <p className="text-xs text-neutral-400 max-w-xs">
+                        No cash calculation or change required. Amount will be settled automatically.
+                      </p>
+                    </div>
+
+                    <div className="bg-[#1C1C24] p-3.5 rounded-xl border border-[#2E2E3E] w-full max-w-xs">
+                      <span className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider block">
+                        Net Amount to Charge:
+                      </span>
+                      <span className="text-2xl font-black text-[#FF6B00] font-display block mt-1">
+                        Rs. {checkoutGrandTotal.toLocaleString()}
+                      </span>
+                    </div>
+
+                    <div className="text-xs font-semibold text-emerald-400 flex items-center gap-1.5">
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>Ready to confirm & print customer receipt</span>
                     </div>
                   </div>
                 )}
               </div>
-
-              {/* RIGHT COLUMN (when CASH and isTouchMode): Tendered/Balance + Touch Numpad */}
-              {paymentMethod === 'CASH' && isTouchMode && (
-                <div className="space-y-2.5">
-                  {/* Tendered & Balance inputs */}
-                  <div className="grid grid-cols-2 gap-2 bg-[#1C1C24] p-2.5 rounded-xl border border-[#2B2B38] text-xs">
-                    <div>
-                      <label className="block text-[10px] font-bold text-neutral-400 uppercase mb-1">
-                        Amount Tendered (Rs.)
-                      </label>
-                      <input
-                        type="number"
-                        autoFocus
-                        value={amountTendered}
-                        onWheel={(e) => e.target.blur()}
-                        onFocus={(e) => e.target.select()}
-                        onChange={(e) => setAmountTendered(e.target.value)}
-                        placeholder={`e.g. ${checkoutGrandTotal}`}
-                        className="w-full bg-[#141418] border border-[#2E2E3E] focus:border-[#FF6B00] rounded-lg px-2.5 py-1 text-sm font-bold text-white outline-none"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-[10px] font-bold text-neutral-400 uppercase mb-1">
-                        Balance (Rs.)
-                      </label>
-                      <input
-                        type="text"
-                        readOnly
-                        value={
-                          !isTenderedEntered
-                            ? `Rs. 0`
-                            : checkoutBalance >= 0
-                            ? `Rs. ${checkoutBalance.toLocaleString()}`
-                            : `- Rs. ${Math.abs(checkoutBalance).toLocaleString()} (Due)`
-                        }
-                        className={`w-full bg-[#141418] border rounded-lg px-2.5 py-1 text-sm font-black outline-none cursor-default ${
-                          !isTenderedEntered || checkoutBalance >= 0
-                            ? 'border-[#2E2E3E] text-emerald-400'
-                            : 'border-red-500/50 text-red-400'
-                        }`}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Touchscreen Numpad */}
-                  <div className="bg-[#141418] p-2 rounded-xl border border-[#2B2B38] space-y-1.5">
-                    {/* Quick Cash Buttons */}
-                    <div className="grid grid-cols-4 gap-1 text-xs font-bold">
-                      <button
-                        type="button"
-                        onClick={() => handleNumpadPress('EXACT')}
-                        className="py-1.5 bg-[#262634] hover:bg-[#343444] rounded-lg text-emerald-400 font-black text-xs"
-                      >
-                        Exact
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleNumpadPress(500)}
-                        className="py-1.5 bg-[#262634] hover:bg-[#343444] rounded-lg text-white text-xs"
-                      >
-                        +500
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleNumpadPress(1000)}
-                        className="py-1.5 bg-[#262634] hover:bg-[#343444] rounded-lg text-white text-xs"
-                      >
-                        +1000
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleNumpadPress(5000)}
-                        className="py-1.5 bg-[#262634] hover:bg-[#343444] rounded-lg text-white text-xs"
-                      >
-                        +5000
-                      </button>
-                    </div>
-
-                    {/* Numeric Grid */}
-                    <div className="grid grid-cols-3 gap-1 text-sm font-bold text-white">
-                      {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
-                        <button
-                          key={num}
-                          type="button"
-                          onClick={() => handleNumpadPress(num)}
-                          className="py-1.5 sm:py-2 bg-[#1E1E28] hover:bg-[#2A2A38] rounded-lg shadow-sm active:scale-95 text-xs sm:text-sm font-bold"
-                        >
-                          {num}
-                        </button>
-                      ))}
-                      <button
-                        type="button"
-                        onClick={() => handleNumpadPress('CLEAR')}
-                        className="py-1.5 sm:py-2 bg-rose-500/20 text-rose-400 rounded-lg hover:bg-rose-500/30 text-xs sm:text-sm font-bold"
-                      >
-                        C
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleNumpadPress(0)}
-                        className="py-1.5 sm:py-2 bg-[#1E1E28] hover:bg-[#2A2A38] rounded-lg text-xs sm:text-sm font-bold"
-                      >
-                        0
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleNumpadPress('BACK')}
-                        className="py-1.5 sm:py-2 bg-[#2A2A38] text-neutral-300 rounded-lg hover:bg-[#343444] flex items-center justify-center"
-                      >
-                        <Delete className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* Confirm & Print Receipt Button (Full width at bottom) */}
@@ -1763,31 +2003,14 @@ const AdminPOS = () => {
         </div>
       )}
 
-      {/* Quick Note Modal: For overall order special note */}
-      {showOrderNoteModal && (
-        <QuickNoteModal
-          isOpen={showOrderNoteModal}
-          initialNote={orderInstructions}
-          title="Order Special Note"
-          onClose={() => setShowOrderNoteModal(false)}
-          onSkip={() => {
-            setOrderInstructions('');
-            setShowOrderNoteModal(false);
-          }}
-          onSave={(note) => {
-            setOrderInstructions(note);
-            setShowOrderNoteModal(false);
-          }}
-        />
-      )}
 
       {/* Quick Note Modal: For editing existing cart item note */}
       {editingCartItem && (
         <QuickNoteModal
           isOpen={Boolean(editingCartItem)}
           item={editingCartItem}
-          initialNote={editingCartItem.specialInstructions || ''}
-          title={`Special Note: ${editingCartItem.name}`}
+          initialNote={editingCartItem?.specialInstructions || ''}
+          title={`Special Note: ${editingCartItem?.name}`}
           onClose={() => setEditingCartItem(null)}
           onSkip={() => handleSaveCartItemNote('')}
           onSave={(note) => handleSaveCartItemNote(note)}

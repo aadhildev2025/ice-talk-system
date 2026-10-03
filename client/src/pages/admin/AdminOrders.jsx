@@ -307,8 +307,12 @@ const AdminOrders = () => {
                       </div>
                       <div className="text-[10px] text-neutral-400 mt-0.5">
                         Dept: <span className="text-orange-400 font-semibold">{it.department}</span>
-                        {it.specialInstructions && ` • Note: ${it.specialInstructions}`}
                       </div>
+                      {it.specialInstructions && (
+                        <div className="mt-1 text-[11px] font-bold text-amber-300 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded inline-block">
+                          📝 Note: {it.specialInstructions}
+                        </div>
+                      )}
                     </div>
                     <span className="font-bold text-neutral-300">
                       Rs. {(it.price * it.quantity).toLocaleString()}

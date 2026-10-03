@@ -9,9 +9,9 @@ const {
 } = require('../controllers/expenseController');
 const { protect, authorize } = require('../middleware/auth');
 
-// All expense routes require authentication and admin or superadmin role
+// All expense routes require authentication and superadmin role
 router.use(protect);
-router.use(authorize('admin')); // Note: authorize('admin') also allows 'superadmin' automatically
+router.use(authorize('superadmin'));
 
 router.route('/')
   .get(getExpenses)

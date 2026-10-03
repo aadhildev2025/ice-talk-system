@@ -2,6 +2,7 @@ const Sale = require('../models/Sale');
 const Order = require('../models/Order');
 const Table = require('../models/Table');
 const Expense = require('../models/Expense');
+const { generateDemoSalesIfNeeded } = require('../utils/demoSalesService');
 
 // Helper for date ranges in reports
 const getReportDateRange = (timeframe, startDate, endDate) => {
@@ -56,12 +57,15 @@ const getReportDateRange = (timeframe, startDate, endDate) => {
 // @access  Private (Admin, SuperAdmin)
 const getDashboardMetrics = async (req, res) => {
   try {
+    const isDemo = Boolean(req.user?.isDemo);
+    const demoFilter = isDemo ? { isDemo: true } : { isDemo: { $ne: true } };
+
     const now = new Date();
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
     // Today's sales from Sale collection
     const todaySalesData = await Sale.aggregate([
-      { $match: { createdAt: { $gte: startOfToday } } },
+      { $match: { createdAt: { $gte: startOfToday }, ...demoFilter } },
       {
         $group: {
           _id: null,
@@ -87,25 +91,29 @@ const getDashboardMetrics = async (req, res) => {
     const onlineSales = todaySalesData[0]?.onlineSales || 0;
 
     // Order counts by status
-    const pendingOrders = await Order.countDocuments({ status: 'PENDING' });
-    const approvedOrders = await Order.countDocuments({ status: 'APPROVED' });
-    const preparingOrders = await Order.countDocuments({ status: 'PREPARING' });
-    const readyOrders = await Order.countDocuments({ status: 'READY' });
+    const pendingOrders = await Order.countDocuments({ status: 'PENDING', ...demoFilter });
+    const approvedOrders = await Order.countDocuments({ status: 'APPROVED', ...demoFilter });
+    const preparingOrders = await Order.countDocuments({ status: 'PREPARING', ...demoFilter });
+    const readyOrders = await Order.countDocuments({ status: 'READY', ...demoFilter });
     const completedTodayOrders = await Order.countDocuments({
       status: 'COMPLETED',
       updatedAt: { $gte: startOfToday },
+      ...demoFilter,
     });
     const cancelledTodayOrders = await Order.countDocuments({
       status: 'CANCELLED',
       updatedAt: { $gte: startOfToday },
+      ...demoFilter,
     });
     const rejectedTodayOrders = await Order.countDocuments({
       status: 'REJECTED',
       updatedAt: { $gte: startOfToday },
+      ...demoFilter,
     });
 
     const totalOrdersToday = await Order.countDocuments({
       createdAt: { $gte: startOfToday },
+      ...demoFilter,
     });
 
     // Active Tables summary
@@ -120,12 +128,13 @@ const getDashboardMetrics = async (req, res) => {
     });
 
     // Recent incoming / active orders
-    const recentOrders = await Order.find()
+    const recentOrders = await Order.find(demoFilter)
       .sort({ createdAt: -1 })
       .limit(6);
 
-    // Top selling items
+    // Top selling items (today)
     const topItemsData = await Sale.aggregate([
+      { $match: { createdAt: { $gte: startOfToday }, ...demoFilter } },
       { $unwind: '$items' },
       {
         $group: {
@@ -141,7 +150,7 @@ const getDashboardMetrics = async (req, res) => {
 
     // Today's total expenses
     const todayExpensesData = await Expense.aggregate([
-      { $match: { date: { $gte: startOfToday } } },
+      { $match: { date: { $gte: startOfToday }, ...demoFilter } },
       {
         $group: {
           _id: null,
@@ -192,7 +201,9 @@ const getDashboardMetrics = async (req, res) => {
 const getDetailedReports = async (req, res) => {
   try {
     const { timeframe = 'week', startDate, endDate } = req.query;
-    const filter = {};
+    const filter = {
+      isDemo: req.user?.isDemo ? true : { $ne: true },
+    };
 
     const dateRange = getReportDateRange(timeframe, startDate, endDate);
     if (dateRange) {
@@ -242,9 +253,10 @@ const getDetailedReports = async (req, res) => {
 const getProfitLossReport = async (req, res) => {
   try {
     const { timeframe = 'thisMonth', startDate, endDate } = req.query;
+    const isDemo = Boolean(req.user?.isDemo);
 
-    const salesFilter = {};
-    const expenseFilter = {};
+    const salesFilter = { isDemo: isDemo ? true : { $ne: true } };
+    const expenseFilter = { isDemo: isDemo ? true : { $ne: true } };
 
     const dateRange = getReportDateRange(timeframe, startDate, endDate);
     if (dateRange) {

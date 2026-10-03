@@ -2,6 +2,7 @@ const Order = require('../models/Order');
 const Table = require('../models/Table');
 const Sale = require('../models/Sale');
 const { emitSaleCompleted, emitTableUpdated } = require('../socket');
+const { generateDemoSalesIfNeeded } = require('../utils/demoSalesService');
 
 // Helper to generate sequential sale invoice number
 const getNextSaleNumber = async () => {
@@ -26,6 +27,7 @@ const getTableActiveOrders = async (req, res) => {
       tableId: table._id,
       status: { $nin: ['CANCELLED', 'REJECTED'] },
       isSettled: false,
+      isDemo: req.user?.isDemo ? true : { $ne: true },
     }).sort({ createdAt: 1 });
 
     const totalAmount = orders.reduce((sum, ord) => sum + (ord.total || 0), 0);
@@ -70,6 +72,7 @@ const getChannelActiveOrders = async (req, res) => {
     const filter = {
       isSettled: false,
       status: { $in: ['PENDING', 'APPROVED', 'PREPARING', 'READY'] },
+      isDemo: req.user?.isDemo ? true : { $ne: true },
     };
 
     if (orderType && orderType !== 'ALL') {
@@ -104,6 +107,8 @@ const settleTable = async (req, res) => {
       discount = 0,
       discountPercentage = 0,
       tax = 0,
+      specialNotesExtra = 0,
+      specialNoteCharges = [],
     } = req.body;
 
     if (!paymentMethod) {
@@ -161,6 +166,7 @@ const settleTable = async (req, res) => {
     const itemsSnapshot = [];
     const orderIds = [];
     const orderNumbers = [];
+    const remainingCharges = Array.isArray(specialNoteCharges) ? [...specialNoteCharges] : [];
 
     orders.forEach((ord) => {
       subtotal += ord.subtotal || ord.total;
@@ -168,15 +174,51 @@ const settleTable = async (req, res) => {
       orderNumbers.push(ord.orderNumber);
 
       ord.items.forEach((item) => {
+        let itemNoteAmount = 0;
+        if (item.specialInstructions && remainingCharges.length > 0) {
+          const cIdx = remainingCharges.findIndex(
+            (c) =>
+              c.type === 'ITEM' &&
+              c.name === item.name &&
+              c.note === item.specialInstructions
+          );
+          if (cIdx >= 0) {
+            itemNoteAmount = Number(remainingCharges[cIdx].amount) || 0;
+            remainingCharges.splice(cIdx, 1);
+          }
+        }
+
         itemsSnapshot.push({
           name: item.name,
           quantity: item.quantity,
           price: item.price,
-          total: item.price * item.quantity,
+          total: item.price * item.quantity + itemNoteAmount,
           department: item.department || 'KITCHEN',
+          specialInstructions: item.specialInstructions || '',
+          noteAmount: itemNoteAmount,
         });
       });
     });
+
+    // Add remaining special note charges (e.g. order-level special notes or custom note charges)
+    const extraNotesAmount = Number(specialNotesExtra) || 0;
+    remainingCharges.forEach((c) => {
+      const amt = Number(c.amount) || 0;
+      if (amt > 0) {
+        itemsSnapshot.push({
+          name: `Special Note (${c.note || c.name || 'Custom'})`,
+          quantity: 1,
+          price: amt,
+          total: amt,
+          department: 'OTHER',
+          specialInstructions: c.note || '',
+          noteAmount: amt,
+        });
+      }
+    });
+
+    // Add special notes extra to overall subtotal
+    subtotal += extraNotesAmount;
 
     let finalDiscount = Number(discount) || 0;
     let finalDiscountPercentage = Number(discountPercentage) || 0;
@@ -205,7 +247,8 @@ const settleTable = async (req, res) => {
       subtotal,
       discount: finalDiscount,
       discountPercentage: finalDiscountPercentage,
-      tax: Number(tax),
+      specialNotesTotal: extraNotesAmount,
+      tax: Number(tax) || 0,
       total: finalTotal,
       paymentMethod,
       paymentStatus: 'PAID',
@@ -213,6 +256,7 @@ const settleTable = async (req, res) => {
       changeAmount: change,
       cashierId: req.user ? req.user._id : null,
       cashierNameSnapshot: req.user ? req.user.name : 'Admin',
+      isDemo: Boolean(req.user?.isDemo),
     });
 
     // Mark all orders as COMPLETED and settled
@@ -264,7 +308,10 @@ const settleTable = async (req, res) => {
 const getSalesHistory = async (req, res) => {
   try {
     const { timeframe, startDate, endDate, paymentMethod, search, limit = 50, page = 1 } = req.query;
-    const filter = {};
+
+    const filter = {
+      isDemo: req.user?.isDemo ? true : { $ne: true },
+    };
 
     // Date range filter
     const now = new Date();

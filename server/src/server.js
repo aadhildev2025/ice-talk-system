@@ -15,6 +15,7 @@ const orderRoutes = require('./routes/orderRoutes');
 const posRoutes = require('./routes/posRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const expenseRoutes = require('./routes/expenseRoutes');
+const { initDemoUser } = require('./utils/demoSalesService');
 
 const path = require('path');
 const fs = require('fs');
@@ -30,7 +31,9 @@ process.env.MONGODB_URI =
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'icetalk_restaurant_secret_key_2026';
 
 // Connect to MongoDB
-connectDB();
+connectDB().then(() => {
+  initDemoUser();
+}).catch(() => {});
 
 const app = express();
 const server = http.createServer(app);

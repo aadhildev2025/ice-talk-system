@@ -59,7 +59,9 @@ const getExpenses = async (req, res) => {
   try {
     const { category, timeframe, startDate, endDate, search, limit = 100, page = 1 } = req.query;
 
-    const query = {};
+    const query = {
+      isDemo: req.user?.isDemo ? true : { $ne: true },
+    };
 
     if (category && category !== 'ALL') {
       query.category = category;
@@ -174,6 +176,7 @@ const createExpense = async (req, res) => {
       receiptRef: receiptRef ? receiptRef.trim() : '',
       recordedBy: req.user ? req.user._id : null,
       recordedByName: req.user ? req.user.name : 'Admin',
+      isDemo: Boolean(req.user?.isDemo),
     });
 
     const saved = await expense.save();
@@ -290,7 +293,9 @@ const deleteExpense = async (req, res) => {
 const getExpenseSummary = async (req, res) => {
   try {
     const { timeframe, startDate, endDate } = req.query;
-    const match = {};
+    const match = {
+      isDemo: req.user?.isDemo ? true : { $ne: true },
+    };
 
     const dateRange = getDateFilter(timeframe, startDate, endDate);
     if (dateRange) {

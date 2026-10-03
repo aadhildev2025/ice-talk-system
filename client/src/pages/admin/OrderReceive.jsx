@@ -232,9 +232,9 @@ const OrderReceive = () => {
                         </span>
                       </div>
                       {item.specialInstructions && (
-                        <p className="text-[10px] text-amber-300 italic pl-7 mt-0.5">
-                          * {item.specialInstructions}
-                        </p>
+                        <div className="ml-7 mt-1 inline-flex items-center gap-1 text-[11px] font-bold text-amber-300 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded">
+                          📝 {item.specialInstructions}
+                        </div>
                       )}
                     </div>
                   ))}

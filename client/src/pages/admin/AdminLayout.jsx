@@ -21,8 +21,10 @@ import {
   Printer,
 } from 'lucide-react';
 import { usePrinter } from '../../context/PrinterContext';
+import { useAuth } from '../../context/AuthContext';
 
 const AdminLayout = () => {
+  const { isSuperAdmin } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
   const [preparingCount, setPreparingCount] = useState(0);
@@ -78,7 +80,7 @@ const AdminLayout = () => {
     setSidebarOpen(false);
   }, [location.pathname]);
 
-  const navLinks = [
+  const allNavLinks = [
     { to: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     {
       to: '/admin/order-receive',
@@ -97,9 +99,11 @@ const AdminLayout = () => {
     { to: '/admin/tables', label: 'Tables', icon: Grid },
     { to: '/admin/menu', label: 'Menu & Categories', icon: UtensilsCrossed },
     { to: '/admin/staff', label: 'Staff Management', icon: Users },
-    { to: '/admin/expenses', label: 'Expenses & Salaries', icon: Wallet },
-    { to: '/admin/reports', label: 'Sales & Reports', icon: BarChart3 },
+    { to: '/admin/expenses', label: 'Expenses & Salaries', icon: Wallet, superAdminOnly: true },
+    { to: '/admin/reports', label: 'Sales & Reports', icon: BarChart3, superAdminOnly: true },
   ];
+
+  const navLinks = allNavLinks.filter((item) => !item.superAdminOnly || isSuperAdmin);
 
   return (
     <div className="h-full flex-1 bg-[#0F0F12] flex flex-col overflow-hidden">
@@ -174,29 +178,31 @@ const AdminLayout = () => {
               })}
             </nav>
 
-            {/* Station Printers Setting Trigger */}
-            <div className="pt-2">
-              <button
-                type="button"
-                onClick={openSettings}
-                className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold text-neutral-300 hover:text-white hover:bg-[#1C1C24] border border-[#2B2B38] transition-all group"
-                title="Configure Station Printers & KOT Routing"
-              >
-                <div className="flex items-center gap-2.5">
-                  <Printer className="w-4 h-4 text-orange-400 group-hover:scale-110 transition-transform" />
-                  <span>Printers &amp; KOT Setup</span>
-                </div>
-                {multiPrinterMode ? (
-                  <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-orange-500/20 text-orange-400 border border-orange-500/30">
-                    Split ON
-                  </span>
-                ) : (
-                  <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-neutral-800 text-neutral-400 border border-neutral-700">
-                    Single
-                  </span>
-                )}
-              </button>
-            </div>
+            {/* Station Printers Setting Trigger (Super Admin Only) */}
+            {isSuperAdmin && (
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={openSettings}
+                  className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold text-neutral-300 hover:text-white hover:bg-[#1C1C24] border border-[#2B2B38] transition-all group"
+                  title="Configure Station Printers & KOT Routing"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Printer className="w-4 h-4 text-orange-400 group-hover:scale-110 transition-transform" />
+                    <span>Printers &amp; KOT Setup</span>
+                  </div>
+                  {multiPrinterMode ? (
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-orange-500/20 text-orange-400 border border-orange-500/30">
+                      Split ON
+                    </span>
+                  ) : (
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-neutral-800 text-neutral-400 border border-neutral-700">
+                      Single
+                    </span>
+                  )}
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Restaurant footer watermark */}

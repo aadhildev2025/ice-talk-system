@@ -80,7 +80,7 @@ const Login = () => {
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="e.g. admin, waiter"
+                  placeholder="e.g. admin, waiter, dsuper"
                   className="w-full bg-[#1C1C24] border border-[#2D2D3B] focus:border-[#FF6B00] focus:ring-1 focus:ring-[#FF6B00] rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-neutral-500 transition-all outline-none"
                   autoComplete="username"
                   required
@@ -131,6 +131,22 @@ const Login = () => {
                 </>
               )}
             </button>
+
+            {/* Quick Demo Access for dsuper */}
+            <div className="pt-2 flex items-center justify-between text-xs">
+              <span className="text-neutral-500 text-[11px]">Demo Mode:</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setUsername('dsuper');
+                  setPassword('dsuper123');
+                  setError('');
+                }}
+                className="text-[11px] text-purple-400 hover:text-purple-300 font-semibold transition-colors flex items-center gap-1 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 px-2.5 py-1 rounded-lg"
+              >
+                <span>⚡ Fill dsuper (SuperADMIN)</span>
+              </button>
+            </div>
           </form>
         </div>
 

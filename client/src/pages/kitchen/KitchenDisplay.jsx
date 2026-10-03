@@ -284,9 +284,10 @@ const KitchenDisplay = () => {
                             </div>
 
                             {item.specialInstructions && (
-                              <p className="text-[11px] font-bold text-amber-400 mt-1 italic">
-                                Note: {item.specialInstructions}
-                              </p>
+                              <div className="mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-500/20 border border-amber-500/40 text-amber-300 font-extrabold text-xs uppercase tracking-wide">
+                                <span>📝 NOTE:</span>
+                                <span>{item.specialInstructions}</span>
+                              </div>
                             )}
                           </div>
                         </div>

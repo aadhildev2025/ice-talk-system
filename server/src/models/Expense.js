@@ -65,6 +65,11 @@ const expenseSchema = new mongoose.Schema(
       type: String,
       default: 'Admin',
     },
+    isDemo: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
   },
   {
     timestamps: true,

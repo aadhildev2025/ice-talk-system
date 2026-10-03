@@ -1,8 +1,13 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
+import axios from 'axios';
 import App from './App';
 import './index.css';
+import { setupDsuperInterceptor } from './services/dsuperStorageService';
+
+// Initialize isolated local storage interceptor for dsuper login
+setupDsuperInterceptor(axios);
 
 // Ensure all form inputs immediately gain focus on click in Electron and desktop browsers
 if (typeof window !== 'undefined') {

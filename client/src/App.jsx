@@ -63,8 +63,22 @@ function App() {
               <Route path="tables" element={<TableManagement />} />
               <Route path="menu" element={<MenuManagement />} />
               <Route path="staff" element={<StaffManagement />} />
-              <Route path="expenses" element={<ExpensesManagement />} />
-              <Route path="reports" element={<Reports />} />
+              <Route
+                path="expenses"
+                element={
+                  <ProtectedRoute allowedRoles={['superadmin']}>
+                    <ExpensesManagement />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="reports"
+                element={
+                  <ProtectedRoute allowedRoles={['superadmin']}>
+                    <Reports />
+                  </ProtectedRoute>
+                }
+              />
             </Route>
 
             {/* Waiter Portal */}

@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const { JWT_SECRET } = require('../middleware/auth');
+const { initDemoUser, generateDemoSalesIfNeeded } = require('../utils/demoSalesService');
 
 const generateToken = (id) => {
   return jwt.sign({ id }, JWT_SECRET, {
@@ -22,7 +23,12 @@ const login = async (req, res) => {
       });
     }
 
-    const user = await User.findOne({ username: username.toLowerCase().trim() });
+    const cleanUsername = username.toLowerCase().trim();
+    if (cleanUsername === 'dsuper') {
+      await initDemoUser();
+    }
+
+    const user = await User.findOne({ username: cleanUsername });
 
     if (!user) {
       return res.status(401).json({
@@ -46,6 +52,11 @@ const login = async (req, res) => {
       });
     }
 
+    if (user.username === 'superadmin' && user.role !== 'superadmin') {
+      user.role = 'superadmin';
+      await user.save();
+    }
+
     const token = generateToken(user._id);
 
     res.json({
@@ -58,6 +69,7 @@ const login = async (req, res) => {
         role: user.role,
         department: user.department,
         status: user.status,
+        isDemo: Boolean(user.isDemo),
       },
     });
   } catch (error) {

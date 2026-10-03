@@ -228,6 +228,7 @@ const createOrder = async (req, res) => {
       approvedAt: shouldAutoApprove ? new Date() : undefined,
       priority: priority || 'NORMAL',
       specialInstructions: specialInstructions || '',
+      isDemo: Boolean(req.user?.isDemo),
     });
 
     if (table) {
@@ -556,7 +557,9 @@ const updatePrepTask = async (req, res) => {
 const getOrders = async (req, res) => {
   try {
     const { status, tableId, waiterId, limit = 50, page = 1 } = req.query;
-    const filter = {};
+    const filter = {
+      isDemo: req.user?.isDemo ? true : { $ne: true },
+    };
 
     if (status) {
       if (status.includes(',')) {
