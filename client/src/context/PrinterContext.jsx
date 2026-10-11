@@ -92,9 +92,9 @@ export const PrinterProvider = ({ children }) => {
   };
 
   // Direct silent thermal print to a specified target printer
-  const executeSilentPrintTo = async (targetPrinterName, targetWidth = null) => {
+  const executeSilentPrintTo = async (targetPrinterName, targetWidth = null, force = false) => {
     const isDemoDsuper = isDsuperUser();
-    if (isDemoDsuper && !dsuperPrintEnabled) {
+    if (!force && isDemoDsuper && !dsuperPrintEnabled) {
       return;
     }
 
@@ -246,7 +246,7 @@ export const PrinterProvider = ({ children }) => {
     });
 
     setTimeout(() => {
-      executeSilentPrintTo(printerName);
+      executeSilentPrintTo(printerName, null, true);
     }, 150);
   };
 

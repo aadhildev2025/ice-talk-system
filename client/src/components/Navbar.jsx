@@ -6,7 +6,7 @@ import { LogOut, Wifi, WifiOff, User as UserIcon, Printer } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const Navbar = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, isAdmin } = useAuth();
   const { isConnected } = useSocket();
   const { isElectron, autoPrintEnabled, openSettings, multiPrinterMode } = usePrinter();
   const navigate = useNavigate();
@@ -51,8 +51,8 @@ const Navbar = () => {
 
       {/* Center Controls: Live Status */}
       <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-        {/* Native Hardware Printer Status & Settings (Super Admin Only) */}
-        {user?.role === 'superadmin' && (
+        {/* Native Hardware Printer Status & Settings */}
+        {isAdmin && (
           <button
             onClick={openSettings}
             className="flex items-center gap-1.5 bg-[#1C1C24] hover:bg-[#252532] text-neutral-300 hover:text-white px-3 py-1 rounded-xl border border-[#2B2B38] text-xs font-bold transition-all shadow-sm"

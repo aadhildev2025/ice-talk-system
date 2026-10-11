@@ -24,7 +24,7 @@ import { usePrinter } from '../../context/PrinterContext';
 import { useAuth } from '../../context/AuthContext';
 
 const AdminLayout = () => {
-  const { isSuperAdmin } = useAuth();
+  const { isSuperAdmin, isAdmin } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
   const [preparingCount, setPreparingCount] = useState(0);
@@ -178,8 +178,8 @@ const AdminLayout = () => {
               })}
             </nav>
 
-            {/* Station Printers Setting Trigger (Super Admin Only) */}
-            {isSuperAdmin && (
+            {/* Station Printers Setting Trigger */}
+            {isAdmin && (
               <div className="pt-2">
                 <button
                   type="button"
