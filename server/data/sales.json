@@ -1,5 +1,84 @@
 [
   {
+    "_id": "sale_1791786824868_hg8e82",
+    "saleNumber": "INV-000213",
+    "tableId": "6aa3c9caa4a22826418cbe07",
+    "tableNameSnapshot": "A 01",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1112
+    ],
+    "items": [
+      {
+        "name": "Chicken Submarine",
+        "quantity": 2,
+        "price": 1100,
+        "total": 2200,
+        "department": "BUN",
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 2200,
+    "discount": 220,
+    "discountPercentage": 10,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 1980,
+    "paymentMethod": "CASH",
+    "paymentStatus": "PAID",
+    "amountTendered": 2000,
+    "changeAmount": 20,
+    "cashierNameSnapshot": "Super Admin (Owner)",
+    "isDemo": false,
+    "createdAt": "2026-10-12T06:33:44.868Z",
+    "updatedAt": "2026-10-12T06:33:44.868Z"
+  },
+  {
+    "_id": "sale_1791786058586_ot8bgs",
+    "saleNumber": "INV-000212",
+    "tableId": "6aa3c9caa4a22826418cbe08",
+    "tableNameSnapshot": "Family 02",
+    "orderType": "DINE_IN",
+    "orderNumbers": [
+      1113
+    ],
+    "items": [
+      {
+        "name": "Beef Submarine",
+        "quantity": 1,
+        "price": 1400,
+        "total": 1400,
+        "department": "BUN",
+        "specialInstructions": "",
+        "noteAmount": 0
+      },
+      {
+        "name": "Chicken Submarine",
+        "quantity": 1,
+        "price": 1100,
+        "total": 1100,
+        "department": "BUN",
+        "specialInstructions": "",
+        "noteAmount": 0
+      }
+    ],
+    "subtotal": 2500,
+    "discount": 100,
+    "discountPercentage": 4,
+    "tax": 0,
+    "specialNotesTotal": 0,
+    "total": 2400,
+    "paymentMethod": "CASH",
+    "paymentStatus": "PAID",
+    "amountTendered": 3000,
+    "changeAmount": 600,
+    "cashierNameSnapshot": "Super Admin (Owner)",
+    "isDemo": false,
+    "createdAt": "2026-10-12T06:20:58.586Z",
+    "updatedAt": "2026-10-12T06:20:58.586Z"
+  },
+  {
     "_id": "sale_1791035519193_s3imzk",
     "saleNumber": "INV-000211",
     "tableId": null,

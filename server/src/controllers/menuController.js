@@ -50,7 +50,19 @@ const getMenuItem = async (req, res) => {
 // @access  Private (Admin)
 const createMenuItem = async (req, res) => {
   try {
-    const { name, description, price, category, department, image, prepTimeMinutes, isPopular } = req.body;
+    const {
+      name,
+      description,
+      price,
+      category,
+      department,
+      image,
+      prepTimeMinutes,
+      isPopular,
+      hasPortions,
+      portionPrices,
+      availablePortions,
+    } = req.body;
 
     if (!name || price === undefined || !category) {
       return res.status(400).json({ success: false, message: 'Name, price, and category are required' });
@@ -66,6 +78,9 @@ const createMenuItem = async (req, res) => {
       prepTimeMinutes: prepTimeMinutes ? Number(prepTimeMinutes) : 10,
       isPopular: !!isPopular,
       isAvailable: true,
+      hasPortions: !!hasPortions,
+      portionPrices: portionPrices || { portion: Number(price) },
+      availablePortions: availablePortions || ['Portion'],
     });
 
     emitMenuUpdated();
@@ -86,7 +101,20 @@ const updateMenuItem = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Menu item not found' });
     }
 
-    const { name, description, price, category, department, image, isAvailable, prepTimeMinutes, isPopular } = req.body;
+    const {
+      name,
+      description,
+      price,
+      category,
+      department,
+      image,
+      isAvailable,
+      prepTimeMinutes,
+      isPopular,
+      hasPortions,
+      portionPrices,
+      availablePortions,
+    } = req.body;
 
     if (name) item.name = name.trim();
     if (description !== undefined) item.description = description;
@@ -97,6 +125,9 @@ const updateMenuItem = async (req, res) => {
     if (isAvailable !== undefined) item.isAvailable = isAvailable;
     if (prepTimeMinutes !== undefined) item.prepTimeMinutes = Number(prepTimeMinutes);
     if (isPopular !== undefined) item.isPopular = isPopular;
+    if (hasPortions !== undefined) item.hasPortions = !!hasPortions;
+    if (portionPrices !== undefined) item.portionPrices = portionPrices;
+    if (availablePortions !== undefined) item.availablePortions = availablePortions;
 
     await item.save();
 

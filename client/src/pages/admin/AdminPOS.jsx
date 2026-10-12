@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useSearchParams } from 'react-router-dom';
 import { useSocket } from '../../context/SocketContext';
 import { usePrinter } from '../../context/PrinterContext';
+import { useAuth } from '../../context/AuthContext';
 import { useUI } from '../../context/UIContext';
 import {
   CreditCard,
@@ -45,6 +46,7 @@ const AdminPOS = () => {
   const initialChannel = searchParams.get('channel') || 'DINE_IN';
 
   const { socket } = useSocket();
+  const { user } = useAuth();
   const { printPreparationSlip, printCustomerReceipt, dsuperPrintEnabled, toggleDsuperPrint, openSettings } = usePrinter();
   const { isTouchMode } = useUI();
   const isDsuper = isDsuperUser();
@@ -52,13 +54,17 @@ const AdminPOS = () => {
   // Active Channel: 'DINE_IN' | 'TAKEAWAY' | 'UBEREATS' | 'PICKME'
   const [activeChannel, setActiveChannel] = useState(initialChannel);
   // Channel sub-view: 'TABLES' (table layout & billing) | 'MENU' (place new order) | 'ACTIVE_ORDERS' (view/settle existing channel orders)
-  const [channelView, setChannelView] = useState('TABLES');
+  const [channelView, setChannelView] = useState(initialChannel === 'DINE_IN' ? 'TABLES' : 'MENU');
 
-  // Always default to Table Layout & Billing when opening POS billing
+  // Channel & view synchronization
   useEffect(() => {
-    if (!searchParams.get('channel') && !searchParams.get('table')) {
+    const ch = searchParams.get('channel');
+    if (!ch && !searchParams.get('table')) {
       setActiveChannel('DINE_IN');
       setChannelView('TABLES');
+    } else if (ch && ch !== 'DINE_IN') {
+      setActiveChannel(ch);
+      setChannelView('MENU');
     }
   }, [searchParams]);
 
@@ -74,6 +80,7 @@ const AdminPOS = () => {
   const [menuItems, setMenuItems] = useState([]);
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [posPortionFilter, setPosPortionFilter] = useState('ALL'); // 'ALL' | 'PORTION' | 'FULL' | 'HALF'
   const [menuSearch, setMenuSearch] = useState('');
   const [loadingMenu, setLoadingMenu] = useState(true);
 
@@ -225,12 +232,34 @@ const AdminPOS = () => {
     fetchTableOrders(table._id);
   };
 
-  // Cart Operations & Direct Item Add (no popup modal on click)
-  const handleAddToCart = (item) => {
+  // Cart Operations & Direct Item Add with Portion Support
+  const handleAddToCart = (item, portion = 'Portion', customPrice = null) => {
     if (!item || !item.isAvailable) return;
+
+    let finalPrice = Number(item.price);
+    if (customPrice !== null && !isNaN(customPrice)) {
+      finalPrice = Number(customPrice);
+    } else if (item.portionPrices) {
+      const pKey = portion.toLowerCase();
+      if (portion === 'Normal' && item.portionPrices.normal) finalPrice = item.portionPrices.normal;
+      else if (portion === 'Full' && item.portionPrices.full) finalPrice = item.portionPrices.full;
+      else if (portion === 'Half' && item.portionPrices.half) finalPrice = item.portionPrices.half;
+      else if (portion === 'Quarter' && item.portionPrices.quarter) finalPrice = item.portionPrices.quarter;
+      else if (portion === 'With Cheese' && item.portionPrices.withCheese) finalPrice = item.portionPrices.withCheese;
+      else if (portion === 'Without Cheese' && item.portionPrices.withoutCheese) finalPrice = item.portionPrices.withoutCheese;
+      else if (item.portionPrices[pKey]) finalPrice = item.portionPrices[pKey];
+      else if (item.portionPrices.normal) finalPrice = item.portionPrices.normal;
+      else if (item.portionPrices.portion) finalPrice = item.portionPrices.portion;
+    }
+
+    const cartId = item.hasPortions ? `${item._id}_${portion}` : item._id;
+    const displayName = item.hasPortions ? `${item.name} (${portion})` : item.name;
+
     setCart((prev) => {
       const existing = prev.find(
-        (i) => i.menuItemId === item._id && !i.specialInstructions
+        (i) =>
+          (i.cartId === cartId || (i.menuItemId === item._id && i.portion === portion)) &&
+          !i.specialInstructions
       );
       if (existing) {
         return prev.map((i) =>
@@ -240,16 +269,54 @@ const AdminPOS = () => {
       return [
         ...prev,
         {
-          cartId: `${item._id}_${Date.now()}_${Math.random()}`,
+          cartId,
           menuItemId: item._id,
-          name: item.name,
-          price: item.price,
+          name: displayName,
+          baseName: item.name,
+          portion,
+          hasPortions: item.hasPortions,
+          portionPrices: item.portionPrices,
+          availablePortions: item.availablePortions || ['Normal'],
+          price: finalPrice,
           department: item.department || 'KITCHEN',
           category: item.category,
           quantity: 1,
           specialInstructions: '',
         },
       ];
+    });
+  };
+
+  const handleSwitchCartPortion = (cartId, newPortion) => {
+    setCart((prev) => {
+      const target = prev.find((i) => i.cartId === cartId);
+      if (!target) return prev;
+
+      let newPrice = target.price;
+      if (target.portionPrices) {
+        if (newPortion === 'Normal' && target.portionPrices.normal) newPrice = target.portionPrices.normal;
+        else if (newPortion === 'Full' && target.portionPrices.full) newPrice = target.portionPrices.full;
+        else if (newPortion === 'Half' && target.portionPrices.half) newPrice = target.portionPrices.half;
+        else if (newPortion === 'Quarter' && target.portionPrices.quarter) newPrice = target.portionPrices.quarter;
+        else if (newPortion === 'With Cheese' && target.portionPrices.withCheese) newPrice = target.portionPrices.withCheese;
+        else if (newPortion === 'Without Cheese' && target.portionPrices.withoutCheese) newPrice = target.portionPrices.withoutCheese;
+        else if (target.portionPrices.portion) newPrice = target.portionPrices.portion;
+        else if (target.portionPrices.normal) newPrice = target.portionPrices.normal;
+      }
+
+      const cleanBase = target.baseName || target.name.replace(/\s*\([^)]*\)$/, '');
+      const newName = target.hasPortions ? `${cleanBase} (${newPortion})` : target.name;
+
+      return prev.map((i) =>
+        i.cartId === cartId
+          ? {
+              ...i,
+              portion: newPortion,
+              name: newName,
+              price: newPrice,
+            }
+          : i
+      );
     });
   };
 
@@ -321,9 +388,21 @@ const AdminPOS = () => {
         !menuSearch ||
         item.name.toLowerCase().includes(menuSearch.toLowerCase()) ||
         item.code?.toLowerCase().includes(menuSearch.toLowerCase());
-      return matchCat && matchSearch;
+
+      let matchPortion = true;
+      if (posPortionFilter === 'NORMAL') {
+        matchPortion = item.hasPortions && (Boolean(item.portionPrices?.normal) || (item.availablePortions || []).includes('Normal'));
+      } else if (posPortionFilter === 'FULL') {
+        matchPortion = item.hasPortions && (Boolean(item.portionPrices?.full) || (item.availablePortions || []).includes('Full'));
+      } else if (posPortionFilter === 'HALF') {
+        matchPortion = item.hasPortions && (Boolean(item.portionPrices?.half) || (item.availablePortions || []).includes('Half'));
+      } else if (posPortionFilter === 'PORTION') {
+        matchPortion = item.name.includes('(Portion)') || (item.availablePortions || []).includes('Portion') || item.category?.includes('(PORTION ONLY)');
+      }
+
+      return matchCat && matchSearch && matchPortion;
     });
-  }, [menuItems, selectedCategory, menuSearch]);
+  }, [menuItems, selectedCategory, menuSearch, posPortionFilter]);
 
   // Action: Send Order to Kitchen (Creates order & auto-prints Kitchen Preparation Slip)
   const handleSendToKitchen = async () => {
@@ -339,9 +418,22 @@ const AdminPOS = () => {
 
     setSubmittingAction(true);
     try {
+      const tableName = activeChannel === 'DINE_IN' && selectedTable
+        ? selectedTable.name
+        : activeChannel === 'UBEREATS'
+        ? (channelOrderRef ? `UberEats (${channelOrderRef})` : 'UberEats')
+        : activeChannel === 'PICKME'
+        ? (channelOrderRef ? `PickMe (${channelOrderRef})` : 'PickMe')
+        : (customerName ? `Takeaway (${customerName})` : 'Takeaway');
+      const staffName = user?.name || user?.username || 'Admin';
+
       const payload = {
         orderType: activeChannel,
         tableId: activeChannel === 'DINE_IN' ? selectedTable._id : undefined,
+        tableName,
+        tableNameSnapshot: tableName,
+        waiterName: staffName,
+        waiterNameSnapshot: staffName,
         customerName,
         customerPhone,
         channelOrderRef,
@@ -350,6 +442,9 @@ const AdminPOS = () => {
         autoApprove: true, // Admin direct placement immediately approves & creates prep tasks
         items: cart.map((i) => ({
           menuItemId: i.menuItemId,
+          name: i.name,
+          portion: i.portion || 'Portion',
+          price: i.price,
           quantity: i.quantity,
           specialInstructions: i.specialInstructions,
         })),
@@ -357,7 +452,13 @@ const AdminPOS = () => {
 
       const res = await axios.post('/api/orders', payload);
       if (res.data.success) {
-        const order = res.data.order;
+        const order = {
+          ...res.data.order,
+          tableNameSnapshot: res.data.order?.tableNameSnapshot || tableName,
+          tableName: res.data.order?.tableName || tableName,
+          waiterNameSnapshot: res.data.order?.waiterNameSnapshot || staffName,
+          waiterName: res.data.order?.waiterName || staffName,
+        };
         // Auto-print kitchen note slip
         if (!isDsuper || dsuperPrintEnabled) {
           printPreparationSlip(order, true);
@@ -563,10 +664,23 @@ const AdminPOS = () => {
       };
 
       if (checkoutTarget === 'CART') {
+        const cartTableName = activeChannel === 'DINE_IN' && selectedTable
+          ? selectedTable.name
+          : activeChannel === 'UBEREATS'
+          ? (channelOrderRef ? `UberEats (${channelOrderRef})` : 'UberEats')
+          : activeChannel === 'PICKME'
+          ? (channelOrderRef ? `PickMe (${channelOrderRef})` : 'PickMe')
+          : (customerName ? `Takeaway (${customerName})` : 'Takeaway');
+        const staffName = user?.name || user?.username || 'Admin';
+
         // 1. First create the approved order
         const orderRes = await axios.post('/api/orders', {
           orderType: activeChannel,
           tableId: activeChannel === 'DINE_IN' ? selectedTable?._id : undefined,
+          tableName: cartTableName,
+          tableNameSnapshot: cartTableName,
+          waiterName: staffName,
+          waiterNameSnapshot: staffName,
           customerName,
           customerPhone,
           channelOrderRef,
@@ -575,13 +689,22 @@ const AdminPOS = () => {
           autoApprove: true,
           items: cart.map((i) => ({
             menuItemId: i.menuItemId,
+            name: i.name,
+            portion: i.portion || 'Portion',
+            price: i.price,
             quantity: i.quantity,
             specialInstructions: i.specialInstructions,
           })),
         });
 
         if (!orderRes.data.success) throw new Error('Order creation failed');
-        const order = orderRes.data.order;
+        const order = {
+          ...orderRes.data.order,
+          tableNameSnapshot: orderRes.data.order?.tableNameSnapshot || cartTableName,
+          tableName: orderRes.data.order?.tableName || cartTableName,
+          waiterNameSnapshot: orderRes.data.order?.waiterNameSnapshot || staffName,
+          waiterName: orderRes.data.order?.waiterName || staffName,
+        };
 
         // Auto-print kitchen slip
         if (!isDsuper || dsuperPrintEnabled) {
@@ -711,6 +834,7 @@ const AdminPOS = () => {
             type="button"
             onClick={() => {
               setActiveChannel('TAKEAWAY');
+              setChannelView('MENU');
               setSearchParams({ channel: 'TAKEAWAY' });
             }}
             className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-bold text-xs transition-all ${
@@ -728,6 +852,7 @@ const AdminPOS = () => {
             type="button"
             onClick={() => {
               setActiveChannel('UBEREATS');
+              setChannelView('MENU');
               setSearchParams({ channel: 'UBEREATS' });
             }}
             className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-bold text-xs transition-all ${
@@ -745,6 +870,7 @@ const AdminPOS = () => {
             type="button"
             onClick={() => {
               setActiveChannel('PICKME');
+              setChannelView('MENU');
               setSearchParams({ channel: 'PICKME' });
             }}
             className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-bold text-xs transition-all ${
@@ -833,15 +959,6 @@ const AdminPOS = () => {
               </button>
             </div>
           )}
-
-          <button
-            type="button"
-            onClick={openSettings}
-            className="p-2 bg-[#1C1C24] hover:bg-[#252530] text-neutral-300 hover:text-white rounded-xl border border-[#2A2A38] transition-all"
-            title="Printer Selecting Options & Setup"
-          >
-            <Printer className="w-4 h-4 text-orange-400" />
-          </button>
 
           <button
             type="button"
@@ -1166,6 +1283,39 @@ const AdminPOS = () => {
               </div>
             </div>
 
+            {/* Portion Quick Filter Tabs */}
+            <div className="flex items-center gap-1.5 bg-[#171720] p-1.5 rounded-xl border border-[#272736] shrink-0">
+              <span className="text-[10px] font-black uppercase tracking-wider text-neutral-400 px-2 shrink-0">
+                Portion Size:
+              </span>
+              <div className="flex gap-1 overflow-x-auto no-scrollbar py-0.5">
+                {[
+                  { id: 'ALL', label: 'All Items', icon: '📋' },
+                  { id: 'NORMAL', label: 'Normal', icon: '🍽️' },
+                  { id: 'FULL', label: 'Full', icon: '🍲' },
+                  { id: 'HALF', label: 'Half', icon: '🥣' },
+                  { id: 'PORTION', label: 'Portion Only', icon: '🍛' },
+                ].map((p) => {
+                  const active = posPortionFilter === p.id;
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => setPosPortionFilter(p.id)}
+                      className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap ${
+                        active
+                          ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md shadow-orange-500/20'
+                          : 'text-neutral-400 hover:text-white hover:bg-[#20202C]'
+                      }`}
+                    >
+                      <span>{p.icon}</span>
+                      <span>{p.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             {/* Category Filter Chips */}
             <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
               <button
@@ -1216,48 +1366,227 @@ const AdminPOS = () => {
                 }`}
               >
                 {filteredMenuItems.map((item) => {
-                  const inCartItem = cart.find((i) => i.menuItemId === item._id);
+                  const itemCartItems = cart.filter((i) => i.menuItemId === item._id);
+                  const totalInCart = itemCartItems.reduce((sum, i) => sum + i.quantity, 0);
                   const isOut = !item.isAvailable;
 
+                  const normalPrice = item.portionPrices?.normal;
+                  const portionPrice = item.portionPrices?.portion;
+                  const fullPrice = item.portionPrices?.full;
+                  const halfPrice = item.portionPrices?.half;
+                  const quarterPrice = item.portionPrices?.quarter;
+                  const withCheesePrice = item.portionPrices?.withCheese;
+                  const withoutCheesePrice = item.portionPrices?.withoutCheese;
+
                   return (
-                    <button
+                    <div
                       key={item._id}
-                      type="button"
-                      disabled={isOut}
-                      onClick={() => handleAddToCart(item)}
-                      className={`p-3 rounded-2xl border text-left flex flex-col justify-between transition-all relative overflow-hidden group ${
-                        inCartItem
+                      className={`p-3 rounded-2xl border text-left flex flex-col justify-between transition-all relative overflow-hidden ${
+                        totalInCart > 0
                           ? 'bg-gradient-to-br from-[#2D1B12] to-[#1C1412] border-[#FF6B00] shadow-md shadow-orange-500/10'
-                          : 'bg-[#1C1C24] border-[#2A2A38] hover:border-neutral-500 text-neutral-200'
-                      } ${isOut ? 'opacity-40 cursor-not-allowed' : 'active:scale-95'} ${
-                        isTouchMode ? 'min-h-[120px] p-4' : 'min-h-[105px]'
+                          : 'bg-[#1C1C24] border-[#2A2A38] text-neutral-200'
+                      } ${isOut ? 'opacity-40 pointer-events-none' : ''} ${
+                        isTouchMode ? 'min-h-[140px] p-4' : 'min-h-[125px]'
                       }`}
                     >
-                      {/* Cart Qty Badge */}
-                      {inCartItem && (
+                      {/* Total In Cart Badge */}
+                      {totalInCart > 0 && (
                         <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-[#FF6B00] text-white text-xs font-black flex items-center justify-center shadow">
-                          {inCartItem.quantity}
+                          {totalInCart}
                         </div>
                       )}
 
                       <div>
-                        <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-wider block truncate">
-                          {item.category || item.department}
-                        </span>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-wider block truncate">
+                            {item.category || item.department}
+                          </span>
+                          {item.hasPortions && (
+                            <span className="text-[8px] font-black uppercase px-1.5 py-0.2 rounded bg-orange-500/20 text-orange-400 border border-orange-500/30">
+                              Multi-Size
+                            </span>
+                          )}
+                        </div>
                         <p className="font-bold text-xs text-white mt-0.5 line-clamp-2 leading-tight">
                           {item.name}
                         </p>
                       </div>
 
-                      <div className="mt-2 pt-1 border-t border-neutral-800 flex justify-between items-center">
-                        <span className="font-black text-sm text-[#FF6B00]">
-                          Rs. {item.price.toLocaleString()}
-                        </span>
-                        <div className="w-6 h-6 rounded-lg bg-neutral-800 group-hover:bg-[#FF6B00] text-neutral-400 group-hover:text-white flex items-center justify-center transition-colors">
-                          <Plus className="w-3.5 h-3.5" />
-                        </div>
+                      {/* Portions or Single Item Action Buttons */}
+                      <div className="mt-2.5 pt-2 border-t border-neutral-800">
+                        {item.hasPortions ? (
+                          <div className="space-y-1.5">
+                            <div className="grid grid-cols-2 gap-1.5">
+                              {normalPrice && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleAddToCart(item, 'Normal', normalPrice)}
+                                  className="py-1.5 px-1 rounded-xl bg-[#22222E] hover:bg-emerald-600 active:scale-95 text-white border border-[#313142] hover:border-emerald-500 text-center transition-all flex flex-col items-center justify-center group"
+                                >
+                                  <div className="flex items-center gap-1">
+                                    <span className="text-[9px] text-emerald-400 group-hover:text-white font-black uppercase">
+                                      Normal
+                                    </span>
+                                    {(() => {
+                                      const c = itemCartItems.find((i) => i.portion === 'Normal');
+                                      return c ? (
+                                        <span className="w-3.5 h-3.5 rounded-full bg-emerald-500 text-white text-[8px] font-black flex items-center justify-center">
+                                          {c.quantity}
+                                        </span>
+                                      ) : null;
+                                    })()}
+                                  </div>
+                                  <span className="text-[11px] font-bold text-neutral-200 group-hover:text-white">
+                                    Rs. {normalPrice.toLocaleString()}
+                                  </span>
+                                </button>
+                              )}
+
+                              {portionPrice && !normalPrice && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleAddToCart(item, 'Portion', portionPrice)}
+                                  className="py-1.5 px-1 rounded-xl bg-[#22222E] hover:bg-emerald-600 active:scale-95 text-white border border-[#313142] hover:border-emerald-500 text-center transition-all flex flex-col items-center justify-center group"
+                                >
+                                  <div className="flex items-center gap-1">
+                                    <span className="text-[9px] text-emerald-400 group-hover:text-white font-black uppercase">
+                                      Portion
+                                    </span>
+                                    {(() => {
+                                      const c = itemCartItems.find((i) => i.portion === 'Portion');
+                                      return c ? (
+                                        <span className="w-3.5 h-3.5 rounded-full bg-emerald-500 text-white text-[8px] font-black flex items-center justify-center">
+                                          {c.quantity}
+                                        </span>
+                                      ) : null;
+                                    })()}
+                                  </div>
+                                  <span className="text-[11px] font-bold text-neutral-200 group-hover:text-white">
+                                    Rs. {portionPrice.toLocaleString()}
+                                  </span>
+                                </button>
+                              )}
+
+                              {fullPrice && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleAddToCart(item, 'Full', fullPrice)}
+                                  className="py-1.5 px-1 rounded-xl bg-[#22222E] hover:bg-amber-600 active:scale-95 text-white border border-[#313142] hover:border-amber-500 text-center transition-all flex flex-col items-center justify-center group"
+                                >
+                                  <div className="flex items-center gap-1">
+                                    <span className="text-[9px] text-amber-400 group-hover:text-white font-black uppercase">
+                                      Full
+                                    </span>
+                                    {(() => {
+                                      const c = itemCartItems.find((i) => i.portion === 'Full');
+                                      return c ? (
+                                        <span className="w-3.5 h-3.5 rounded-full bg-amber-500 text-white text-[8px] font-black flex items-center justify-center">
+                                          {c.quantity}
+                                        </span>
+                                      ) : null;
+                                    })()}
+                                  </div>
+                                  <span className="text-[11px] font-bold text-neutral-200 group-hover:text-white">
+                                    Rs. {fullPrice.toLocaleString()}
+                                  </span>
+                                </button>
+                              )}
+
+                              {halfPrice && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleAddToCart(item, 'Half', halfPrice)}
+                                  className="py-1.5 px-1 rounded-xl bg-[#22222E] hover:bg-cyan-600 active:scale-95 text-white border border-[#313142] hover:border-cyan-500 text-center transition-all flex flex-col items-center justify-center group"
+                                >
+                                  <div className="flex items-center gap-1">
+                                    <span className="text-[9px] text-cyan-400 group-hover:text-white font-black uppercase">
+                                      Half
+                                    </span>
+                                    {(() => {
+                                      const c = itemCartItems.find((i) => i.portion === 'Half');
+                                      return c ? (
+                                        <span className="w-3.5 h-3.5 rounded-full bg-cyan-500 text-white text-[8px] font-black flex items-center justify-center">
+                                          {c.quantity}
+                                        </span>
+                                      ) : null;
+                                    })()}
+                                  </div>
+                                  <span className="text-[11px] font-bold text-neutral-200 group-hover:text-white">
+                                    Rs. {halfPrice.toLocaleString()}
+                                  </span>
+                                </button>
+                              )}
+
+                              {quarterPrice && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleAddToCart(item, 'Quarter', quarterPrice)}
+                                  className="py-1.5 px-1 rounded-xl bg-[#22222E] hover:bg-purple-600 active:scale-95 text-white border border-[#313142] hover:border-purple-500 text-center transition-all flex flex-col items-center justify-center group"
+                                >
+                                  <span className="text-[9px] text-purple-400 group-hover:text-white font-black uppercase">
+                                    Quarter
+                                  </span>
+                                  <span className="text-[11px] font-bold text-neutral-200 group-hover:text-white">
+                                    Rs. {quarterPrice.toLocaleString()}
+                                  </span>
+                                </button>
+                              )}
+
+                              {withCheesePrice && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleAddToCart(item, 'With Cheese', withCheesePrice)}
+                                  className="py-1.5 px-1 rounded-xl bg-[#22222E] hover:bg-amber-600 active:scale-95 text-white border border-[#313142] hover:border-amber-500 text-center transition-all flex flex-col items-center justify-center group"
+                                >
+                                  <span className="text-[9px] text-amber-400 group-hover:text-white font-black uppercase">
+                                    + Cheese
+                                  </span>
+                                  <span className="text-[11px] font-bold text-neutral-200 group-hover:text-white">
+                                    Rs. {withCheesePrice.toLocaleString()}
+                                  </span>
+                                </button>
+                              )}
+
+                              {withoutCheesePrice && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleAddToCart(item, 'Without Cheese', withoutCheesePrice)}
+                                  className="py-1.5 px-1 rounded-xl bg-[#22222E] hover:bg-neutral-600 active:scale-95 text-white border border-[#313142] hover:border-neutral-500 text-center transition-all flex flex-col items-center justify-center group"
+                                >
+                                  <span className="text-[9px] text-neutral-400 group-hover:text-white font-black uppercase">
+                                    Plain
+                                  </span>
+                                  <span className="text-[11px] font-bold text-neutral-200 group-hover:text-white">
+                                    Rs. {withoutCheesePrice.toLocaleString()}
+                                  </span>
+                                </button>
+                              )}
+                            </div>
+
+                            {totalInCart > 0 && (
+                              <p className="text-[10px] font-bold text-[#FF6B00] bg-[#1E1712] border border-[#FF6B00]/25 rounded-lg py-0.5 px-1 text-center truncate">
+                                Added: {itemCartItems.map((c) => `${c.quantity}x ${c.portion}`).join(', ')}
+                              </p>
+                            )}
+                          </div>
+                        ) : (
+                          /* Single Portion Item */
+                          <div className="flex justify-between items-center">
+                            <span className="font-black text-sm text-[#FF6B00]">
+                              Rs. {item.price.toLocaleString()}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handleAddToCart(item, item.name.includes('(Portion)') ? 'Portion' : 'Portion')}
+                              className="px-2.5 py-1.5 rounded-xl bg-neutral-800 hover:bg-[#FF6B00] text-neutral-300 hover:text-white flex items-center gap-1 text-xs font-bold transition-all shadow"
+                            >
+                              <Plus className="w-3.5 h-3.5" />
+                              <span>{item.name.includes('(Portion)') ? 'Add Portion' : 'Add'}</span>
+                            </button>
+                          </div>
+                        )}
                       </div>
-                    </button>
+                    </div>
                   );
                 })}
               </div>
@@ -1323,12 +1652,53 @@ const AdminPOS = () => {
                     key={item.cartId}
                     className="p-2.5 rounded-xl bg-[#191920] border border-[#262634] space-y-1.5 text-xs"
                   >
-                    <div className="flex justify-between items-start">
-                      <span className="font-bold text-white flex-1 pr-1">{item.name}</span>
-                      <span className="font-bold text-[#FF6B00]">
+                    <div className="flex justify-between items-start gap-1">
+                      <div className="flex-1 pr-1">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="font-bold text-white leading-tight">{item.name}</span>
+                          {item.portion && (
+                            <span className={`text-[8px] font-black uppercase px-1.5 py-0.2 rounded border ${
+                              item.portion.toLowerCase() === 'full'
+                                ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                                : item.portion.toLowerCase() === 'half'
+                                ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30'
+                                : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                            }`}>
+                              {item.portion}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <span className="font-bold text-[#FF6B00] shrink-0">
                         Rs. {(item.price * item.quantity).toLocaleString()}
                       </span>
                     </div>
+
+                    {/* Quick Portion Switcher in Cart */}
+                    {item.hasPortions && item.availablePortions && item.availablePortions.length > 1 && (
+                      <div className="flex items-center gap-1.5 bg-[#141418] p-1 rounded-lg border border-[#262634]">
+                        <span className="text-[9px] uppercase tracking-wider text-neutral-400 font-bold pl-0.5">Size:</span>
+                        <div className="flex items-center gap-1 flex-wrap">
+                          {item.availablePortions.map((p) => {
+                            const isSelected = item.portion === p;
+                            return (
+                              <button
+                                key={p}
+                                type="button"
+                                onClick={() => handleSwitchCartPortion(item.cartId, p)}
+                                className={`text-[9px] font-bold px-2 py-0.5 rounded transition-all ${
+                                  isSelected
+                                    ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow'
+                                    : 'bg-[#22222E] text-neutral-400 hover:text-white hover:bg-[#2C2C3D]'
+                                }`}
+                              >
+                                {p}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
 
                     {/* Special note on item if present or Add note button */}
                     {item.specialInstructions ? (

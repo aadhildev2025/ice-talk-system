@@ -113,26 +113,36 @@ const createOrder = async (req, res) => {
     }
 
     let table = null;
-    let tableNameSnapshot = 'Takeaway';
+    let tableNameSnapshot = req.body.tableNameSnapshot || req.body.tableName;
 
     if (orderType === 'DINE_IN') {
-      if (!tableId) {
+      if (!tableId && !tableNameSnapshot) {
         return res.status(400).json({
           success: false,
           message: 'Table is required for Dine-in orders.',
         });
       }
-      try {
-        table = await Table.findById(tableId);
-      } catch {}
-      tableNameSnapshot = table ? table.name : `Table ${tableId}`;
+      if (tableId) {
+        try {
+          table = await Table.findById(tableId);
+        } catch {}
+      }
+      if (!tableNameSnapshot) {
+        tableNameSnapshot = table ? table.name : (tableId ? `Table ${tableId}` : 'Table');
+      }
     } else if (orderType === 'UBEREATS') {
-      tableNameSnapshot = channelOrderRef ? `UberEats (${channelOrderRef})` : 'UberEats';
+      tableNameSnapshot = tableNameSnapshot || (channelOrderRef ? `UberEats (${channelOrderRef})` : 'UberEats');
     } else if (orderType === 'PICKME') {
-      tableNameSnapshot = channelOrderRef ? `PickMe (${channelOrderRef})` : 'PickMe';
+      tableNameSnapshot = tableNameSnapshot || (channelOrderRef ? `PickMe (${channelOrderRef})` : 'PickMe');
     } else {
-      tableNameSnapshot = customerName ? `Takeaway (${customerName})` : 'Takeaway';
+      tableNameSnapshot = tableNameSnapshot || (customerName ? `Takeaway (${customerName})` : 'Takeaway');
     }
+
+    const resolvedWaiterName =
+      req.body.waiterNameSnapshot ||
+      req.body.waiterName ||
+      (req.user ? (req.user.name || req.user.username) : '') ||
+      'Staff';
 
     // Process items & enforce pricing
     let subtotal = 0;
@@ -144,10 +154,11 @@ const createOrder = async (req, res) => {
         menuItem = await MenuItem.findById(item.menuItemId || item._id);
       } catch {}
 
-      const name = menuItem ? menuItem.name : (item.name || 'Item');
-      const price = menuItem ? menuItem.price : (Number(item.price) || 0);
-      const category = menuItem ? menuItem.category : (item.category || '');
-      const dept = menuItem ? menuItem.department : (item.department || '');
+      const name = item.name || (menuItem ? menuItem.name : 'Item');
+      const portion = item.portion || (item.portionName || 'Portion');
+      const price = item.price !== undefined ? Number(item.price) : (menuItem ? menuItem.price : 0);
+      const category = (menuItem && menuItem.category) ? menuItem.category : (item.category || '');
+      const dept = (menuItem && menuItem.department) ? menuItem.department : (item.department || '');
       const detectedDept = detectKOTSection(category, dept);
       const qty = Math.max(1, Number(item.quantity) || 1);
       const itemTotal = price * qty;
@@ -156,6 +167,7 @@ const createOrder = async (req, res) => {
       processedItems.push({
         menuItemId: item.menuItemId || item._id,
         name,
+        portion,
         quantity: qty,
         price,
         total: itemTotal,
@@ -181,14 +193,15 @@ const createOrder = async (req, res) => {
     const order = localDataService.saveOrder({
       orderNumber,
       orderType,
-      tableId: table ? table._id : undefined,
+      tableId: table ? table._id : (tableId || undefined),
       tableName: tableNameSnapshot,
       tableNameSnapshot,
       customerName,
       customerPhone,
       channelOrderRef,
       waiterId: req.user ? req.user._id : null,
-      waiterNameSnapshot: req.user ? req.user.name : 'Staff',
+      waiterName: resolvedWaiterName,
+      waiterNameSnapshot: resolvedWaiterName,
       items: processedItems,
       subtotal,
       total: subtotal,
@@ -281,6 +294,10 @@ const approveOrder = async (req, res) => {
     const updated = localDataService.updateOrder(order._id, {
       status: 'APPROVED',
       approvedAt: new Date().toISOString(),
+      tableName: order.tableNameSnapshot || order.tableName,
+      tableNameSnapshot: order.tableNameSnapshot || order.tableName,
+      waiterName: order.waiterNameSnapshot || order.waiterName,
+      waiterNameSnapshot: order.waiterNameSnapshot || order.waiterName,
     });
 
     // Group items by department to create Preparation Tasks

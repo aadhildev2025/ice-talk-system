@@ -458,26 +458,43 @@ const getOrders = (filter = {}) => {
   if (filter.isSettled !== undefined) {
     orders = orders.filter((o) => Boolean(o.isSettled) === Boolean(filter.isSettled));
   }
-  return orders;
+  return orders.map((o) => ({
+    ...o,
+    tableNameSnapshot: o.tableNameSnapshot || o.tableName || 'Dine-In',
+    waiterNameSnapshot: o.waiterNameSnapshot || o.waiterName || 'Staff',
+  }));
 };
 
 const getOrderById = (id) => {
   const orders = readJSON(FILES.ORDERS, []);
-  return orders.find((o) => String(o._id) === String(id)) || null;
+  const found = orders.find((o) => String(o._id) === String(id)) || null;
+  if (!found) return null;
+  return {
+    ...found,
+    tableNameSnapshot: found.tableNameSnapshot || found.tableName || 'Dine-In',
+    waiterNameSnapshot: found.waiterNameSnapshot || found.waiterName || 'Staff',
+  };
 };
 
 const saveOrder = (orderData) => {
   const orders = readJSON(FILES.ORDERS, []);
+  const tableName = orderData.tableNameSnapshot || orderData.tableName || 'Dine-In';
+  const waiterName = orderData.waiterNameSnapshot || orderData.waiterName || 'Staff';
+
   const newOrder = {
     _id: orderData._id || `ord_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
     orderNumber: orderData.orderNumber || getNextOrderNumber(),
+    orderType: orderData.orderType || 'DINE_IN',
     tableId: orderData.tableId || null,
-    tableName: orderData.tableName || 'Dine-In',
+    tableName: tableName,
+    tableNameSnapshot: tableName,
     waiterId: orderData.waiterId || null,
-    waiterName: orderData.waiterName || 'Staff',
+    waiterName: waiterName,
+    waiterNameSnapshot: waiterName,
     customerName: orderData.customerName || '',
     customerPhone: orderData.customerPhone || '',
     channelOrderRef: orderData.channelOrderRef || '',
+    round: orderData.round || 1,
     status: orderData.status || 'APPROVED',
     isSettled: Boolean(orderData.isSettled),
     items: (orderData.items || []).map((it) => ({
@@ -502,9 +519,17 @@ const updateOrder = (id, updates) => {
   const orders = readJSON(FILES.ORDERS, []);
   const idx = orders.findIndex((o) => String(o._id) === String(id));
   if (idx >= 0) {
+    const existing = orders[idx];
+    const resolvedTable = updates.tableNameSnapshot || updates.tableName || existing.tableNameSnapshot || existing.tableName;
+    const resolvedWaiter = updates.waiterNameSnapshot || updates.waiterName || existing.waiterNameSnapshot || existing.waiterName;
+
     orders[idx] = {
-      ...orders[idx],
+      ...existing,
       ...updates,
+      tableName: resolvedTable,
+      tableNameSnapshot: resolvedTable,
+      waiterName: resolvedWaiter,
+      waiterNameSnapshot: resolvedWaiter,
       updatedAt: new Date().toISOString(),
     };
     writeJSON(FILES.ORDERS, orders);

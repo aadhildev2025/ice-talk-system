@@ -41,6 +41,8 @@ const MenuManagement = () => {
     prepTimeMinutes: 10,
     isPopular: false,
     isAvailable: true,
+    hasPortions: false,
+    portionPrices: { normal: '', portion: '', full: '', half: '', quarter: '', withCheese: '', withoutCheese: '' },
   });
 
   const [newCategoryName, setNewCategoryName] = useState('');
@@ -97,6 +99,8 @@ const MenuManagement = () => {
       prepTimeMinutes: 10,
       isPopular: false,
       isAvailable: true,
+      hasPortions: false,
+      portionPrices: { normal: '', portion: '', full: '', half: '', quarter: '', withCheese: '', withoutCheese: '' },
     });
     setModalOpen(true);
   };
@@ -113,6 +117,16 @@ const MenuManagement = () => {
       prepTimeMinutes: item.prepTimeMinutes || 10,
       isPopular: !!item.isPopular,
       isAvailable: item.isAvailable,
+      hasPortions: !!item.hasPortions,
+      portionPrices: {
+        normal: item.portionPrices?.normal || '',
+        portion: item.portionPrices?.portion || item.price || '',
+        full: item.portionPrices?.full || '',
+        half: item.portionPrices?.half || '',
+        quarter: item.portionPrices?.quarter || '',
+        withCheese: item.portionPrices?.withCheese || '',
+        withoutCheese: item.portionPrices?.withoutCheese || '',
+      },
     });
     setModalOpen(true);
   };
@@ -121,10 +135,42 @@ const MenuManagement = () => {
     e.preventDefault();
     setFormLoading(true);
     try {
-      if (editingItem) {
-        await axios.put(`/api/menu/${editingItem._id}`, formData);
+      const normalPortionPrice = Number(formData.portionPrices.normal);
+      const portionPortionPrice = Number(formData.portionPrices.portion);
+      const basePrice = Number(formData.price) || normalPortionPrice || portionPortionPrice || 0;
+
+      const availablePortions = [];
+      if (formData.hasPortions) {
+        if (normalPortionPrice > 0) availablePortions.push('Normal');
+        if (portionPortionPrice > 0 || (!normalPortionPrice && basePrice > 0)) availablePortions.push('Portion');
+        if (Number(formData.portionPrices.full) > 0) availablePortions.push('Full');
+        if (Number(formData.portionPrices.half) > 0) availablePortions.push('Half');
+        if (Number(formData.portionPrices.quarter) > 0) availablePortions.push('Quarter');
+        if (Number(formData.portionPrices.withCheese) > 0) availablePortions.push('With Cheese');
+        if (Number(formData.portionPrices.withoutCheese) > 0) availablePortions.push('Without Cheese');
       } else {
-        await axios.post('/api/menu', formData);
+        availablePortions.push('Normal');
+      }
+
+      const payload = {
+        ...formData,
+        price: basePrice,
+        availablePortions,
+        portionPrices: {
+          normal: normalPortionPrice || 0,
+          portion: portionPortionPrice || basePrice,
+          full: Number(formData.portionPrices.full) || 0,
+          half: Number(formData.portionPrices.half) || 0,
+          quarter: Number(formData.portionPrices.quarter) || 0,
+          withCheese: Number(formData.portionPrices.withCheese) || 0,
+          withoutCheese: Number(formData.portionPrices.withoutCheese) || 0,
+        },
+      };
+
+      if (editingItem) {
+        await axios.put(`/api/menu/${editingItem._id}`, payload);
+      } else {
+        await axios.post('/api/menu', payload);
       }
       setModalOpen(false);
       fetchMenuData();
@@ -372,11 +418,6 @@ const MenuManagement = () => {
                     <span className="bg-[#1C1C24] border border-[#2B2B38] text-neutral-300 px-2 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wider">
                       {item.department}
                     </span>
-                    {item.isPopular && (
-                      <span className="bg-amber-500/20 text-amber-400 border border-amber-500/40 font-extrabold px-1.5 py-0.5 rounded text-[10px] flex items-center gap-0.5">
-                        <Flame className="w-3 h-3 text-amber-400" /> POPULAR
-                      </span>
-                    )}
                   </div>
 
                   <span
@@ -397,10 +438,47 @@ const MenuManagement = () => {
                       <h3 className="font-black text-sm text-white leading-snug">{item.name}</h3>
                       <p className="text-[10px] text-neutral-400 font-semibold">{item.category}</p>
                     </div>
-                    <span className="font-extrabold text-sm text-[#FF6B00] font-display whitespace-nowrap">
-                      Rs. {item.price.toLocaleString()}
-                    </span>
+                    <div className="text-right shrink-0">
+                      <span className="font-extrabold text-sm text-[#FF6B00] font-display whitespace-nowrap block">
+                        Rs. {item.price.toLocaleString()}
+                      </span>
+                      {item.hasPortions && (
+                        <span className="text-[9px] font-bold text-orange-400 uppercase tracking-wider block">
+                          Multi-Portion
+                        </span>
+                      )}
+                    </div>
                   </div>
+
+                  {item.hasPortions && item.portionPrices && (
+                    <div className="flex flex-wrap gap-1 pt-0.5">
+                      {item.portionPrices.normal > 0 && (
+                        <span className="text-[9.5px] px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 font-medium">
+                          Normal: Rs. {item.portionPrices.normal}
+                        </span>
+                      )}
+                      {item.portionPrices.full > 0 && (
+                        <span className="text-[9.5px] px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 text-amber-300 font-medium">
+                          Full: Rs. {item.portionPrices.full}
+                        </span>
+                      )}
+                      {item.portionPrices.half > 0 && (
+                        <span className="text-[9.5px] px-1.5 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 font-medium">
+                          Half: Rs. {item.portionPrices.half}
+                        </span>
+                      )}
+                      {item.portionPrices.portion > 0 && !item.portionPrices.normal && (
+                        <span className="text-[9.5px] px-1.5 py-0.5 rounded bg-purple-500/10 border border-purple-500/20 text-purple-300 font-medium">
+                          Portion: Rs. {item.portionPrices.portion}
+                        </span>
+                      )}
+                      {item.portionPrices.quarter > 0 && (
+                        <span className="text-[9.5px] px-1.5 py-0.5 rounded bg-purple-500/10 border border-purple-500/20 text-purple-300 font-medium">
+                          Quarter: Rs. {item.portionPrices.quarter}
+                        </span>
+                      )}
+                    </div>
+                  )}
 
                   {item.description && (
                     <p className="text-[11px] text-neutral-400 line-clamp-2 leading-relaxed">
@@ -517,6 +595,105 @@ const MenuManagement = () => {
                 </div>
               </div>
 
+              {/* Portion Pricing Toggle & Options */}
+              <div className="p-3.5 bg-[#131318] border border-[#2A2A38] rounded-xl space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="font-bold text-xs text-white block">Multi-Portion Sizing</span>
+                    <span className="text-[10px] text-neutral-400">Enable Portion, Full, Half pricing options</span>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.hasPortions}
+                      onChange={(e) => setFormData({ ...formData, hasPortions: e.target.checked })}
+                      className="sr-only peer"
+                    />
+                    <div className="w-9 h-5 bg-neutral-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#FF6B00]"></div>
+                  </label>
+                </div>
+
+                {formData.hasPortions && (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2 border-t border-neutral-800">
+                    <div>
+                      <label className="block text-[10px] font-bold text-emerald-400 uppercase tracking-wider mb-1">
+                        🍽️ Normal (Rs.)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={formData.portionPrices.normal}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            portionPrices: { ...formData.portionPrices, normal: e.target.value },
+                          })
+                        }
+                        placeholder="950"
+                        className="w-full bg-[#1C1C24] border border-[#2D2D3B] focus:border-emerald-500 rounded-xl px-2.5 py-2 text-white text-xs outline-none font-bold"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-amber-400 uppercase tracking-wider mb-1">
+                        🍲 Full (Rs.)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={formData.portionPrices.full}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            portionPrices: { ...formData.portionPrices, full: e.target.value },
+                          })
+                        }
+                        placeholder="1600"
+                        className="w-full bg-[#1C1C24] border border-[#2D2D3B] focus:border-amber-500 rounded-xl px-2.5 py-2 text-white text-xs outline-none font-bold"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-cyan-400 uppercase tracking-wider mb-1">
+                        🥣 Half (Rs.)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={formData.portionPrices.half}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            portionPrices: { ...formData.portionPrices, half: e.target.value },
+                          })
+                        }
+                        placeholder="1200"
+                        className="w-full bg-[#1C1C24] border border-[#2D2D3B] focus:border-cyan-500 rounded-xl px-2.5 py-2 text-white text-xs outline-none font-bold"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-purple-400 uppercase tracking-wider mb-1">
+                        🍛 Portion (Rs.)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={formData.portionPrices.portion}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            portionPrices: { ...formData.portionPrices, portion: e.target.value },
+                          })
+                        }
+                        placeholder="850"
+                        className="w-full bg-[#1C1C24] border border-[#2D2D3B] focus:border-purple-500 rounded-xl px-2.5 py-2 text-white text-xs outline-none font-bold"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* Station Selection Cards (Kitchen, Juice, Bun, Other) */}
               <div>
                 <label className="block font-bold text-neutral-300 mb-1.5 uppercase tracking-wider">
@@ -593,16 +770,6 @@ const MenuManagement = () => {
               </div>
 
               <div className="flex gap-4 pt-1">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.isPopular}
-                    onChange={(e) => setFormData({ ...formData, isPopular: e.target.checked })}
-                    className="w-4 h-4 rounded text-orange-500 focus:ring-0 bg-[#1C1C24] border-[#2D2D3B]"
-                  />
-                  <span className="font-semibold text-neutral-300">Feature as Popular Item</span>
-                </label>
-
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"

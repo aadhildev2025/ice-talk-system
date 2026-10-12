@@ -33,10 +33,11 @@ const WaiterMenu = () => {
   const [tables, setTables] = useState([]);
   const [selectedWaiterFloor, setSelectedWaiterFloor] = useState('ALL');
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedPortionFilter, setSelectedPortionFilter] = useState('ALL'); // 'ALL' | 'PORTION' | 'FULL' | 'HALF'
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
 
-  // Cart state: [{ cartId, menuItemId, name, price, department, category, quantity, specialInstructions }]
+  // Cart state: [{ cartId, menuItemId, name, baseName, portion, price, department, category, quantity, specialInstructions, hasPortions, portionPrices }]
   const [cart, setCart] = useState([]);
   const [orderType, setOrderType] = useState('DINE_IN');
   const [selectedTableId, setSelectedTableId] = useState('');
@@ -97,11 +98,32 @@ const WaiterMenu = () => {
     }
   }, [tables, selectedTableId]);
 
-  // Direct add item to cart (no popup modal on click)
-  const handleAddToCart = (item) => {
+  // Direct add item to cart with portion (Portion, Full, Half, etc.)
+  const handleAddToCart = (item, portion = 'Portion', customPrice = null) => {
     if (!item.isAvailable) return;
+
+    let price = Number(item.price);
+    if (customPrice !== null && !isNaN(customPrice)) {
+      price = Number(customPrice);
+    } else if (item.portionPrices) {
+      const pKey = portion.toLowerCase();
+      if (portion === 'Normal' && item.portionPrices.normal) price = item.portionPrices.normal;
+      else if (portion === 'Full' && item.portionPrices.full) price = item.portionPrices.full;
+      else if (portion === 'Half' && item.portionPrices.half) price = item.portionPrices.half;
+      else if (portion === 'Quarter' && item.portionPrices.quarter) price = item.portionPrices.quarter;
+      else if (portion === 'With Cheese' && item.portionPrices.withCheese) price = item.portionPrices.withCheese;
+      else if (portion === 'Without Cheese' && item.portionPrices.withoutCheese) price = item.portionPrices.withoutCheese;
+      else if (item.portionPrices[pKey]) price = item.portionPrices[pKey];
+      else if (item.portionPrices.portion) price = item.portionPrices.portion;
+      else if (item.portionPrices.normal) price = item.portionPrices.normal;
+    }
+
+    const itemName = item.hasPortions ? `${item.name} (${portion})` : item.name;
+
     setCart((prev) => {
-      const existing = prev.find((i) => i.menuItemId === item._id && !i.specialInstructions);
+      const existing = prev.find(
+        (i) => i.menuItemId === item._id && i.portion === portion && !i.specialInstructions
+      );
       if (existing) {
         return prev.map((i) =>
           i.cartId === existing.cartId ? { ...i, quantity: i.quantity + 1 } : i
@@ -110,16 +132,54 @@ const WaiterMenu = () => {
       return [
         ...prev,
         {
-          cartId: `${item._id}_${Date.now()}_${Math.random()}`,
+          cartId: `${item._id}_${portion}_${Date.now()}_${Math.random()}`,
           menuItemId: item._id,
-          name: item.name,
-          price: item.price,
+          name: itemName,
+          baseName: item.name,
+          portion: portion,
+          price: price,
           department: item.department || 'KITCHEN',
           category: item.category,
           quantity: 1,
           specialInstructions: '',
+          hasPortions: item.hasPortions,
+          portionPrices: item.portionPrices || {},
+          availablePortions: item.availablePortions || ['Normal'],
         },
       ];
+    });
+  };
+
+  // Switch portion in cart
+  const handleSwitchCartPortion = (cartId, newPortion) => {
+    setCart((prev) => {
+      const target = prev.find((i) => i.cartId === cartId);
+      if (!target) return prev;
+
+      let newPrice = target.price;
+      if (target.portionPrices) {
+        if (newPortion === 'Normal' && target.portionPrices.normal) newPrice = target.portionPrices.normal;
+        else if (newPortion === 'Full' && target.portionPrices.full) newPrice = target.portionPrices.full;
+        else if (newPortion === 'Half' && target.portionPrices.half) newPrice = target.portionPrices.half;
+        else if (newPortion === 'Quarter' && target.portionPrices.quarter) newPrice = target.portionPrices.quarter;
+        else if (newPortion === 'With Cheese' && target.portionPrices.withCheese) newPrice = target.portionPrices.withCheese;
+        else if (newPortion === 'Without Cheese' && target.portionPrices.withoutCheese) newPrice = target.portionPrices.withoutCheese;
+        else if (target.portionPrices.portion) newPrice = target.portionPrices.portion;
+      }
+
+      const cleanBase = target.baseName || target.name.replace(/\s*\([^)]*\)$/, '');
+      const newName = target.hasPortions ? `${cleanBase} (${newPortion})` : target.name;
+
+      return prev.map((i) =>
+        i.cartId === cartId
+          ? {
+              ...i,
+              portion: newPortion,
+              name: newName,
+              price: newPrice,
+            }
+          : i
+      );
     });
   };
 
@@ -179,20 +239,33 @@ const WaiterMenu = () => {
 
     setSubmittingOrder(true);
     try {
+      const selectedTable = tables.find((t) => t._id === selectedTableId);
+      const tableName = selectedTable ? selectedTable.name : (orderType === 'TAKEAWAY' ? 'Takeaway' : 'Table');
+      const waiterName = user?.name || user?.username || 'Waiter';
+
       const payload = {
         orderType,
+        tableId: selectedTableId || undefined,
+        tableName,
+        tableNameSnapshot: tableName,
+        waiterName,
+        waiterNameSnapshot: waiterName,
         items: cart,
         specialInstructions: orderInstructions,
       };
-      if (orderType === 'DINE_IN') {
-        payload.tableId = selectedTableId;
-      }
 
       const res = await axios.post('/api/orders', payload);
 
       if (res.data.success) {
-        setOrderSuccess(res.data.order);
-        printPreparationSlip(res.data.order, true);
+        const orderToPrint = {
+          ...res.data.order,
+          tableNameSnapshot: res.data.order?.tableNameSnapshot || tableName,
+          tableName: res.data.order?.tableName || tableName,
+          waiterNameSnapshot: res.data.order?.waiterNameSnapshot || waiterName,
+          waiterName: res.data.order?.waiterName || waiterName,
+        };
+        setOrderSuccess(orderToPrint);
+        printPreparationSlip(orderToPrint, true);
         setCart([]);
         setOrderInstructions('');
         setSelectedTableId('');
@@ -208,7 +281,19 @@ const WaiterMenu = () => {
   const filteredItems = menuItems.filter((item) => {
     const matchesCat = selectedCategory === 'All' || item.category === selectedCategory;
     const matchesSearch = !search || item.name.toLowerCase().includes(search.toLowerCase());
-    return matchesCat && matchesSearch;
+
+    let matchesPortion = true;
+    if (selectedPortionFilter === 'NORMAL') {
+      matchesPortion = item.hasPortions && (Boolean(item.portionPrices?.normal) || (item.availablePortions || []).includes('Normal'));
+    } else if (selectedPortionFilter === 'FULL') {
+      matchesPortion = item.hasPortions && (Boolean(item.portionPrices?.full) || (item.availablePortions || []).includes('Full'));
+    } else if (selectedPortionFilter === 'HALF') {
+      matchesPortion = item.hasPortions && (Boolean(item.portionPrices?.half) || (item.availablePortions || []).includes('Half'));
+    } else if (selectedPortionFilter === 'PORTION') {
+      matchesPortion = item.name.includes('(Portion)') || (item.availablePortions || []).includes('Portion') || item.category?.includes('(PORTION ONLY)');
+    }
+
+    return matchesCat && matchesSearch && matchesPortion;
   });
 
   const selectedTableObj = tables.find((t) => t._id === selectedTableId);
@@ -227,7 +312,7 @@ const WaiterMenu = () => {
                 Staff Order Pad
               </span>
             </h1>
-            <p className="text-[11px] text-neutral-400 hidden sm:block">Select table, browse menu and place orders</p>
+            <p className="text-[11px] text-neutral-400 hidden sm:block">Select table, browse menu with portions and place orders</p>
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
@@ -252,7 +337,7 @@ const WaiterMenu = () => {
         </div>
       </div>
 
-      {/* Search & Category Pills */}
+      {/* Search, Portion Filter & Category Pills */}
       <div className="sticky top-14 z-30 bg-[#0F0F12] border-b border-[#24242E] py-2.5 px-3 sm:px-4 shadow-md shrink-0">
         <div className="max-w-7xl mx-auto space-y-2.5">
           {/* Search bar */}
@@ -262,9 +347,71 @@ const WaiterMenu = () => {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search dishes, drinks, appetizers (e.g. Kottu, Falooda)..."
+              placeholder="Search dishes, drinks, appetizers (e.g. Chicken Rice, Cheese Kottu)..."
               className="w-full bg-[#181820] border border-[#2A2A38] focus:border-[#FF6B00] rounded-xl pl-10 pr-4 py-2 text-xs text-white placeholder-neutral-500 outline-none shadow-inner"
             />
+          </div>
+
+          {/* Portion Option Filter Bar: All Sizes | Normal | Full | Half | Portion Only */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none pt-0.5">
+            <span className="text-[10px] font-black text-neutral-400 uppercase tracking-wider shrink-0 mr-1">
+              Size:
+            </span>
+            <button
+              type="button"
+              onClick={() => setSelectedPortionFilter('ALL')}
+              className={`px-3 py-1 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                selectedPortionFilter === 'ALL'
+                  ? 'bg-[#FF6B00] text-white shadow-md shadow-orange-500/25'
+                  : 'bg-[#181820] text-neutral-400 hover:text-white border border-[#24242E]'
+              }`}
+            >
+              All Items ({menuItems.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedPortionFilter('NORMAL')}
+              className={`px-3 py-1 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 ${
+                selectedPortionFilter === 'NORMAL'
+                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30 font-black'
+                  : 'bg-[#181820] text-emerald-400 hover:text-white border border-[#24242E]'
+              }`}
+            >
+              <span>🍽️ Normal</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedPortionFilter('FULL')}
+              className={`px-3 py-1 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 ${
+                selectedPortionFilter === 'FULL'
+                  ? 'bg-amber-600 text-white shadow-md shadow-amber-600/30 font-black'
+                  : 'bg-[#181820] text-amber-400 hover:text-white border border-[#24242E]'
+              }`}
+            >
+              <span>🍲 Full</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedPortionFilter('HALF')}
+              className={`px-3 py-1 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 ${
+                selectedPortionFilter === 'HALF'
+                  ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30 font-black'
+                  : 'bg-[#181820] text-blue-400 hover:text-white border border-[#24242E]'
+              }`}
+            >
+              <span>🥣 Half</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedPortionFilter('PORTION')}
+              className={`px-3 py-1 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 ${
+                selectedPortionFilter === 'PORTION'
+                  ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30 font-black'
+                  : 'bg-[#181820] text-purple-400 hover:text-white border border-[#24242E]'
+              }`}
+            >
+              <span>🍛 Portion Only</span>
+            </button>
           </div>
 
           {/* Category Pills */}
@@ -277,7 +424,7 @@ const WaiterMenu = () => {
                   : 'bg-[#181820] text-neutral-400 hover:text-white border border-[#24242E]'
               }`}
             >
-              All Items ({menuItems.length})
+              All Categories
             </button>
             {categories
               .filter((c) => c.name !== 'All')
@@ -311,7 +458,16 @@ const WaiterMenu = () => {
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2.5 sm:gap-4">
             {filteredItems.map((item) => {
-              const inCart = cart.find((i) => i.menuItemId === item._id);
+              const itemCartItems = cart.filter((i) => i.menuItemId === item._id);
+              const totalInCart = itemCartItems.reduce((acc, i) => acc + i.quantity, 0);
+
+              const normalPrice = item.portionPrices?.normal;
+              const portionPrice = item.portionPrices?.portion;
+              const fullPrice = item.portionPrices?.full;
+              const halfPrice = item.portionPrices?.half;
+              const quarterPrice = item.portionPrices?.quarter;
+              const withCheesePrice = item.portionPrices?.withCheese;
+              const withoutCheesePrice = item.portionPrices?.withoutCheese;
 
               return (
                 <div
@@ -319,17 +475,22 @@ const WaiterMenu = () => {
                   className={`bg-[#141419] border rounded-2xl p-3 sm:p-3.5 flex flex-col justify-between transition-colors select-none ${
                     !item.isAvailable
                       ? 'border-neutral-800 opacity-50 cursor-not-allowed'
-                      : inCart
+                      : totalInCart > 0
                       ? 'border-orange-500/80 ring-1 ring-orange-500/50 shadow-lg shadow-orange-500/10 bg-[#1A1816]'
                       : 'border-[#24242E] hover:border-neutral-600'
                   }`}
                 >
-                  <div className="space-y-2 mb-3">
+                  <div className="space-y-2 mb-2.5">
                     {/* Dept badge & Out of stock status */}
                     <div className="flex items-center justify-between gap-1">
                       <span className="bg-[#1C1C24] border border-[#2B2B38] text-neutral-300 px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase">
                         {item.department}
                       </span>
+                      {item.hasPortions && (
+                        <span className="bg-orange-500/10 text-orange-400 border border-orange-500/20 text-[9px] font-black uppercase px-1.5 py-0.5 rounded">
+                          PORTIONS
+                        </span>
+                      )}
                       {!item.isAvailable && (
                         <span className="bg-rose-500/20 text-rose-400 border border-rose-500/40 text-[9px] font-black uppercase px-1.5 py-0.5 rounded">
                           OUT OF STOCK
@@ -338,17 +499,18 @@ const WaiterMenu = () => {
                     </div>
 
                     {/* Title & Price */}
-                    <div className="space-y-1">
+                    <div className="space-y-0.5">
                       <h3 className="font-bold text-xs text-white line-clamp-2 leading-snug min-h-[32px]">
                         {item.name}
                       </h3>
                       <p className="font-black text-sm sm:text-base text-[#FF6B00] font-display">
                         Rs. {item.price.toLocaleString()}
+                        {item.hasPortions && <span className="text-[10px] font-semibold text-neutral-400 ml-1">/ size</span>}
                       </p>
                     </div>
                   </div>
 
-                  {/* Add / Counter Button */}
+                  {/* Add / Portion Action Buttons */}
                   <div>
                     {!item.isAvailable ? (
                       <button
@@ -357,32 +519,193 @@ const WaiterMenu = () => {
                       >
                         Unavailable
                       </button>
-                    ) : inCart ? (
-                      <div className="flex items-center justify-between bg-[#1C1C24] border border-[#FF6B00]/40 rounded-xl p-1">
-                        <button
-                          onClick={() => handleUpdateQty(inCart.cartId, -1)}
-                          className="w-8 h-8 rounded-lg bg-[#282834] active:bg-neutral-700 text-white flex items-center justify-center font-bold text-sm touch-manipulation"
-                        >
-                          <Minus className="w-4 h-4" />
-                        </button>
-                        <span className="font-black text-xs text-white px-2">
-                          {inCart.quantity}
-                        </span>
-                        <button
-                          onClick={() => handleUpdateQty(inCart.cartId, 1)}
-                          className="w-8 h-8 rounded-lg bg-[#FF6B00] active:bg-[#E05A00] text-white flex items-center justify-center font-bold text-sm shadow touch-manipulation"
-                        >
-                          <Plus className="w-4 h-4" />
-                        </button>
+                    ) : item.hasPortions ? (
+                      /* Multi-portion Buttons: Normal, Full, Half */
+                      <div className="space-y-1.5">
+                        <div className="grid grid-cols-2 gap-1.5">
+                          {normalPrice && (
+                            <button
+                              type="button"
+                              onClick={() => handleAddToCart(item, 'Normal', normalPrice)}
+                              className="py-1.5 px-1.5 rounded-xl bg-[#1C1C24] hover:bg-emerald-600 active:scale-95 text-white border border-[#2B2B38] hover:border-emerald-500 text-center transition-all flex flex-col items-center justify-center touch-manipulation group"
+                            >
+                              <div className="flex items-center gap-1">
+                                <span className="text-[9px] text-emerald-400 group-hover:text-white font-black uppercase">
+                                  Normal
+                                </span>
+                                {(() => {
+                                  const c = itemCartItems.find((i) => i.portion === 'Normal');
+                                  return c ? (
+                                    <span className="w-4 h-4 rounded-full bg-emerald-500 text-white text-[9px] font-black flex items-center justify-center">
+                                      {c.quantity}
+                                    </span>
+                                  ) : null;
+                                })()}
+                              </div>
+                              <span className="text-[11px] font-bold text-neutral-200 group-hover:text-white">
+                                Rs. {normalPrice}
+                              </span>
+                            </button>
+                          )}
+
+                          {portionPrice && !normalPrice && (
+                            <button
+                              type="button"
+                              onClick={() => handleAddToCart(item, 'Portion', portionPrice)}
+                              className="py-1.5 px-1.5 rounded-xl bg-[#1C1C24] hover:bg-emerald-600 active:scale-95 text-white border border-[#2B2B38] hover:border-emerald-500 text-center transition-all flex flex-col items-center justify-center touch-manipulation group"
+                            >
+                              <div className="flex items-center gap-1">
+                                <span className="text-[9px] text-emerald-400 group-hover:text-white font-black uppercase">
+                                  Portion
+                                </span>
+                                {(() => {
+                                  const c = itemCartItems.find((i) => i.portion === 'Portion');
+                                  return c ? (
+                                    <span className="w-4 h-4 rounded-full bg-emerald-500 text-white text-[9px] font-black flex items-center justify-center">
+                                      {c.quantity}
+                                    </span>
+                                  ) : null;
+                                })()}
+                              </div>
+                              <span className="text-[11px] font-bold text-neutral-200 group-hover:text-white">
+                                Rs. {portionPrice}
+                              </span>
+                            </button>
+                          )}
+
+                          {fullPrice && (
+                            <button
+                              type="button"
+                              onClick={() => handleAddToCart(item, 'Full', fullPrice)}
+                              className="py-1.5 px-1.5 rounded-xl bg-[#1C1C24] hover:bg-amber-600 active:scale-95 text-white border border-[#2B2B38] hover:border-amber-500 text-center transition-all flex flex-col items-center justify-center touch-manipulation group"
+                            >
+                              <div className="flex items-center gap-1">
+                                <span className="text-[9px] text-amber-400 group-hover:text-white font-black uppercase">
+                                  Full
+                                </span>
+                                {(() => {
+                                  const c = itemCartItems.find((i) => i.portion === 'Full');
+                                  return c ? (
+                                    <span className="w-4 h-4 rounded-full bg-amber-500 text-white text-[9px] font-black flex items-center justify-center">
+                                      {c.quantity}
+                                    </span>
+                                  ) : null;
+                                })()}
+                              </div>
+                              <span className="text-[11px] font-bold text-neutral-200 group-hover:text-white">
+                                Rs. {fullPrice}
+                              </span>
+                            </button>
+                          )}
+
+                          {halfPrice && (
+                            <button
+                              type="button"
+                              onClick={() => handleAddToCart(item, 'Half', halfPrice)}
+                              className="py-1.5 px-1.5 rounded-xl bg-[#1C1C24] hover:bg-blue-600 active:scale-95 text-white border border-[#2B2B38] hover:border-blue-500 text-center transition-all flex flex-col items-center justify-center touch-manipulation group"
+                            >
+                              <div className="flex items-center gap-1">
+                                <span className="text-[9px] text-blue-400 group-hover:text-white font-black uppercase">
+                                  Half
+                                </span>
+                                {(() => {
+                                  const c = itemCartItems.find((i) => i.portion === 'Half');
+                                  return c ? (
+                                    <span className="w-4 h-4 rounded-full bg-blue-500 text-white text-[9px] font-black flex items-center justify-center">
+                                      {c.quantity}
+                                    </span>
+                                  ) : null;
+                                })()}
+                              </div>
+                              <span className="text-[11px] font-bold text-neutral-200 group-hover:text-white">
+                                Rs. {halfPrice}
+                              </span>
+                            </button>
+                          )}
+
+                          {quarterPrice && (
+                            <button
+                              type="button"
+                              onClick={() => handleAddToCart(item, 'Quarter', quarterPrice)}
+                              className="py-1.5 px-1.5 rounded-xl bg-[#1C1C24] hover:bg-purple-600 active:scale-95 text-white border border-[#2B2B38] hover:border-purple-500 text-center transition-all flex flex-col items-center justify-center touch-manipulation group"
+                            >
+                              <span className="text-[9px] text-purple-400 group-hover:text-white font-black uppercase">
+                                Quarter
+                              </span>
+                              <span className="text-[11px] font-bold text-neutral-200 group-hover:text-white">
+                                Rs. {quarterPrice}
+                              </span>
+                            </button>
+                          )}
+
+                          {withCheesePrice && (
+                            <button
+                              type="button"
+                              onClick={() => handleAddToCart(item, 'With Cheese', withCheesePrice)}
+                              className="py-1.5 px-1.5 rounded-xl bg-[#1C1C24] hover:bg-amber-600 active:scale-95 text-white border border-[#2B2B38] hover:border-amber-500 text-center transition-all flex flex-col items-center justify-center touch-manipulation group"
+                            >
+                              <span className="text-[9px] text-amber-400 group-hover:text-white font-black uppercase">
+                                + Cheese
+                              </span>
+                              <span className="text-[11px] font-bold text-neutral-200 group-hover:text-white">
+                                Rs. {withCheesePrice}
+                              </span>
+                            </button>
+                          )}
+
+                          {withoutCheesePrice && (
+                            <button
+                              type="button"
+                              onClick={() => handleAddToCart(item, 'Without Cheese', withoutCheesePrice)}
+                              className="py-1.5 px-1.5 rounded-xl bg-[#1C1C24] hover:bg-neutral-600 active:scale-95 text-white border border-[#2B2B38] hover:border-neutral-500 text-center transition-all flex flex-col items-center justify-center touch-manipulation group"
+                            >
+                              <span className="text-[9px] text-neutral-400 group-hover:text-white font-black uppercase">
+                                Plain
+                              </span>
+                              <span className="text-[11px] font-bold text-neutral-200 group-hover:text-white">
+                                Rs. {withoutCheesePrice}
+                              </span>
+                            </button>
+                          )}
+                        </div>
+
+                        {totalInCart > 0 && (
+                          <p className="text-[10px] font-bold text-[#FF6B00] bg-[#1E1712] border border-[#FF6B00]/25 rounded-lg py-0.5 px-1 text-center truncate">
+                            In Order: {itemCartItems.map((c) => `${c.quantity}x ${c.portion}`).join(', ')}
+                          </p>
+                        )}
                       </div>
                     ) : (
-                      <button
-                        onClick={() => handleAddToCart(item)}
-                        className="w-full py-2.5 rounded-xl bg-[#1C1C24] hover:bg-[#FF6B00] active:bg-[#FF6B00] text-neutral-300 hover:text-white border border-[#2B2B38] font-bold text-xs transition-all flex items-center justify-center gap-1.5 touch-manipulation"
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                        <span>ADD</span>
-                      </button>
+                      /* Single Portion Item */
+                      <div>
+                        {itemCartItems.length > 0 ? (
+                          <div className="flex items-center justify-between bg-[#1C1C24] border border-[#FF6B00]/40 rounded-xl p-1">
+                            <button
+                              onClick={() => handleUpdateQty(itemCartItems[0].cartId, -1)}
+                              className="w-8 h-8 rounded-lg bg-[#282834] active:bg-neutral-700 text-white flex items-center justify-center font-bold text-sm touch-manipulation"
+                            >
+                              <Minus className="w-4 h-4" />
+                            </button>
+                            <span className="font-black text-xs text-white px-2">
+                              {itemCartItems[0].quantity}
+                            </span>
+                            <button
+                              onClick={() => handleUpdateQty(itemCartItems[0].cartId, 1)}
+                              className="w-8 h-8 rounded-lg bg-[#FF6B00] active:bg-[#E05A00] text-white flex items-center justify-center font-bold text-sm shadow touch-manipulation"
+                            >
+                              <Plus className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => handleAddToCart(item, item.name.includes('(Portion)') ? 'Portion' : 'Standard')}
+                            className="w-full py-2.5 rounded-xl bg-[#1C1C24] hover:bg-[#FF6B00] active:bg-[#FF6B00] text-neutral-300 hover:text-white border border-[#2B2B38] font-bold text-xs transition-all flex items-center justify-center gap-1.5 touch-manipulation"
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                            <span>{item.name.includes('(Portion)') ? 'ADD PORTION' : 'ADD ITEM'}</span>
+                          </button>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>
@@ -586,17 +909,56 @@ const WaiterMenu = () => {
                       key={item.cartId}
                       className="p-3 bg-[#1C1C24] rounded-xl border border-[#2B2B38] space-y-2"
                     >
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="font-bold text-xs text-white">{item.name}</p>
-                          <p className="text-[10px] text-neutral-400">
-                            Dept: <span className="text-orange-400 font-bold">{item.department}</span> • Rs. {item.price} each
+                      <div className="flex justify-between items-start gap-2">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <p className="font-bold text-xs text-white leading-tight">{item.name}</p>
+                            {item.portion && (
+                              <span className={`text-[9px] font-black uppercase px-1.5 py-0.2 rounded border ${
+                                item.portion.toLowerCase() === 'full'
+                                  ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                                  : item.portion.toLowerCase() === 'half'
+                                  ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30'
+                                  : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                              }`}>
+                                {item.portion}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[10px] text-neutral-400 mt-0.5">
+                            Dept: <span className="text-orange-400 font-bold">{item.department}</span> • Rs. {item.price.toLocaleString()} each
                           </p>
                         </div>
-                        <span className="font-bold text-xs text-white">
+                        <span className="font-bold text-xs text-white shrink-0">
                           Rs. {(item.price * item.quantity).toLocaleString()}
                         </span>
                       </div>
+
+                      {/* Quick Portion Switcher in Cart */}
+                      {item.hasPortions && item.availablePortions && item.availablePortions.length > 1 && (
+                        <div className="flex items-center gap-1.5 bg-[#14141A] p-1.5 rounded-lg border border-[#262635]">
+                          <span className="text-[9px] uppercase tracking-wider text-neutral-400 font-bold pl-0.5">Size:</span>
+                          <div className="flex items-center gap-1 flex-wrap">
+                            {item.availablePortions.map((p) => {
+                              const isSelected = item.portion === p;
+                              return (
+                                <button
+                                  key={p}
+                                  type="button"
+                                  onClick={() => handleSwitchCartPortion(item.cartId, p)}
+                                  className={`text-[10px] font-bold px-2 py-0.5 rounded transition-all ${
+                                    isSelected
+                                      ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow'
+                                      : 'bg-[#22222E] text-neutral-400 hover:text-white hover:bg-[#2C2C3D]'
+                                  }`}
+                                >
+                                  {p}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
 
                       {/* Item Special Note Badge or Add Button */}
                       {item.specialInstructions ? (
@@ -622,7 +984,7 @@ const WaiterMenu = () => {
                       )}
 
                       <div className="flex items-center justify-between pt-1 border-t border-neutral-800">
-                        <span className="text-[11px] text-neutral-400">
+                        <span className="text-[11px] text-neutral-400 font-medium">
                           Rs. {item.price.toLocaleString()} ea
                         </span>
 

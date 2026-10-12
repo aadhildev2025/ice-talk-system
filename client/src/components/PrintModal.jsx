@@ -62,35 +62,45 @@ const PrintModal = () => {
   // User name extraction
   const kotUserName = (
     data.waiterNameSnapshot ||
-    data.user?.name ||
     data.waiterName ||
     data.cashierNameSnapshot ||
-    'SHAHL'
+    data.cashierName ||
+    data.user?.name ||
+    data.user?.username ||
+    'STAFF'
   ).toUpperCase();
 
   const billUserName = (
     data.cashierNameSnapshot ||
+    data.cashierName ||
     data.waiterNameSnapshot ||
+    data.waiterName ||
     data.user?.name ||
-    'SHAHL'
+    'STAFF'
   ).toUpperCase();
 
   // Table name or order label
-  const tableName = (
+  const rawTable = (
     data.tableNameSnapshot ||
-    (data.tableId?.name ? `TABLE ${data.tableId.name}` : '') ||
-    (data.orderType === 'TAKEAWAY' ? 'TAKEAWAY' : 'TABLE')
-  ).toUpperCase();
+    data.tableName ||
+    (typeof data.tableId === 'object' && data.tableId?.name ? data.tableId.name : '') ||
+    (data.orderType === 'TAKEAWAY'
+      ? (data.customerName ? `TAKEAWAY (${data.customerName})` : 'TAKEAWAY')
+      : data.orderType === 'UBEREATS'
+      ? (data.channelOrderRef ? `UBEREATS (${data.channelOrderRef})` : 'UBEREATS')
+      : data.orderType === 'PICKME'
+      ? (data.channelOrderRef ? `PICKME (${data.channelOrderRef})` : 'PICKME')
+      : (data.tableId ? `TABLE ${data.tableId}` : 'DINE-IN'))
+  );
+
+  const tableName = String(rawTable).toUpperCase();
 
   // Order reference for receipt
   const orderRefText = (
-    data.tableNameSnapshot
-      ? `${data.tableNameSnapshot}`
-      : data.tableId?.name
-      ? `TABLE ${data.tableId.name}`
-      : data.customerName
-      ? `TAKEAWAY (${data.customerName})`
-      : 'DINE-IN'
+    data.tableNameSnapshot ||
+    data.tableName ||
+    (typeof data.tableId === 'object' && data.tableId?.name ? data.tableId.name : '') ||
+    (data.customerName ? `TAKEAWAY (${data.customerName})` : (data.orderType || 'DINE-IN'))
   ).toUpperCase();
 
   const roundNum = data.round || data.roundNumber || 1;

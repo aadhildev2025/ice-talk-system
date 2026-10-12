@@ -44,6 +44,23 @@ const menuItemSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    hasPortions: {
+      type: Boolean,
+      default: false,
+    },
+    portionPrices: {
+      normal: { type: Number, min: 0 },
+      portion: { type: Number, min: 0 },
+      full: { type: Number, min: 0 },
+      half: { type: Number, min: 0 },
+      quarter: { type: Number, min: 0 },
+      withCheese: { type: Number, min: 0 },
+      withoutCheese: { type: Number, min: 0 },
+    },
+    availablePortions: {
+      type: [String],
+      default: ['Portion'],
+    },
   },
   { timestamps: true }
 );

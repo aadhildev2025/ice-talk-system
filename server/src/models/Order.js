@@ -9,6 +9,10 @@ const orderItemSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  portion: {
+    type: String,
+    default: 'Portion',
+  },
   quantity: {
     type: Number,
     required: true,

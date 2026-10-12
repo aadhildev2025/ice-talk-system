@@ -87,7 +87,14 @@ const OrderReceive = () => {
           setSelectedOrderDetails(null);
         }
         // Auto-print thermal preparation slip
-        printPreparationSlip(res.data.order, true);
+        const orderToPrint = {
+          ...res.data.order,
+          tableNameSnapshot: res.data.order?.tableNameSnapshot || order.tableNameSnapshot || order.tableName,
+          tableName: res.data.order?.tableName || order.tableName,
+          waiterNameSnapshot: res.data.order?.waiterNameSnapshot || order.waiterNameSnapshot || order.waiterName,
+          waiterName: res.data.order?.waiterName || order.waiterName,
+        };
+        printPreparationSlip(orderToPrint, true);
       }
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to approve order');
