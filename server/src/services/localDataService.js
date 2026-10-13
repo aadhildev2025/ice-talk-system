@@ -583,7 +583,7 @@ const updatePrepTask = (id, updates) => {
 
 // Sales
 const getSales = (filter = {}) => {
-  let sales = readJSON(FILES.SALES, []);
+  let sales = readJSON(FILES.SALES, []).filter((s) => !s.isDemo);
   if (filter.timeframe) {
     sales = sales.filter((s) => matchesTimeframe(s.createdAt, filter.timeframe, filter.startDate, filter.endDate));
   }
@@ -719,9 +719,9 @@ const deleteExpense = (id) => {
 // --- REPORT GENERATORS FROM LOCAL COMPUTER STORAGE ---
 
 const getDashboardMetrics = () => {
-  const sales = readJSON(FILES.SALES, []);
-  const orders = readJSON(FILES.ORDERS, []);
-  const expenses = readJSON(FILES.EXPENSES, []);
+  const sales = readJSON(FILES.SALES, []).filter((s) => !s.isDemo);
+  const orders = readJSON(FILES.ORDERS, []).filter((o) => !o.isDemo);
+  const expenses = readJSON(FILES.EXPENSES, []).filter((e) => !e.isDemo);
 
   const todaySalesList = sales.filter((s) => matchesTimeframe(s.createdAt, 'today'));
   const todaySales = todaySalesList.reduce((sum, s) => sum + (s.total || 0), 0);
@@ -807,7 +807,7 @@ const getDashboardMetrics = () => {
 };
 
 const getDetailedReports = ({ timeframe = 'week', startDate, endDate } = {}) => {
-  const sales = readJSON(FILES.SALES, []);
+  const sales = readJSON(FILES.SALES, []).filter((s) => !s.isDemo);
   const filtered = sales.filter((s) => matchesTimeframe(s.createdAt, timeframe, startDate, endDate));
 
   filtered.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
@@ -840,8 +840,8 @@ const getDetailedReports = ({ timeframe = 'week', startDate, endDate } = {}) => 
 };
 
 const getProfitLossReport = ({ timeframe = 'thisMonth', startDate, endDate } = {}) => {
-  const sales = readJSON(FILES.SALES, []);
-  const expenses = readJSON(FILES.EXPENSES, []);
+  const sales = readJSON(FILES.SALES, []).filter((s) => !s.isDemo);
+  const expenses = readJSON(FILES.EXPENSES, []).filter((e) => !e.isDemo);
 
   const filteredSales = sales.filter((s) => matchesTimeframe(s.createdAt, timeframe, startDate, endDate));
   const filteredExpenses = expenses.filter((e) => matchesTimeframe(e.date, timeframe, startDate, endDate));

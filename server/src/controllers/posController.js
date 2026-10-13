@@ -229,6 +229,61 @@ const settleTable = async (req, res) => {
     const tendered = Number(amountTendered) || finalTotal;
     const change = paymentMethod === 'CASH' ? Math.max(0, tendered - finalTotal) : 0;
 
+    // Per requirement: Only the sales records should not be entered in dsuper
+    if (req.user?.username === 'dsuper' || req.user?.isDemo) {
+      const demoSaleNumber = `INV-D${String(Date.now()).slice(-5)}`;
+      const demoSale = {
+        _id: `ds_sale_${Date.now()}`,
+        saleNumber: demoSaleNumber,
+        orderType: orderType || (table ? 'DINE_IN' : 'TAKEAWAY'),
+        tableId: table ? table._id : undefined,
+        tableNameSnapshot,
+        orderIds,
+        orderNumbers,
+        items: itemsSnapshot,
+        subtotal,
+        discount: finalDiscount,
+        discountPercentage: finalDiscountPercentage,
+        specialNotesTotal: extraNotesAmount,
+        tax: Number(tax) || 0,
+        total: finalTotal,
+        paymentMethod,
+        paymentStatus: 'PAID',
+        amountTendered: tendered,
+        changeAmount: change,
+        cashierId: req.user ? req.user._id : null,
+        cashierNameSnapshot: 'SuperADMIN',
+        isDemo: true,
+        createdAt: new Date().toISOString(),
+      };
+
+      // Mark orders as COMPLETED and settled in local storage so table orders are cleared
+      orderIds.forEach((id) => {
+        localDataService.updateOrder(id, {
+          status: 'COMPLETED',
+          isSettled: true,
+          completedAt: new Date().toISOString(),
+          saleId: demoSale._id,
+        });
+      });
+
+      if (table) {
+        try {
+          table.status = 'AVAILABLE';
+          await table.save();
+          emitTableUpdated(table);
+        } catch {}
+      }
+
+      emitSaleCompleted(demoSale, table ? [table] : []);
+
+      return res.status(201).json({
+        success: true,
+        message: `Sale ${demoSaleNumber} completed (Demo mode - not entered into sales records).`,
+        sale: demoSale,
+      });
+    }
+
     const saleNumber = localDataService.getNextSaleNumber();
 
     // Create Sale record in local computer storage

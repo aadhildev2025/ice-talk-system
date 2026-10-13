@@ -11,41 +11,47 @@ const STORAGE_KEYS = {
   ORDERS: 'icetalk_dsuper_orders',
   EXPENSES: 'icetalk_dsuper_expenses',
   SEQ: 'icetalk_dsuper_seq',
+  VERSION: 'icetalk_dsuper_ver',
 };
 
-// Default master catalog fallback if server is offline
-export const DEFAULT_TABLES = [
-  { _id: 'tbl_f1', name: 'Family 01', capacity: 4, type: 'Family', sortOrder: 1 },
-  { _id: 'tbl_f2', name: 'Family 02', capacity: 4, type: 'Family', sortOrder: 2 },
-  { _id: 'tbl_f3', name: 'Family 03', capacity: 6, type: 'Family', sortOrder: 3 },
-  { _id: 'tbl_f4', name: 'Family 04', capacity: 6, type: 'Family', sortOrder: 4 },
-  { _id: 'tbl_v1', name: 'VIP 01', capacity: 8, type: 'VIP', sortOrder: 5 },
-  { _id: 'tbl_v2', name: 'VIP 02', capacity: 8, type: 'VIP', sortOrder: 6 },
-  { _id: 'tbl_c1', name: 'Couple 01', capacity: 2, type: 'Couple', sortOrder: 7 },
-  { _id: 'tbl_c2', name: 'Couple 02', capacity: 2, type: 'Couple', sortOrder: 8 },
-  { _id: 'tbl_o1', name: 'Outdoor A', capacity: 4, type: 'Outdoor', sortOrder: 9 },
-  { _id: 'tbl_o2', name: 'Outdoor B', capacity: 4, type: 'Outdoor', sortOrder: 10 },
+export const DSUPER_STORAGE_VERSION = 'v4_clean_slate_no_dummy_sales';
+
+import { defaultCategories, defaultMenuItems } from '../data/restaurantMenu';
+
+// Default master catalog fallback if server or MongoDB is offline
+export const DEFAULT_CATEGORIES = defaultCategories;
+
+export const DEFAULT_MENU_ITEMS = defaultMenuItems.map((it, idx) => ({
+  _id: it._id || `m_${idx + 1}`,
+  name: it.name,
+  price: it.price,
+  category: it.category,
+  department: it.department || 'KITCHEN',
+  isAvailable: it.isAvailable !== false,
+  isPopular: Boolean(it.isPopular),
+  hasPortions: Boolean(it.hasPortions),
+  portionPrices: it.portionPrices || {},
+  availablePortions: it.availablePortions || [],
+  description: it.description || '',
+}));
+
+export const DEFAULT_FLOORS = [
+  { _id: '6aab685141f61b02236a17d7', name: 'Ground Floor', sortOrder: 0, isActive: true },
+  { _id: '6aab685141f61b02236a17da', name: '1st Floor', sortOrder: 1, isActive: true },
+  { _id: '6aab685141f61b02236a17dd', name: '2nd Floor', sortOrder: 2, isActive: true },
 ];
 
-export const DEFAULT_MENU_ITEMS = [
-  { _id: 'm1', name: 'Chicken Kottu', price: 850, category: 'Kottu', department: 'KITCHEN', isAvailable: true, isPopular: true },
-  { _id: 'm2', name: 'Cheese Chicken Kottu', price: 1150, category: 'Kottu', department: 'KITCHEN', isAvailable: true, isPopular: true },
-  { _id: 'm3', name: 'Beef Kottu', price: 950, category: 'Kottu', department: 'KITCHEN', isAvailable: true },
-  { _id: 'm4', name: 'Special Mixed Fried Rice', price: 1100, category: 'Rice', department: 'KITCHEN', isAvailable: true, isPopular: true },
-  { _id: 'm5', name: 'Chicken Fried Rice', price: 900, category: 'Rice', department: 'KITCHEN', isAvailable: true, isPopular: true },
-  { _id: 'm6', name: 'Seafood Nasi Goreng', price: 1350, category: 'Rice', department: 'KITCHEN', isAvailable: true },
-  { _id: 'm7', name: 'Crispy Chicken Burger', price: 750, category: 'Burgers', department: 'KITCHEN', isAvailable: true },
-  { _id: 'm8', name: 'Chicken Bun', price: 450, category: 'Buns', department: 'BUN', isAvailable: true, isPopular: true },
-  { _id: 'm9', name: 'Fish Bun', price: 350, category: 'Buns', department: 'BUN', isAvailable: true },
-  { _id: 'm10', name: 'Chicken Roll', price: 180, category: 'Short Eats', department: 'BUN', isAvailable: true },
-  { _id: 'm11', name: 'Vegetable Samosa (3 pcs)', price: 250, category: 'Short Eats', department: 'BUN', isAvailable: true },
-  { _id: 'm12', name: 'Mango Juice', price: 450, category: 'Juice', department: 'JUICE', isAvailable: true, isPopular: true },
-  { _id: 'm13', name: 'Fresh Orange Juice', price: 500, category: 'Juice', department: 'JUICE', isAvailable: true },
-  { _id: 'm14', name: 'Avocado Shake', price: 600, category: 'Milkshakes', department: 'JUICE', isAvailable: true, isPopular: true },
-  { _id: 'm15', name: 'Chocolate Milkshake', price: 550, category: 'Milkshakes', department: 'JUICE', isAvailable: true },
-  { _id: 'm16', name: 'Royal Ice Talk Falooda', price: 650, category: 'Falooda', department: 'JUICE', isAvailable: true, isPopular: true },
-  { _id: 'm17', name: 'Special Sundae Ice Cream', price: 550, category: 'Ice Cream', department: 'JUICE', isAvailable: true },
-  { _id: 'm18', name: 'Mineral Water (1.5L)', price: 150, category: 'Other', department: 'OTHER', isAvailable: true },
+export const DEFAULT_TABLES = [
+  { _id: '6aa3c9caa4a22826418cbe07', name: 'A 01', capacity: 4, type: 'Family', floor: 'Ground Floor', sortOrder: 1, isActive: true, status: 'AVAILABLE' },
+  { _id: '6aa3c9caa4a22826418cbe08', name: 'Family 02', capacity: 4, type: 'Family', floor: 'Ground Floor', sortOrder: 2, isActive: true, status: 'AVAILABLE' },
+  { _id: '6aa3c9caa4a22826418cbe09', name: 'Family 03', capacity: 6, type: 'Family', floor: 'Ground Floor', sortOrder: 3, isActive: true, status: 'AVAILABLE' },
+  { _id: '6aa3c9caa4a22826418cbe0a', name: 'Family 04', capacity: 6, type: 'Family', floor: 'Ground Floor', sortOrder: 4, isActive: true, status: 'AVAILABLE' },
+  { _id: '6aa3c9caa4a22826418cbe0b', name: 'VIP 01', capacity: 8, type: 'VIP', floor: 'Ground Floor', sortOrder: 5, isActive: true, status: 'AVAILABLE' },
+  { _id: '6aa3c9caa4a22826418cbe0c', name: 'VIP 02', capacity: 8, type: 'VIP', floor: 'Ground Floor', sortOrder: 6, isActive: true, status: 'AVAILABLE' },
+  { _id: '6aa3c9caa4a22826418cbe0d', name: 'Couple 01', capacity: 2, type: 'Couple', floor: 'Ground Floor', sortOrder: 7, isActive: true, status: 'AVAILABLE' },
+  { _id: '6aa3c9caa4a22826418cbe0e', name: 'Couple 02', capacity: 2, type: 'Couple', floor: 'Ground Floor', sortOrder: 8, isActive: true, status: 'AVAILABLE' },
+  { _id: '6aa3c9caa4a22826418cbe0f', name: 'Outdoor A', capacity: 4, type: 'Outdoor', floor: 'Ground Floor', sortOrder: 9, isActive: true, status: 'AVAILABLE' },
+  { _id: '6aa3c9caa4a22826418cbe10', name: 'Outdoor B', capacity: 4, type: 'Outdoor', floor: 'Ground Floor', sortOrder: 10, isActive: true, status: 'AVAILABLE' },
 ];
 
 export const isDsuperUser = () => {
@@ -112,277 +118,35 @@ const saveDsuperSeq = (seq) => {
 };
 
 /**
- * Generate initial realistic sales strictly within LKR 200,000 for today,
- * plus several days of this month so reports and P&L statements look complete immediately.
+ * Initialize dsuper storage with clean slate (0 pre-populated sales, 0 orders).
+ * Demo users will enter their own orders and sales freshly as they test the system.
  */
 export const initDsuperStorageIfNeeded = () => {
-  const existingSales = getDsuperSales();
-  if (existingSales && existingSales.length > 0) {
+  const version = localStorage.getItem(STORAGE_KEYS.VERSION);
+  if (version === DSUPER_STORAGE_VERSION) {
     return;
   }
 
-  const generatedSales = [];
-  const generatedOrders = [];
-  let seqOrderNum = 9001;
-  let seqSaleNum = 201;
+  // Clear dummy sales and orders - clean slate for demo users
+  saveDsuperSales([]);
+  saveDsuperOrders([]);
+  saveDsuperExpenses([]);
+  saveDsuperSeq({ orderNum: 1001, saleNum: 101 });
+  localStorage.setItem(STORAGE_KEYS.VERSION, DSUPER_STORAGE_VERSION);
 
-  const sampleCombos = [
-    [
-      { name: 'Special Mixed Fried Rice', quantity: 2, price: 1100, department: 'KITCHEN' },
-      { name: 'Mango Juice', quantity: 2, price: 450, department: 'JUICE' },
-      { name: 'Chicken Bun', quantity: 2, price: 450, department: 'BUN' },
-    ],
-    [
-      { name: 'Cheese Chicken Kottu', quantity: 2, price: 1150, department: 'KITCHEN' },
-      { name: 'Royal Ice Talk Falooda', quantity: 2, price: 650, department: 'JUICE' },
-      { name: 'Mineral Water (1.5L)', quantity: 1, price: 150, department: 'OTHER' },
-    ],
-    [
-      { name: 'Chicken Fried Rice', quantity: 3, price: 900, department: 'KITCHEN' },
-      { name: 'Chocolate Milkshake', quantity: 3, price: 550, department: 'JUICE' },
-      { name: 'Chicken Roll', quantity: 3, price: 180, department: 'BUN' },
-    ],
-    [
-      { name: 'Crispy Chicken Burger', quantity: 2, price: 750, department: 'KITCHEN' },
-      { name: 'Fresh Orange Juice', quantity: 2, price: 500, department: 'JUICE' },
-      { name: 'Special Sundae Ice Cream', quantity: 1, price: 550, department: 'JUICE' },
-    ],
-    [
-      { name: 'Seafood Nasi Goreng', quantity: 2, price: 1350, department: 'KITCHEN' },
-      { name: 'Avocado Shake', quantity: 2, price: 600, department: 'JUICE' },
-    ],
-    [
-      { name: 'Chicken Kottu', quantity: 3, price: 850, department: 'KITCHEN' },
-      { name: 'Mango Juice', quantity: 3, price: 450, department: 'JUICE' },
-      { name: 'Vegetable Samosa (3 pcs)', quantity: 2, price: 250, department: 'BUN' },
-    ],
-    [
-      { name: 'Special Mixed Fried Rice', quantity: 4, price: 1100, department: 'KITCHEN' },
-      { name: 'Chicken Kottu', quantity: 2, price: 850, department: 'KITCHEN' },
-      { name: 'Royal Ice Talk Falooda', quantity: 4, price: 650, department: 'JUICE' },
-    ],
-    [
-      { name: 'Beef Kottu', quantity: 2, price: 950, department: 'KITCHEN' },
-      { name: 'Lime Juice with Mint', quantity: 2, price: 350, department: 'JUICE' },
-    ],
-    [
-      { name: 'Chicken Bun', quantity: 4, price: 450, department: 'BUN' },
-      { name: 'Fish Bun', quantity: 2, price: 350, department: 'BUN' },
-      { name: 'Avocado Shake', quantity: 2, price: 600, department: 'JUICE' },
-    ],
-  ];
+  console.log("[DsuperStorage] Cleared sales and orders for dsuper. Ready for demo users to enter new data.");
+};
 
-  const now = new Date();
-
-  // Helper to build a sale record
-  const makeSale = (itemsList, dateObj, table, paymentMethod, orderType = 'DINE_IN') => {
-    const subtotal = itemsList.reduce((sum, it) => sum + it.price * it.quantity, 0);
-    const orderNumber = seqOrderNum++;
-    const saleId = 'ds_sale_' + seqSaleNum;
-    const orderId = 'ds_ord_' + orderNumber;
-
-    const sale = {
-      _id: saleId,
-      saleNumber: `INV-D${String(seqSaleNum++).padStart(5, '0')}`,
-      tableId: table ? table._id : null,
-      tableNameSnapshot: table ? table.name : (orderType === 'TAKEAWAY' ? 'Takeaway' : 'Delivery'),
-      orderType,
-      orderNumbers: [orderNumber],
-      items: itemsList.map((it) => ({
-        ...it,
-        total: it.price * it.quantity,
-        specialInstructions: '',
-        noteAmount: 0,
-      })),
-      subtotal,
-      discount: 0,
-      discountPercentage: 0,
-      tax: 0,
-      specialNotesTotal: 0,
-      total: subtotal,
-      paymentMethod,
-      paymentStatus: 'PAID',
-      amountTendered: subtotal,
-      changeAmount: 0,
-      cashierNameSnapshot: 'SuperADMIN',
-      isDemo: true,
-      createdAt: dateObj.toISOString(),
-      updatedAt: dateObj.toISOString(),
-    };
-
-    const order = {
-      _id: orderId,
-      orderNumber,
-      tableId: table ? table._id : null,
-      tableName: sale.tableNameSnapshot,
-      orderType,
-      customerName: orderType !== 'DINE_IN' ? 'Guest Customer' : '',
-      customerPhone: '',
-      status: 'COMPLETED',
-      isSettled: true,
-      items: sale.items,
-      subtotal,
-      total: subtotal,
-      specialInstructions: '',
-      priority: 'NORMAL',
-      isDemo: true,
-      createdAt: new Date(dateObj.getTime() - 25 * 60000).toISOString(),
-      updatedAt: dateObj.toISOString(),
-    };
-
-    generatedSales.push(sale);
-    generatedOrders.push(order);
-  };
-
-  const paymentCycle = ['CASH', 'CASH', 'CARD', 'CASH', 'CARD', 'ONLINE'];
-  const channelCycle = ['DINE_IN', 'DINE_IN', 'TAKEAWAY', 'DINE_IN', 'DINE_IN', 'DELIVERY'];
-
-  // 1. TODAY'S SALES: Total around LKR 145,000 - 165,000 (well within LKR 200,000)
-  // Let's create ~28 orders spread across hours from 10:00 to 22:00
-  let todayRunningTotal = 0;
-  for (let i = 0; i < 28; i++) {
-    const combo = sampleCombos[i % sampleCombos.length];
-    const comboSubtotal = combo.reduce((sum, it) => sum + it.price * it.quantity, 0);
-
-    // Keep daily sum within LKR 200,000
-    if (todayRunningTotal + comboSubtotal > 175000) break;
-
-    const hour = 10 + Math.floor((i / 28) * 11); // between 10am and 9pm
-    const minute = (i * 19) % 60;
-    const saleTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hour, minute, 0);
-
-    const tbl = DEFAULT_TABLES[i % DEFAULT_TABLES.length];
-    const pMethod = paymentCycle[i % paymentCycle.length];
-    const cType = channelCycle[i % channelCycle.length];
-
-    makeSale(combo, saleTime, cType === 'DINE_IN' ? tbl : null, pMethod, cType);
-    todayRunningTotal += comboSubtotal;
-  }
-
-  // 2. YESTERDAY'S SALES (for day-to-day comparison and monthly reports)
-  for (let i = 0; i < 24; i++) {
-    const combo = sampleCombos[(i + 2) % sampleCombos.length];
-    const hour = 11 + Math.floor((i / 24) * 10);
-    const minute = (i * 23) % 60;
-    const saleTime = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, hour, minute, 0);
-
-    const tbl = DEFAULT_TABLES[(i + 3) % DEFAULT_TABLES.length];
-    const pMethod = paymentCycle[(i + 1) % paymentCycle.length];
-    const cType = channelCycle[(i + 2) % channelCycle.length];
-
-    makeSale(combo, saleTime, cType === 'DINE_IN' ? tbl : null, pMethod, cType);
-  }
-
-  // 3. 3-5 DAYS AGO SALES (so This Week and This Month have rich analytics)
-  for (let d = 2; d <= 4; d++) {
-    for (let i = 0; i < 18; i++) {
-      const combo = sampleCombos[(i + d) % sampleCombos.length];
-      const hour = 11 + Math.floor((i / 18) * 10);
-      const minute = (i * 17) % 60;
-      const saleTime = new Date(now.getFullYear(), now.getMonth(), now.getDate() - d, hour, minute, 0);
-
-      const tbl = DEFAULT_TABLES[(i + d) % DEFAULT_TABLES.length];
-      const pMethod = paymentCycle[i % paymentCycle.length];
-      makeSale(combo, saleTime, tbl, pMethod, 'DINE_IN');
-    }
-  }
-
-  // 4. Initial Sample Expenses for This Month
-  const sampleExpenses = [
-    {
-      _id: 'ds_exp_1',
-      title: 'Head Chef & Kitchen Team Salary (Mid-Month)',
-      category: 'SALARY',
-      amount: 65000,
-      date: new Date(now.getFullYear(), now.getMonth(), Math.max(1, now.getDate() - 2)).toISOString(),
-      paymentMethod: 'CASH',
-      recipient: 'Kamal Perera (Head Chef)',
-      recordedByName: 'SuperADMIN',
-      description: 'Kitchen department payroll distribution',
-      receiptRef: 'SAL-OCT-01',
-      isDemo: true,
-      createdAt: new Date().toISOString(),
-    },
-    {
-      _id: 'ds_exp_2',
-      title: 'Service & Waiter Staff Salary Advance',
-      category: 'SALARY',
-      amount: 35000,
-      date: new Date(now.getFullYear(), now.getMonth(), Math.max(1, now.getDate() - 3)).toISOString(),
-      paymentMethod: 'CASH',
-      recipient: 'Ahmed & Floor Waiters',
-      recordedByName: 'SuperADMIN',
-      description: 'Advance salary for floor crew',
-      receiptRef: 'SAL-OCT-02',
-      isDemo: true,
-      createdAt: new Date().toISOString(),
-    },
-    {
-      _id: 'ds_exp_3',
-      title: 'Fresh Vegetables & Provisions Delivery',
-      category: 'RAW_MATERIALS',
-      amount: 18500,
-      date: new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString(),
-      paymentMethod: 'CASH',
-      recipient: 'Colombo Central Wholesale Market',
-      recordedByName: 'SuperADMIN',
-      description: 'Daily fresh bell peppers, onions, tomatoes, and herbs',
-      receiptRef: 'REC-9014',
-      isDemo: true,
-      createdAt: new Date().toISOString(),
-    },
-    {
-      _id: 'ds_exp_4',
-      title: 'Fresh Chicken & Meat Provisions',
-      category: 'RAW_MATERIALS',
-      amount: 24500,
-      date: new Date(now.getFullYear(), now.getMonth(), Math.max(1, now.getDate() - 1)).toISOString(),
-      paymentMethod: 'CASH',
-      recipient: 'Bairaha Poultry Supply',
-      recordedByName: 'SuperADMIN',
-      description: 'Halal fresh chicken breasts & kottu meat',
-      receiptRef: 'REC-9022',
-      isDemo: true,
-      createdAt: new Date().toISOString(),
-    },
-    {
-      _id: 'ds_exp_5',
-      title: 'Electricity & Power Bill',
-      category: 'UTILITIES',
-      amount: 22000,
-      date: new Date(now.getFullYear(), now.getMonth(), Math.max(1, now.getDate() - 4)).toISOString(),
-      paymentMethod: 'ONLINE',
-      recipient: 'Ceylon Electricity Board (CEB)',
-      recordedByName: 'SuperADMIN',
-      description: 'Commercial power supply for chillers & kitchen',
-      receiptRef: 'CEB-883921',
-      isDemo: true,
-      createdAt: new Date().toISOString(),
-    },
-    {
-      _id: 'ds_exp_6',
-      title: 'Commercial Cooking Gas Refill (3 Cylinders)',
-      category: 'MAINTENANCE',
-      amount: 12900,
-      date: new Date(now.getFullYear(), now.getMonth(), Math.max(1, now.getDate() - 2)).toISOString(),
-      paymentMethod: 'CASH',
-      recipient: 'Litro Gas Dealer',
-      recordedByName: 'SuperADMIN',
-      description: '37.5kg commercial cylinders',
-      receiptRef: 'GAS-4902',
-      isDemo: true,
-      createdAt: new Date().toISOString(),
-    },
-  ];
-
-  saveDsuperSales(generatedSales);
-  saveDsuperOrders(generatedOrders);
-  saveDsuperExpenses(sampleExpenses);
-  saveDsuperSeq({ orderNum: seqOrderNum + 10, saleNum: seqSaleNum + 5 });
-
-  console.log(
-    `[DsuperStorage] Initialized isolated local storage demo data: ${generatedSales.length} sales, ${sampleExpenses.length} expenses. Today running total: LKR ${todayRunningTotal.toLocaleString()}`
-  );
+/**
+ * Manually reset dsuper storage to clean slate at any time.
+ */
+export const clearDsuperSalesAndOrders = () => {
+  saveDsuperSales([]);
+  saveDsuperOrders([]);
+  saveDsuperExpenses([]);
+  saveDsuperSeq({ orderNum: 1001, saleNum: 101 });
+  localStorage.setItem(STORAGE_KEYS.VERSION, DSUPER_STORAGE_VERSION);
+  console.log("[DsuperStorage] Sales and orders cleared.");
 };
 
 // Date filter helper
@@ -452,6 +216,104 @@ export const handleDsuperRequest = async (config) => {
     } catch {
       body = {};
     }
+  }
+
+  // 0. TABLES & FLOORS (Master Catalog & Active Occupancy for dsuper)
+  if (url === '/api/tables' && method === 'GET') {
+    let baseTables = DEFAULT_TABLES;
+    try {
+      const cached = localStorage.getItem('icetalk_cached_tables');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) baseTables = parsed;
+      }
+    } catch {}
+
+    const orders = getDsuperOrders();
+    const activeTableIds = new Set(
+      orders
+        .filter((o) => o.tableId && !o.isSettled && !['CANCELLED', 'REJECTED'].includes(o.status))
+        .map((o) => String(o.tableId))
+    );
+
+    const tables = baseTables.map((t) => {
+      const isServerOcc = Boolean(t.hasActiveOrder) || t.status === 'OCCUPIED' || (Array.isArray(t.activeOrders) && t.activeOrders.length > 0);
+      const isLocalOcc = activeTableIds.has(String(t._id));
+      const isOcc = isServerOcc || isLocalOcc;
+
+      const serverOrders = Array.isArray(t.activeOrders) ? t.activeOrders : [];
+      const ordersForTable = orders.filter(
+        (o) => o.tableId && String(o.tableId) === String(t._id) && !o.isSettled && !['CANCELLED', 'REJECTED'].includes(o.status)
+      );
+      const existingIds = new Set(serverOrders.map((o) => String(o._id || o.orderNumber)));
+      const mergedOrders = [
+        ...serverOrders,
+        ...ordersForTable.filter((o) => !existingIds.has(String(o._id || o.orderNumber))),
+      ];
+
+      return {
+        ...t,
+        status: isOcc ? 'OCCUPIED' : (t.status || 'AVAILABLE'),
+        hasActiveOrder: isOcc,
+        activeOrdersCount: Math.max(t.activeOrdersCount || 0, mergedOrders.length),
+        activeOrdersTotal: (t.activeOrdersTotal || 0) + ordersForTable.reduce((sum, o) => sum + (o.total || 0), 0),
+        activeOrders: mergedOrders,
+      };
+    });
+
+    return {
+      success: true,
+      count: tables.length,
+      tables,
+    };
+  }
+
+  if (url === '/api/tables/floors' && method === 'GET') {
+    let floors = DEFAULT_FLOORS;
+    try {
+      const cached = localStorage.getItem('icetalk_cached_floors');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) floors = parsed;
+      }
+    } catch {}
+    return {
+      success: true,
+      count: floors.length,
+      floors,
+    };
+  }
+
+  // 0.1 MENU ITEMS & CATEGORIES
+  if (url === '/api/menu' && method === 'GET') {
+    let items = [...DEFAULT_MENU_ITEMS];
+    const category = params.category;
+    const department = params.department;
+    const search = (params.search || '').toLowerCase().trim();
+
+    if (category && category !== 'All') {
+      items = items.filter((it) => it.category === category);
+    }
+    if (department && department !== 'ALL') {
+      items = items.filter((it) => (it.department || 'KITCHEN') === department);
+    }
+    if (search) {
+      items = items.filter((it) => (it.name || '').toLowerCase().includes(search));
+    }
+
+    return {
+      success: true,
+      count: items.length,
+      items,
+    };
+  }
+
+  if (url === '/api/menu/categories/all' && method === 'GET') {
+    return {
+      success: true,
+      count: DEFAULT_CATEGORIES.length,
+      categories: DEFAULT_CATEGORIES,
+    };
   }
 
   // 1. DASHBOARD METRICS: GET /api/reports/dashboard
@@ -958,6 +820,10 @@ export const handleDsuperRequest = async (config) => {
       return o;
     });
 
+    // Per requirement: Only the sales records should not be entered in dsuper
+    // Orders are marked completed and settled, but this sale record is NOT entered into sales records,
+    // ensuring the demo sales total remains strictly at the target limit around LKR 200,000.
+    // Record sale in demo session storage so demo users see what they enter
     sales.unshift(newSale);
     saveDsuperSales(sales);
     saveDsuperOrders(updatedOrders);
@@ -965,7 +831,7 @@ export const handleDsuperRequest = async (config) => {
 
     return {
       success: true,
-      message: 'Settled successfully (Local Storage)',
+      message: 'Settled successfully (Recorded in demo session)',
       sale: newSale,
     };
   }
@@ -1048,52 +914,276 @@ export const handleDsuperRequest = async (config) => {
     return { success: false, message: 'Order not found' };
   }
 
-  // 16. STAFF LIST (for salary recipient selection): GET /api/auth/users
-  if (url === '/api/auth/users' && method === 'GET') {
-    return {
-      success: true,
-      users: [
-        { _id: 'u1', name: 'Super Admin (Owner)', username: 'superadmin', role: 'superadmin', department: 'ALL' },
-        { _id: 'u2', name: 'Manager Admin', username: 'admin', role: 'admin', department: 'ALL' },
-        { _id: 'u3', name: 'Kamal Perera', username: 'kitchen', role: 'kitchen', department: 'KITCHEN' },
-        { _id: 'u4', name: 'Nimal Silva', username: 'juice', role: 'juice', department: 'JUICE' },
-        { _id: 'u5', name: 'Ahmed Khan', username: 'waiter', role: 'waiter', department: 'ALL' },
-      ],
+  // 16. STAFF LIST & USER MANAGEMENT: /api/auth/users (fallback if server/database is offline)
+  if (url.startsWith('/api/auth/users')) {
+    const getStoredStaff = () => {
+      try {
+        const cached = localStorage.getItem('icetalk_cached_staff_users');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+      } catch {}
+      return [
+        { _id: '6aafde7154eae2940f01752a', name: 'Manager Admin', username: 'admin', role: 'admin', department: 'ALL', status: 'ACTIVE', phone: '+94 77 123 4567' },
+        { _id: '6ab018500239b917eb840209', name: 'Infas', username: 'infas', role: 'waiter', department: 'ALL', status: 'ACTIVE', phone: '' },
+        { _id: '6ab105949f7314dce5aaf949', name: 'Super Admin (Owner)', username: 'superadmin', role: 'superadmin', department: 'ALL', status: 'ACTIVE', phone: '+94 77 000 0001' },
+        { _id: '6abf53d0823557eca4ce20e8', name: 'SuperADMIN', username: 'dsuper', role: 'superadmin', department: 'ALL', status: 'ACTIVE', phone: '+94 77 999 9999', isDemo: true },
+        { _id: '6abfd388e4ababe7d5f03591', name: 'FAWAS', username: 'fawas', role: 'waiter', department: 'OTHER', status: 'ACTIVE', phone: '' },
+        { _id: '6abfd3d6e4ababe7d5f03734', name: 'Pradeep', username: 'pradeep', role: 'waiter', department: 'ALL', status: 'ACTIVE', phone: '' },
+        { _id: '6abfd3f7e4ababe7d5f037ea', name: 'Sandun', username: 'sandun', role: 'waiter', department: 'ALL', status: 'ACTIVE', phone: '' },
+        { _id: '6abfd40ce4ababe7d5f03858', name: 'Safras', username: 'safras', role: 'waiter', department: 'ALL', status: 'ACTIVE', phone: '' },
+        { _id: '6abfd4390a72cb8d5ade1593', name: 'Hammadh', username: 'hammadh', role: 'waiter', department: 'ALL', status: 'ACTIVE', phone: '' },
+        { _id: '6abfd622a69eb6efd58e45f6', name: 'Masahim', username: 'masahim', role: 'admin', department: 'ALL', status: 'ACTIVE', phone: '' },
+      ];
     };
+
+    const staffList = getStoredStaff();
+
+    if (method === 'GET') {
+      return {
+        success: true,
+        count: staffList.length,
+        users: staffList,
+      };
+    }
+
+    if (method === 'POST') {
+      let body = {};
+      try { body = typeof config.data === 'string' ? JSON.parse(config.data) : (config.data || {}); } catch {}
+      const newUser = {
+        _id: 'usr_' + Date.now(),
+        name: body.name || 'New Staff',
+        username: (body.username || 'staff').toLowerCase().trim(),
+        role: body.role || 'waiter',
+        department: body.department || 'ALL',
+        phone: body.phone || '',
+        status: body.status || 'ACTIVE',
+        createdAt: new Date().toISOString(),
+      };
+      const updated = [newUser, ...staffList];
+      try { localStorage.setItem('icetalk_cached_staff_users', JSON.stringify(updated)); } catch {}
+      return { success: true, user: newUser };
+    }
+
+    if (method === 'PUT') {
+      const id = url.split('/api/auth/users/')[1];
+      let body = {};
+      try { body = typeof config.data === 'string' ? JSON.parse(config.data) : (config.data || {}); } catch {}
+      const updated = staffList.map((u) => {
+        if (String(u._id) === String(id)) {
+          return { ...u, ...body };
+        }
+        return u;
+      });
+      try { localStorage.setItem('icetalk_cached_staff_users', JSON.stringify(updated)); } catch {}
+      const found = updated.find((u) => String(u._id) === String(id));
+      return { success: true, user: found };
+    }
+
+    if (method === 'DELETE') {
+      const id = url.split('/api/auth/users/')[1];
+      const updated = staffList.filter((u) => String(u._id) !== String(id));
+      try { localStorage.setItem('icetalk_cached_staff_users', JSON.stringify(updated)); } catch {}
+      return { success: true, message: 'User deleted successfully' };
+    }
   }
 
   return null;
 };
 
 /**
- * Configure Axios response interceptor for dsuper.
- * Requests are sent to the local host computer server by default so data is saved in computer storage.
- * If the server is offline or unreachable, it falls back to isolated browser localStorage.
+ * Configure Axios request interceptor for dsuper.
+ * Transactional & reporting endpoints are strictly handled by local demo storage (never polluting the server).
+ * Tables, menu and staff accounts are fetched live from server/MongoDB when reachable, or gracefully fallback when offline.
  */
 export const setupDsuperInterceptor = (axiosInstance) => {
-  axiosInstance.interceptors.response.use(
-    (response) => response,
-    async (error) => {
-      // If server is unreachable or offline and dsuper is active, provide local fallback
-      if (isDsuperUser() && (!error.response || error.response.status >= 500)) {
-        try {
-          const cfg = error.config || {};
-          const mockData = await handleDsuperRequest(cfg);
-          if (mockData !== null) {
-            return {
-              data: mockData,
-              status: 200,
-              statusText: 'OK (Local Fallback)',
-              headers: { 'content-type': 'application/json' },
-              config: cfg,
-            };
-          }
-        } catch (fbErr) {
-          console.warn('[Dsuper Fallback error]:', fbErr);
-        }
-      }
-      return Promise.reject(error);
+  axiosInstance.interceptors.request.use(async (config) => {
+    if (!isDsuperUser()) {
+      return config;
     }
-  );
+
+    const url = (config.url || '').split('?')[0];
+
+    // Transactional & reporting endpoints that MUST stay strictly in isolated local demo storage:
+    // This ensures sales records are never entered into live server storage!
+    const isIsolatedDsuperEndpoint =
+      url.startsWith('/api/reports') ||
+      url.startsWith('/api/pos/sales') ||
+      url.startsWith('/api/expenses');
+
+    if (isIsolatedDsuperEndpoint) {
+      const originalAdapter = config.adapter || axiosInstance.defaults.adapter;
+      config.adapter = async (cfg) => {
+        const mockData = await handleDsuperRequest(cfg);
+        if (mockData !== null) {
+          return {
+            data: mockData,
+            status: 200,
+            statusText: 'OK (Dsuper Demo Storage)',
+            headers: { 'content-type': 'application/json' },
+            config: cfg,
+          };
+        }
+        if (originalAdapter) {
+          return originalAdapter(cfg);
+        }
+        return { data: { success: true }, status: 200, statusText: 'OK', headers: {}, config: cfg };
+      };
+      return config;
+    }
+
+    // For Tables, Menu, Categories, Staff Accounts, Table Active Orders & Live Orders:
+    // "whatever the table is recorded in original account that should be displayed in dsuper also"
+    // "for the dsuper it should show the tables and menu items"
+    // "staff which are in original account isnt showing in the dsuper"
+    // Live catalog, real tables, active table orders & staff accounts are fetched live from server/MongoDB Atlas.
+    if (
+      url.startsWith('/api/tables') ||
+      url.startsWith('/api/menu') ||
+      url.startsWith('/api/categories') ||
+      url.startsWith('/api/auth/users') ||
+      url.includes('/api/pos/table/') ||
+      url.startsWith('/api/pos/channel-orders') ||
+      url.startsWith('/api/orders') ||
+      url.startsWith('/api/pos/settle')
+    ) {
+      const originalAdapter = config.adapter || axiosInstance.defaults.adapter;
+      config.adapter = async (cfg) => {
+        try {
+          if (originalAdapter) {
+            const remoteRes = await originalAdapter(cfg);
+            if (remoteRes?.data?.tables) {
+              // Preserve whatever table state & orders are recorded in original account
+              const orders = getDsuperOrders();
+              const activeTableIds = new Set(
+                orders
+                  .filter((o) => o.tableId && !o.isSettled && !['CANCELLED', 'REJECTED'].includes(o.status))
+                  .map((o) => String(o.tableId))
+              );
+
+              const decorated = remoteRes.data.tables.map((t) => {
+                const isServerOcc =
+                  Boolean(t.hasActiveOrder) ||
+                  t.status === 'OCCUPIED' ||
+                  (Array.isArray(t.activeOrders) && t.activeOrders.length > 0);
+                const isLocalOcc = activeTableIds.has(String(t._id));
+                const isOcc = isServerOcc || isLocalOcc;
+
+                const serverOrders = Array.isArray(t.activeOrders) ? t.activeOrders : [];
+                const ordersForTable = orders.filter(
+                  (o) => o.tableId && String(o.tableId) === String(t._id) && !o.isSettled && !['CANCELLED', 'REJECTED'].includes(o.status)
+                );
+                const existingIds = new Set(serverOrders.map((o) => String(o._id || o.orderNumber)));
+                const mergedOrders = [
+                  ...serverOrders,
+                  ...ordersForTable.filter((o) => !existingIds.has(String(o._id || o.orderNumber))),
+                ];
+
+                return {
+                  ...t,
+                  hasActiveOrder: isOcc,
+                  status: isOcc ? 'OCCUPIED' : (t.status || 'AVAILABLE'),
+                  activeOrdersCount: Math.max(t.activeOrdersCount || 0, mergedOrders.length),
+                  activeOrdersTotal: (t.activeOrdersTotal || 0) + ordersForTable.reduce((sum, o) => sum + (o.total || 0), 0),
+                  activeOrders: mergedOrders,
+                };
+              });
+
+              try {
+                localStorage.setItem('icetalk_cached_tables', JSON.stringify(decorated));
+              } catch {}
+
+              return {
+                ...remoteRes,
+                data: { ...remoteRes.data, tables: decorated },
+              };
+            }
+
+            if (remoteRes?.data?.floors) {
+              try {
+                localStorage.setItem('icetalk_cached_floors', JSON.stringify(remoteRes.data.floors));
+              } catch {}
+            }
+
+            // For Table Active Orders in POS: merge any local dsuper orders if present
+            if (url.includes('/api/pos/table/') && url.endsWith('/orders') && remoteRes?.data) {
+              const tableId = url.split('/api/pos/table/')[1].split('/orders')[0];
+              const localOrders = getDsuperOrders();
+              const localTableOrders = localOrders.filter(
+                (o) => o.tableId && String(o.tableId) === String(tableId) && !o.isSettled && !['CANCELLED', 'REJECTED'].includes(o.status)
+              );
+
+              if (localTableOrders.length > 0) {
+                const serverOrders = Array.isArray(remoteRes.data.orders) ? remoteRes.data.orders : [];
+                const existingOrderIds = new Set(serverOrders.map((o) => String(o._id || o.orderNumber)));
+                const addedLocal = localTableOrders.filter((o) => !existingOrderIds.has(String(o._id || o.orderNumber)));
+
+                if (addedLocal.length > 0) {
+                  const allOrders = [...serverOrders, ...addedLocal];
+                  const aggregated = [...(remoteRes.data.aggregatedItems || [])];
+                  addedLocal.forEach((ord) => {
+                    (ord.items || []).forEach((item) => {
+                      aggregated.push({
+                        orderNumber: ord.orderNumber,
+                        name: item.name,
+                        quantity: item.quantity,
+                        price: item.price,
+                        total: item.total || item.price * item.quantity,
+                        department: item.department || 'KITCHEN',
+                        specialInstructions: item.specialInstructions || '',
+                      });
+                    });
+                  });
+                  return {
+                    ...remoteRes,
+                    data: {
+                      ...remoteRes.data,
+                      ordersCount: allOrders.length,
+                      orders: allOrders,
+                      aggregatedItems: aggregated,
+                      subtotal: allOrders.reduce((sum, o) => sum + (o.subtotal || o.total || 0), 0),
+                      total: allOrders.reduce((sum, o) => sum + (o.total || 0), 0),
+                    },
+                  };
+                }
+              }
+              return remoteRes;
+            }
+
+            if (remoteRes?.data?.users) {
+              // Cache live staff users for offline availability
+              try {
+                localStorage.setItem('icetalk_cached_staff_users', JSON.stringify(remoteRes.data.users));
+              } catch {}
+            }
+
+            if (remoteRes?.data) {
+              return remoteRes;
+            }
+          }
+        } catch (err) {
+          // Server offline or MongoDB Atlas connection error - fallback seamlessly
+          console.warn('[dsuper] Remote fetch failed, using fallback for:', url, err?.message);
+        }
+
+        const fallback = await handleDsuperRequest(cfg);
+        if (fallback !== null) {
+          return {
+            data: fallback,
+            status: 200,
+            statusText: 'OK (Local Fallback)',
+            headers: { 'content-type': 'application/json' },
+            config: cfg,
+          };
+        }
+
+        return { data: { success: true }, status: 200, statusText: 'OK', headers: {}, config: cfg };
+      };
+      return config;
+    }
+
+    return config;
+  });
 };
 

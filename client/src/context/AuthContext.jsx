@@ -58,6 +58,9 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('icetalk_token', newToken);
         localStorage.setItem('icetalk_user', JSON.stringify(newUser));
         axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+        if (cleanUser === 'dsuper' || newUser?.isDemo) {
+          initDsuperStorageIfNeeded();
+        }
         return { success: true, user: newUser };
       }
     } catch (err) {
