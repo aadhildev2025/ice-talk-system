@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import ToastNotifications from '../../components/ToastNotifications';
 import axios from 'axios';
@@ -24,14 +24,22 @@ import { usePrinter } from '../../context/PrinterContext';
 import { useAuth } from '../../context/AuthContext';
 
 const AdminLayout = () => {
-  const { isSuperAdmin, isAdmin } = useAuth();
+  const { isSuperAdmin, isAdmin, isDsuper } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
   const [preparingCount, setPreparingCount] = useState(0);
   const [readyCount, setReadyCount] = useState(0);
   const { socket } = useSocket();
   const location = useLocation();
+  const navigate = useNavigate();
   const { openSettings, multiPrinterMode } = usePrinter();
+
+  // If dsuper navigates to expenses or reports, redirect to dashboard
+  useEffect(() => {
+    if (isDsuper && (location.pathname === '/admin/expenses' || location.pathname === '/admin/reports')) {
+      navigate('/admin/dashboard', { replace: true });
+    }
+  }, [isDsuper, location.pathname, navigate]);
 
   const fetchBadgeCounts = async () => {
     try {
@@ -99,11 +107,14 @@ const AdminLayout = () => {
     { to: '/admin/tables', label: 'Tables', icon: Grid },
     { to: '/admin/menu', label: 'Menu & Categories', icon: UtensilsCrossed },
     { to: '/admin/staff', label: 'Staff Management', icon: Users },
-    { to: '/admin/expenses', label: 'Expenses & Salaries', icon: Wallet, superAdminOnly: true },
-    { to: '/admin/reports', label: 'Sales & Reports', icon: BarChart3, superAdminOnly: true },
+    { to: '/admin/expenses', label: 'Expenses & Salaries', icon: Wallet, superAdminOnly: true, hideForDsuper: true },
+    { to: '/admin/reports', label: 'Sales & Reports', icon: BarChart3, superAdminOnly: true, hideForDsuper: true },
   ];
 
-  const navLinks = allNavLinks.filter((item) => !item.superAdminOnly || isSuperAdmin);
+  const navLinks = allNavLinks.filter((item) => {
+    if (isDsuper && item.hideForDsuper) return false;
+    return !item.superAdminOnly || isSuperAdmin;
+  });
 
   return (
     <div className="h-full flex-1 bg-[#0F0F12] flex flex-col overflow-hidden">

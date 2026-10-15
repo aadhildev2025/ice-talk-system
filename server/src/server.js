@@ -147,6 +147,14 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5000;
 
 if (!process.env.VERCEL) {
+  server.on('error', (err) => {
+    if (err && err.code === 'EADDRINUSE') {
+      console.warn(`[Server] Notice: Port ${PORT} is already in use by an active instance. Running gracefully.`);
+    } else {
+      console.error('[Server Error]:', err);
+    }
+  });
+
   server.listen(PORT, () => {
     console.log(`🍦 ICE TALK Server is running on http://localhost:${PORT}`);
   });

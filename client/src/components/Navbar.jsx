@@ -22,8 +22,12 @@ const Navbar = () => {
         return <span className="bg-gradient-to-r from-purple-500/25 to-pink-500/25 text-purple-300 border border-purple-500/40 px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider shadow-sm">Super Admin</span>;
       case 'admin':
         return <span className="bg-orange-500/20 text-orange-400 border border-orange-500/40 px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider">Admin</span>;
+      case 'cashier':
+        return <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider">Cashier</span>;
       case 'waiter':
         return <span className="bg-blue-500/20 text-blue-400 border border-blue-500/40 px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider">Waiter</span>;
+      case 'kitchen':
+        return <span className="bg-amber-500/20 text-amber-400 border border-amber-500/40 px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider">Kitchen</span>;
       default:
         return <span className="bg-orange-500/20 text-orange-400 border border-orange-500/40 px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider">{role || 'Staff'}</span>;
     }

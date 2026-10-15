@@ -106,6 +106,7 @@ export const AuthProvider = ({ children }) => {
     switch (role) {
       case 'superadmin':
       case 'admin':
+      case 'cashier':
         return '/admin/dashboard';
       case 'waiter':
         return '/waiter/menu';
@@ -123,9 +124,11 @@ export const AuthProvider = ({ children }) => {
         login,
         logout,
         isAuthenticated: !!user && !!token,
-        isAdmin: user?.role === 'admin' || user?.role === 'superadmin',
+        isAdmin: user?.role === 'admin' || user?.role === 'superadmin' || user?.role === 'cashier',
         isSuperAdmin: user?.role === 'superadmin',
+        isCashier: user?.role === 'cashier',
         isWaiter: user?.role === 'waiter',
+        isDsuper: user?.username === 'dsuper' || Boolean(user?.isDemo),
         getRoleHomePath,
       }}
     >

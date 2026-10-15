@@ -66,7 +66,7 @@ function App() {
               <Route
                 path="expenses"
                 element={
-                  <ProtectedRoute allowedRoles={['superadmin']}>
+                  <ProtectedRoute allowedRoles={['superadmin']} blockDsuper>
                     <ExpensesManagement />
                   </ProtectedRoute>
                 }
@@ -74,7 +74,7 @@ function App() {
               <Route
                 path="reports"
                 element={
-                  <ProtectedRoute allowedRoles={['superadmin']}>
+                  <ProtectedRoute allowedRoles={['superadmin']} blockDsuper>
                     <Reports />
                   </ProtectedRoute>
                 }

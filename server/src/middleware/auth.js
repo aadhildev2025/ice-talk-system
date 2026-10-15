@@ -114,10 +114,11 @@ const authorize = (...roles) => {
       });
     }
 
-    // Super Admin inherits all admin privileges; specific superadmin routes require superadmin role
+    // Super Admin inherits all admin privileges; Cashier inherits standard admin POS/billing privileges
     const hasRole =
       roles.includes(req.user.role) ||
-      (req.user.role === 'superadmin' && roles.includes('admin'));
+      (req.user.role === 'superadmin' && roles.includes('admin')) ||
+      (req.user.role === 'cashier' && roles.includes('admin'));
 
     if (!hasRole) {
       return res.status(403).json({

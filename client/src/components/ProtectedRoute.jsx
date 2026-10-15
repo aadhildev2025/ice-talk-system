@@ -2,8 +2,8 @@ import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-const ProtectedRoute = ({ children, allowedRoles }) => {
-  const { user, token, loading, getRoleHomePath } = useAuth();
+const ProtectedRoute = ({ children, allowedRoles, blockDsuper = false }) => {
+  const { user, token, loading, getRoleHomePath, isDsuper } = useAuth();
   const location = useLocation();
 
   if (loading) {
@@ -21,9 +21,13 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
+  if (blockDsuper && isDsuper) {
+    return <Navigate to="/admin/dashboard" replace />;
+  }
+
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    // Super Admin inherits all admin access
-    if (user.role === 'superadmin' && allowedRoles.includes('admin')) {
+    // Super Admin and Cashier inherit general admin access
+    if (['superadmin', 'cashier'].includes(user.role) && allowedRoles.includes('admin')) {
       return children;
     }
     // If kitchen role accesses kitchen portal

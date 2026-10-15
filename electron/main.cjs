@@ -1,6 +1,17 @@
 const { app, BrowserWindow, ipcMain, Menu } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const net = require('net');
+const http = require('http');
+
+// Prevent unhandled EADDRINUSE from throwing a fatal crash dialog
+process.on('uncaughtException', (err) => {
+  if (err && (err.code === 'EADDRINUSE' || (err.message && err.message.includes('EADDRINUSE')))) {
+    console.warn('[Process] Caught and handled EADDRINUSE gracefully:', err.message);
+    return;
+  }
+  console.error('[Process] Uncaught Exception:', err);
+});
 
 // Ensure single instance of Ice Talk POS
 const gotTheLock = app.requestSingleInstanceLock();
@@ -11,8 +22,87 @@ if (!gotTheLock) {
 }
 
 let mainWindow = null;
+let activeServerPort = 5000;
 
-function startBackendServerIfNeeded() {
+function isPortFree(port) {
+  return new Promise((resolve) => {
+    const tester = net.createServer();
+    tester.once('error', () => {
+      resolve(false);
+    });
+    tester.once('listening', () => {
+      tester.close(() => {
+        resolve(true);
+      });
+    });
+    tester.listen(port);
+  });
+}
+
+function isIceTalkHealthy(port) {
+  return new Promise((resolve) => {
+    const req = http.get({ host: '127.0.0.1', port, path: '/api/health', timeout: 1500 }, (res) => {
+      let data = '';
+      res.on('data', (chunk) => { data += chunk; });
+      res.on('end', () => {
+        try {
+          const json = JSON.parse(data);
+          resolve(Boolean(json && (json.status === 'ok' || (json.restaurant && json.restaurant.includes('ICE TALK')))));
+        } catch (_) {
+          resolve(false);
+        }
+      });
+    });
+    req.on('error', () => resolve(false));
+    req.on('timeout', () => {
+      req.destroy();
+      resolve(false);
+    });
+  });
+}
+
+async function findNextFreePort(startPort = 5001, maxPort = 5050) {
+  for (let p = startPort; p <= maxPort; p++) {
+    const free = await isPortFree(p);
+    if (free) return p;
+  }
+  return startPort;
+}
+
+async function resolveServerPort() {
+  if (process.env.ELECTRON_START_URL) {
+    return 5000;
+  }
+
+  // 1. Check if an active Ice Talk server is already responding on port 5000
+  const healthy = await isIceTalkHealthy(5000);
+  if (healthy) {
+    console.log('[Backend] Found healthy active Ice Talk server on port 5000. Reusing running server.');
+    process.env.IS_EXTERNAL_SERVER = 'true';
+    return 5000;
+  }
+
+  // 2. Check if port 5000 is free to bind
+  const free5000 = await isPortFree(5000);
+  if (free5000) {
+    console.log('[Backend] Port 5000 is available. Starting internal server on port 5000.');
+    return 5000;
+  }
+
+  // 3. Port 5000 is occupied by another service. Find next free port (5001-5050)
+  const freeFallback = await findNextFreePort(5001, 5050);
+  console.log(`[Backend] Port 5000 is occupied. Starting internal server on fallback port ${freeFallback}.`);
+  return freeFallback;
+}
+
+function startBackendServerIfNeeded(port = 5000) {
+  if (process.env.IS_EXTERNAL_SERVER === 'true') {
+    console.log('[Backend] Reusing running backend on port:', port);
+    return;
+  }
+
+  process.env.PORT = String(port);
+
   try {
     const serverPaths = [
       path.join(__dirname, '../server/src/server.js'),
@@ -21,7 +111,7 @@ function startBackendServerIfNeeded() {
 
     for (const p of serverPaths) {
       if (fs.existsSync(p)) {
-        console.log('[Backend] Initializing server script from:', p);
+        console.log('[Backend] Initializing server script from:', p, 'on port:', port);
         require(p);
         console.log('[Backend] Initialized internal server successfully.');
         return;
@@ -32,7 +122,7 @@ function startBackendServerIfNeeded() {
   }
 }
 
-function createWindow() {
+function createWindow(serverPort = activeServerPort) {
   const iconPath = path.join(__dirname, 'icon.png');
 
   mainWindow = new BrowserWindow({
@@ -67,7 +157,7 @@ function createWindow() {
     path.join(app.getAppPath(), 'client/dist/index.html'),
     path.join(__dirname, '../client/dist/index.html'),
   ].find((p) => fs.existsSync(p));
-  const targetUrl = process.env.ELECTRON_START_URL || 'http://localhost:5000';
+  const targetUrl = process.env.ELECTRON_START_URL || `http://localhost:${serverPort}`;
 
   let attempts = 0;
   const maxAttempts = 30;
@@ -320,10 +410,11 @@ ipcMain.handle('printer:print-silent', async (event, options = {}) => {
   });
 });
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   if (gotTheLock) {
-    startBackendServerIfNeeded();
-    createWindow();
+    activeServerPort = await resolveServerPort();
+    startBackendServerIfNeeded(activeServerPort);
+    createWindow(activeServerPort);
   }
 });
 
@@ -335,6 +426,6 @@ app.on('window-all-closed', () => {
 
 app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0 && gotTheLock) {
-    createWindow();
+    createWindow(activeServerPort);
   }
 });

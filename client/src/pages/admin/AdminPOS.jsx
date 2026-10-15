@@ -36,6 +36,8 @@ import {
   FileText,
   Building,
   Percent,
+  UserCheck,
+  ChevronDown,
 } from 'lucide-react';
 import QuickNoteModal from '../../components/QuickNoteModal';
 import { isDsuperUser } from '../../services/dsuperStorageService';
@@ -96,6 +98,8 @@ const AdminPOS = () => {
   const [channelOrderRef, setChannelOrderRef] = useState('');
   const [orderInstructions, setOrderInstructions] = useState('');
   const [orderPriority, setOrderPriority] = useState('NORMAL');
+  const [waiters, setWaiters] = useState([]);
+  const [selectedWaiter, setSelectedWaiter] = useState('');
 
   // Quick note modal state
   const [editingCartItem, setEditingCartItem] = useState(null);
@@ -180,10 +184,26 @@ const AdminPOS = () => {
     }
   };
 
+  // Load waiters and staff for waiter selection in POS
+  const fetchWaiters = async () => {
+    try {
+      const res = await axios.get('/api/auth/users');
+      if (res.data.success && Array.isArray(res.data.users)) {
+        const staff = res.data.users.filter(
+          (u) => u.status !== 'INACTIVE' && (u.role === 'waiter' || u.role === 'cashier' || u.role === 'admin')
+        );
+        setWaiters(staff);
+      }
+    } catch (err) {
+      console.warn('Failed to fetch staff/waiters for POS:', err);
+    }
+  };
+
   useEffect(() => {
     fetchMenuData();
     fetchTables();
     fetchChannelOrders();
+    fetchWaiters();
 
     if (socket) {
       socket.on('order:created', () => {
@@ -366,6 +386,7 @@ const AdminPOS = () => {
     setChannelOrderRef('');
     setOrderInstructions('');
     setOrderPriority('NORMAL');
+    setSelectedWaiter('');
   };
 
   // Calculations
@@ -425,7 +446,7 @@ const AdminPOS = () => {
         : activeChannel === 'PICKME'
         ? (channelOrderRef ? `PickMe (${channelOrderRef})` : 'PickMe')
         : (customerName ? `Takeaway (${customerName})` : 'Takeaway');
-      const staffName = user?.name || user?.username || 'Admin';
+      const staffName = selectedWaiter || user?.name || user?.username || 'Staff';
 
       const payload = {
         orderType: activeChannel,
@@ -671,7 +692,7 @@ const AdminPOS = () => {
           : activeChannel === 'PICKME'
           ? (channelOrderRef ? `PickMe (${channelOrderRef})` : 'PickMe')
           : (customerName ? `Takeaway (${customerName})` : 'Takeaway');
-        const staffName = user?.name || user?.username || 'Admin';
+        const staffName = selectedWaiter || user?.name || user?.username || 'Staff';
 
         // 1. First create the approved order
         const orderRes = await axios.post('/api/orders', {
@@ -1594,9 +1615,9 @@ const AdminPOS = () => {
           </div>
 
           {/* Cart & Quick Order Panel (4 Cols) */}
-          <div className="lg:col-span-4 bg-[#141418] border border-[#24242E] rounded-2xl p-4 flex flex-col">
+          <div className="lg:col-span-4 lg:sticky lg:top-4 self-start bg-[#141418] border border-[#24242E] rounded-2xl p-4 flex flex-col max-h-[calc(100vh-5.5rem)] shadow-xl z-20">
             {/* Cart Header */}
-            <div className="flex justify-between items-center pb-2.5 border-b border-[#24242E]">
+            <div className="flex justify-between items-center pb-2.5 border-b border-[#24242E] shrink-0">
               <div className="flex items-center gap-2">
                 <ShoppingBag className="w-4 h-4 text-[#FF6B00]" />
                 <h3 className="font-black text-sm text-white">ORDER CART</h3>
@@ -1612,8 +1633,8 @@ const AdminPOS = () => {
               )}
             </div>
 
-            {/* Customer / Order Ref Input */}
-            <div className="mt-2.5 mb-2.5">
+            {/* Customer / Order Ref Input & Waiter Selection */}
+            <div className="mt-2.5 mb-2.5 space-y-2 shrink-0">
               <input
                 type="text"
                 placeholder={
@@ -1635,10 +1656,37 @@ const AdminPOS = () => {
                   isTouchMode ? 'py-2.5 text-sm' : 'py-2'
                 }`}
               />
+
+              {/* Waiter Selection Option */}
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-neutral-400">
+                  <UserCheck className="w-3.5 h-3.5 text-[#FF6B00]" />
+                </div>
+                <select
+                  id="pos-cart-waiter-select"
+                  value={selectedWaiter}
+                  onChange={(e) => setSelectedWaiter(e.target.value)}
+                  className={`w-full bg-[#1C1C24] border border-[#2A2A38] focus:border-[#FF6B00] rounded-xl pl-9 pr-8 text-xs outline-none font-medium appearance-none cursor-pointer transition-all ${
+                    isTouchMode ? 'py-2.5 text-sm' : 'py-2'
+                  } ${!selectedWaiter ? 'text-neutral-400' : 'text-white font-semibold'}`}
+                >
+                  <option value="" className="bg-[#1C1C24] text-neutral-400">
+                    -- Select Waiter (Default: {user?.name || 'Cashier'}) --
+                  </option>
+                  {waiters.map((w) => (
+                    <option key={w._id || w.id || w.name} value={w.name} className="bg-[#1C1C24] text-white">
+                      {w.name} {w.role === 'waiter' ? '(Waiter)' : `(${w.role})`}
+                    </option>
+                  ))}
+                </select>
+                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-neutral-500">
+                  <ChevronDown className="w-3.5 h-3.5" />
+                </div>
+              </div>
             </div>
 
             {/* Cart Items List */}
-            <div className="flex-1 overflow-y-auto space-y-2 pr-1 min-h-[160px] max-h-[380px]">
+            <div className="flex-1 overflow-y-auto space-y-2 pr-1 min-h-[140px] max-h-[calc(100vh-25rem)]">
               {cart.length === 0 ? (
                 <div className="py-6 text-center text-neutral-500 space-y-1">
                   <p className="text-xs font-semibold">Cart is empty</p>
@@ -1764,50 +1812,99 @@ const AdminPOS = () => {
               )}
             </div>
 
-            {/* Cart Summary & Dual Actions */}
-            <div className="bg-[#191920] p-3.5 rounded-xl border border-[#262634] space-y-3">
-              <div className="flex justify-between items-center text-xs font-bold text-neutral-300">
-                <span>Total Items: {cartItemCount}</span>
-                <span className="text-xl font-black text-[#FF6B00] font-display">
-                  Rs. {cartSubtotal.toLocaleString()}
-                </span>
+            {/* Cart Summary & Dual Actions (Pinned to bottom of cart card) */}
+            <div className="shrink-0 sticky bottom-0 bg-[#141418] pt-2.5 border-t border-[#24242E] space-y-2.5 mt-auto z-10">
+              <div className="bg-[#191920] p-3 rounded-xl border border-[#262634] space-y-2.5">
+                <div className="flex justify-between items-center text-xs font-bold text-neutral-300">
+                  <div className="flex items-center gap-1.5">
+                    <span>Total Items: {cartItemCount}</span>
+                    {selectedWaiter && (
+                      <span className="text-[10px] text-blue-400 font-semibold truncate">
+                        • {selectedWaiter}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-xl font-black text-[#FF6B00] font-display">
+                    Rs. {cartSubtotal.toLocaleString()}
+                  </span>
+                </div>
+
+                {/* Action 1: Send to Kitchen (Auto-prints Kitchen Receipt) */}
+                <button
+                  type="button"
+                  disabled={cart.length === 0 || submittingAction}
+                  onClick={handleSendToKitchen}
+                  className={`w-full bg-[#242430] hover:bg-[#303040] text-white py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all border border-[#3A3A4C] disabled:opacity-50 ${
+                    isTouchMode ? 'h-12 text-sm' : ''
+                  }`}
+                >
+                  <Printer className={`w-4 h-4 ${isDsuper && !dsuperPrintEnabled ? 'text-neutral-400' : 'text-amber-400'}`} />
+                  <span>
+                    {isDsuper && !dsuperPrintEnabled
+                      ? 'Send to Kitchen (No Print)'
+                      : 'Send to Kitchen (Print Kitchen Slip)'}
+                  </span>
+                </button>
+
+                {/* Action 2: Fast Pay & Complete (Prints Final Receipt) */}
+                <button
+                  type="button"
+                  disabled={cart.length === 0 || submittingAction}
+                  onClick={() => openCheckout('CART')}
+                  className={`w-full bg-gradient-to-r from-[#FF6B00] to-[#FF8A33] hover:from-[#E55A00] hover:to-[#FF6B00] text-white py-3 px-3 rounded-xl font-black text-xs uppercase tracking-wider shadow-lg shadow-orange-500/25 flex items-center justify-center gap-2 transition-all active:scale-[0.99] disabled:opacity-50 ${
+                    isTouchMode ? 'h-14 text-base' : ''
+                  }`}
+                >
+                  <Receipt className="w-4 h-4" />
+                  <span>
+                    {isDsuper && !dsuperPrintEnabled
+                      ? 'Pay & Complete Order'
+                      : 'Pay & Print Final Receipt'}
+                  </span>
+                </button>
               </div>
-
-
-              {/* Action 1: Send to Kitchen (Auto-prints Kitchen Receipt) */}
-              <button
-                type="button"
-                disabled={cart.length === 0 || submittingAction}
-                onClick={handleSendToKitchen}
-                className={`w-full bg-[#242430] hover:bg-[#303040] text-white py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all border border-[#3A3A4C] disabled:opacity-50 ${
-                  isTouchMode ? 'h-12 text-sm' : ''
-                }`}
-              >
-                <Printer className={`w-4 h-4 ${isDsuper && !dsuperPrintEnabled ? 'text-neutral-400' : 'text-amber-400'}`} />
-                <span>
-                  {isDsuper && !dsuperPrintEnabled
-                    ? 'Send to Kitchen (No Print)'
-                    : 'Send to Kitchen (Print Kitchen Slip)'}
-                </span>
-              </button>
-
-              {/* Action 2: Fast Pay & Complete (Prints Final Receipt) */}
-              <button
-                type="button"
-                disabled={cart.length === 0 || submittingAction}
-                onClick={() => openCheckout('CART')}
-                className={`w-full bg-gradient-to-r from-[#FF6B00] to-[#FF8A33] hover:from-[#E55A00] hover:to-[#FF6B00] text-white py-3 px-3 rounded-xl font-black text-xs uppercase tracking-wider shadow-lg shadow-orange-500/25 flex items-center justify-center gap-2 transition-all active:scale-[0.99] disabled:opacity-50 ${
-                  isTouchMode ? 'h-14 text-base' : ''
-                }`}
-              >
-                <Receipt className="w-4 h-4" />
-                <span>
-                  {isDsuper && !dsuperPrintEnabled
-                    ? 'Pay & Complete Order'
-                    : 'Pay & Print Final Receipt'}
-                </span>
-              </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Action Bar for Mobile & Smaller Screens (User does not need to scroll down) */}
+      {cart.length > 0 && channelView === 'MENU' && (
+        <div className="lg:hidden fixed bottom-4 left-3 right-3 z-40 bg-[#16161D]/95 backdrop-blur-md border border-[#2F2F40] rounded-2xl p-3 shadow-2xl flex items-center justify-between gap-2.5 animate-fadeIn">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5 text-[10px] text-neutral-400 font-bold uppercase truncate">
+              <span>{cartItemCount} Items</span>
+              {activeChannel === 'DINE_IN' && selectedTable && (
+                <span className="text-[#FF6B00] font-black">• {selectedTable.name}</span>
+              )}
+              {selectedWaiter && (
+                <span className="text-blue-400 font-semibold truncate">• {selectedWaiter}</span>
+              )}
+            </div>
+            <p className="text-base font-black text-[#FF6B00] font-display">
+              Rs. {cartSubtotal.toLocaleString()}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              disabled={cart.length === 0 || submittingAction}
+              onClick={handleSendToKitchen}
+              className="bg-[#242430] hover:bg-[#303040] active:scale-95 text-amber-400 border border-[#3A3A4C] px-3 py-2 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all"
+            >
+              <Printer className="w-3.5 h-3.5" />
+              <span className="text-[11px]">Kitchen</span>
+            </button>
+            <button
+              type="button"
+              disabled={cart.length === 0 || submittingAction}
+              onClick={() => openCheckout('CART')}
+              className="bg-gradient-to-r from-[#FF6B00] to-[#FF8A33] hover:from-[#E55A00] hover:to-[#FF6B00] active:scale-95 text-white px-3.5 py-2 rounded-xl font-black text-xs uppercase tracking-wider shadow-lg shadow-orange-500/30 flex items-center gap-1.5 transition-all"
+            >
+              <Receipt className="w-3.5 h-3.5" />
+              <span className="text-[11px]">Pay</span>
+            </button>
           </div>
         </div>
       )}

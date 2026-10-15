@@ -149,7 +149,7 @@ const StaffManagement = () => {
       {/* Filter bar */}
       <div className="bg-[#141418] border border-[#24242E] rounded-2xl p-4 flex flex-col sm:flex-row gap-3 items-center justify-between">
         <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto">
-          {['ALL', 'superadmin', 'admin', 'waiter'].map((r) => (
+          {['ALL', 'waiter', 'cashier', 'kitchen', 'admin'].map((r) => (
             <button
               key={r}
               onClick={() => setRoleFilter(r)}
@@ -159,7 +159,7 @@ const StaffManagement = () => {
                   : 'bg-[#1C1C24] text-neutral-400 hover:text-white border border-[#2B2B38]'
               }`}
             >
-              {r === 'ALL' ? 'All Roles' : r === 'superadmin' ? 'Super Admin' : r}
+              {r === 'ALL' ? 'All Roles' : r === 'superadmin' ? 'Super Admin' : r === 'cashier' ? 'Cashier' : r === 'kitchen' ? 'Kitchen' : r === 'waiter' ? 'Waiter' : 'Admin'}
             </button>
           ))}
         </div>
@@ -200,6 +200,8 @@ const StaffManagement = () => {
                 {filteredUsers.map((u) => {
                   const isSuperAdmin = u.role === 'superadmin';
                   const isAdmin = u.role === 'admin';
+                  const isCashier = u.role === 'cashier';
+                  const isKitchen = u.role === 'kitchen';
                   const isWaiter = u.role === 'waiter';
 
                   return (
@@ -212,9 +214,13 @@ const StaffManagement = () => {
                                 ? 'bg-purple-500/25 text-purple-300 border border-purple-500/40'
                                 : isAdmin
                                 ? 'bg-orange-500/20 text-orange-400'
+                                : isCashier
+                                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+                                : isKitchen
+                                ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
                                 : isWaiter
                                 ? 'bg-blue-500/20 text-blue-400'
-                                : 'bg-emerald-500/20 text-emerald-400'
+                                : 'bg-neutral-800 text-neutral-300'
                             }`}
                           >
                             {u.name.charAt(0)}
@@ -235,9 +241,13 @@ const StaffManagement = () => {
                               ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40'
                               : isAdmin
                               ? 'bg-orange-500/20 text-orange-400 border border-orange-500/40'
+                              : isCashier
+                              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+                              : isKitchen
+                              ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
                               : isWaiter
                               ? 'bg-blue-500/20 text-blue-400 border border-blue-500/40'
-                              : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+                              : 'bg-neutral-800 text-neutral-400'
                           }`}
                         >
                           {isSuperAdmin ? 'Super Admin' : u.role}
@@ -351,7 +361,10 @@ const StaffManagement = () => {
                     className="w-full bg-[#1C1C24] border border-[#2D2D3B] focus:border-[#FF6B00] rounded-xl px-3 py-2 text-white outline-none"
                   >
                     <option value="waiter">Waiter</option>
-                    <option value="admin">Administrator</option>
+                    <option value="cashier">Cashier</option>
+                    <option value="kitchen">Kitchen</option>
+                    {formData.role === 'admin' && <option value="admin">Administrator</option>}
+                    {formData.role === 'superadmin' && <option value="superadmin">Super Admin</option>}
                   </select>
                 </div>
 
