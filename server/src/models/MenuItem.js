@@ -24,7 +24,7 @@ const menuItemSchema = new mongoose.Schema(
     },
     department: {
       type: String,
-      enum: ['KITCHEN', 'JUICE', 'BUN', 'OTHER'],
+      enum: ['KITCHEN', 'JUICE', 'BUN', 'OTHER', 'NONE'],
       default: 'KITCHEN',
       required: true,
     },

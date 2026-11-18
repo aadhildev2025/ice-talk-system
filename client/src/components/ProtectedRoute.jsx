@@ -2,7 +2,7 @@ import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-const ProtectedRoute = ({ children, allowedRoles, blockDsuper = false }) => {
+const ProtectedRoute = ({ children, allowedRoles, disallowedRoles = [], blockDsuper = false }) => {
   const { user, token, loading, getRoleHomePath, isDsuper } = useAuth();
   const location = useLocation();
 
@@ -23,6 +23,10 @@ const ProtectedRoute = ({ children, allowedRoles, blockDsuper = false }) => {
 
   if (blockDsuper && isDsuper) {
     return <Navigate to="/admin/dashboard" replace />;
+  }
+
+  if (disallowedRoles && disallowedRoles.includes(user.role)) {
+    return <Navigate to={getRoleHomePath(user.role)} replace />;
   }
 
   if (allowedRoles && !allowedRoles.includes(user.role)) {

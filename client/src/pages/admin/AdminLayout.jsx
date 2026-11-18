@@ -12,6 +12,8 @@ import {
   CreditCard,
   Grid,
   Users,
+  UserCheck,
+  Package,
   BarChart3,
   Flame,
   Receipt,
@@ -24,7 +26,7 @@ import { usePrinter } from '../../context/PrinterContext';
 import { useAuth } from '../../context/AuthContext';
 
 const AdminLayout = () => {
-  const { isSuperAdmin, isAdmin, isDsuper } = useAuth();
+  const { isSuperAdmin, isAdmin, isDsuper, isCashier, isWaiter, user } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
   const [preparingCount, setPreparingCount] = useState(0);
@@ -40,6 +42,16 @@ const AdminLayout = () => {
       navigate('/admin/dashboard', { replace: true });
     }
   }, [isDsuper, location.pathname, navigate]);
+
+  // If staff/cashier/waiter navigates to staff management, redirect to dashboard
+  useEffect(() => {
+    if (
+      (user?.role === 'cashier' || user?.role === 'waiter' || isCashier || isWaiter) &&
+      location.pathname === '/admin/staff'
+    ) {
+      navigate('/admin/dashboard', { replace: true });
+    }
+  }, [user?.role, isCashier, isWaiter, location.pathname, navigate]);
 
   const fetchBadgeCounts = async () => {
     try {
@@ -88,6 +100,8 @@ const AdminLayout = () => {
     setSidebarOpen(false);
   }, [location.pathname]);
 
+  const isStaff = user?.role === 'cashier' || user?.role === 'waiter' || isCashier || isWaiter;
+
   const allNavLinks = [
     { to: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     {
@@ -106,13 +120,16 @@ const AdminLayout = () => {
     { to: '/admin/pos', label: 'POS Billing', icon: CreditCard, highlight: true },
     { to: '/admin/tables', label: 'Tables', icon: Grid },
     { to: '/admin/menu', label: 'Menu & Categories', icon: UtensilsCrossed },
-    { to: '/admin/staff', label: 'Staff Management', icon: Users },
+    { to: '/admin/grocery', label: 'Grocery Items', icon: Package },
+    { to: '/admin/customers', label: 'Customers', icon: Users },
+    { to: '/admin/staff', label: 'Staff Management', icon: UserCheck, hideForStaff: true },
     { to: '/admin/expenses', label: 'Expenses & Salaries', icon: Wallet, superAdminOnly: true, hideForDsuper: true },
     { to: '/admin/reports', label: 'Sales & Reports', icon: BarChart3, superAdminOnly: true, hideForDsuper: true },
   ];
 
   const navLinks = allNavLinks.filter((item) => {
     if (isDsuper && item.hideForDsuper) return false;
+    if (isStaff && item.hideForStaff) return false;
     return !item.superAdminOnly || isSuperAdmin;
   });
 
@@ -138,19 +155,25 @@ const AdminLayout = () => {
           }`}
         >
           <div className="p-4 space-y-6 overflow-y-auto">
-            {/* Quick Live Status Widget */}
+            {/* Live Status Mini Card */}
             <div className="bg-[#1C1C24] p-3 rounded-2xl border border-[#2B2B38] space-y-2">
               <div className="flex justify-between items-center text-xs font-semibold text-neutral-400">
                 <span>LIVE ORDERS</span>
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
               </div>
-              <div className="bg-[#141418] p-2.5 rounded-xl border border-[#2B2B38] text-center">
-                <p className="text-xs text-amber-400 font-bold tracking-wider">PENDING</p>
-                <p className="text-2xl font-black text-white mt-0.5 font-display">{pendingCount}</p>
+              <div className="grid grid-cols-2 gap-2 text-center">
+                <div className="bg-[#141418] p-2 rounded-xl border border-[#2B2B38]">
+                  <p className="text-[10px] text-amber-400 font-bold tracking-wider">PENDING</p>
+                  <p className="text-xl font-black text-white mt-0.5 font-display">{pendingCount}</p>
+                </div>
+                <div className="bg-[#141418] p-2 rounded-xl border border-[#2B2B38]">
+                  <p className="text-[10px] text-emerald-400 font-bold tracking-wider">PREPARING</p>
+                  <p className="text-xl font-black text-white mt-0.5 font-display">{preparingCount}</p>
+                </div>
               </div>
             </div>
 
-            {/* Nav links */}
+            {/* Navigation Links */}
             <nav className="space-y-1">
               {navLinks.map((item) => {
                 const Icon = item.icon;
@@ -158,6 +181,7 @@ const AdminLayout = () => {
                   <NavLink
                     key={item.to}
                     to={item.to}
+                    onClick={() => setSidebarOpen(false)}
                     className={({ isActive }) =>
                       `flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-semibold transition-all ${
                         isActive
@@ -169,16 +193,14 @@ const AdminLayout = () => {
                     }
                   >
                     <div className="flex items-center gap-3">
-                      <Icon className="w-4 h-4" />
+                      <Icon className="w-5 h-5" />
                       <span>{item.label}</span>
                     </div>
-
                     {item.badge && (
                       <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${item.badgeColor}`}>
                         {item.badge}
                       </span>
                     )}
-
                     {item.subBadge && (
                       <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
                         {item.subBadge}
@@ -189,18 +211,21 @@ const AdminLayout = () => {
               })}
             </nav>
 
-            {/* Station Printers Setting Trigger */}
+            {/* Direct Thermal Printers & KOT Setup button in Admin Sidebar */}
             {isAdmin && (
               <div className="pt-2">
                 <button
                   type="button"
-                  onClick={openSettings}
+                  onClick={() => {
+                    setSidebarOpen(false);
+                    openSettings();
+                  }}
                   className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold text-neutral-300 hover:text-white hover:bg-[#1C1C24] border border-[#2B2B38] transition-all group"
                   title="Configure Station Printers & KOT Routing"
                 >
                   <div className="flex items-center gap-2.5">
                     <Printer className="w-4 h-4 text-orange-400 group-hover:scale-110 transition-transform" />
-                    <span>Printers &amp; KOT Setup</span>
+                    <span>Printers & KOT Setup</span>
                   </div>
                   {multiPrinterMode ? (
                     <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-orange-500/20 text-orange-400 border border-orange-500/30">
@@ -216,20 +241,18 @@ const AdminLayout = () => {
             )}
           </div>
 
-          {/* Restaurant footer watermark */}
-          <div className="p-4 border-t border-[#24242E] text-[11px] text-neutral-500 flex items-center justify-between">
+          <div className="p-4 border-t border-[#24242E] text-xs text-neutral-500 flex items-center justify-between bg-[#111116]">
             <span>ICE TALK v1.0</span>
             <span className="text-[#FF6B00] font-bold">PRO POS</span>
           </div>
         </aside>
 
-        {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto bg-[#0A0A0D] p-4 md:p-6 pb-24 lg:pb-6">
+        {/* Content Area */}
+        <main className="flex-1 overflow-y-auto bg-[#0A0A0D] p-3 sm:p-4 md:p-6 pb-20 lg:pb-6 w-full">
           <Outlet />
         </main>
       </div>
 
-      {/* Real-Time Toast Alerts */}
       <ToastNotifications />
     </div>
   );

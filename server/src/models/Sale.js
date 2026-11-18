@@ -101,6 +101,14 @@ const saleSchema = new mongoose.Schema(
       type: String,
       default: 'Admin',
     },
+    waiterNameSnapshot: {
+      type: String,
+      default: '',
+    },
+    waiterName: {
+      type: String,
+      default: '',
+    },
     isDemo: {
       type: Boolean,
       default: false,

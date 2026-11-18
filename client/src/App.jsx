@@ -17,6 +17,8 @@ import AdminOrders from './pages/admin/AdminOrders';
 import AdminPOS from './pages/admin/AdminPOS';
 import TableManagement from './pages/admin/TableManagement';
 import MenuManagement from './pages/admin/MenuManagement';
+import GroceryManagement from './pages/admin/GroceryManagement';
+import CustomersManagement from './pages/admin/CustomersManagement';
 import StaffManagement from './pages/admin/StaffManagement';
 import ExpensesManagement from './pages/admin/ExpensesManagement';
 import Reports from './pages/admin/Reports';
@@ -42,70 +44,79 @@ function App() {
             <PrintModal />
             <PrinterSettingsModal />
             <Routes>
-            {/* Public Login Route */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/" element={<RootRedirect />} />
+              {/* Public Login Route */}
+              <Route path="/login" element={<Login />} />
+              <Route path="/" element={<RootRedirect />} />
 
-            {/* Admin Portal */}
-            <Route
-              path="/admin"
-              element={
-                <ProtectedRoute allowedRoles={['admin']}>
-                  <AdminLayout />
-                </ProtectedRoute>
-              }
-            >
-              <Route index element={<Navigate to="/admin/dashboard" replace />} />
-              <Route path="dashboard" element={<AdminDashboard />} />
-              <Route path="order-receive" element={<OrderReceive />} />
-              <Route path="orders" element={<AdminOrders />} />
-              <Route path="pos" element={<AdminPOS />} />
-              <Route path="tables" element={<TableManagement />} />
-              <Route path="menu" element={<MenuManagement />} />
-              <Route path="staff" element={<StaffManagement />} />
+              {/* Admin Portal */}
               <Route
-                path="expenses"
+                path="/admin"
                 element={
-                  <ProtectedRoute allowedRoles={['superadmin']} blockDsuper>
-                    <ExpensesManagement />
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <AdminLayout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route index element={<Navigate to="/admin/dashboard" replace />} />
+                <Route path="dashboard" element={<AdminDashboard />} />
+                <Route path="order-receive" element={<OrderReceive />} />
+                <Route path="orders" element={<AdminOrders />} />
+                <Route path="pos" element={<AdminPOS />} />
+                <Route path="tables" element={<TableManagement />} />
+                <Route path="menu" element={<MenuManagement />} />
+                <Route path="grocery" element={<GroceryManagement />} />
+                <Route path="customers" element={<CustomersManagement />} />
+                <Route
+                  path="staff"
+                  element={
+                    <ProtectedRoute disallowedRoles={['cashier', 'waiter']}>
+                      <StaffManagement />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="expenses"
+                  element={
+                    <ProtectedRoute allowedRoles={['superadmin']} blockDsuper>
+                      <ExpensesManagement />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="reports"
+                  element={
+                    <ProtectedRoute allowedRoles={['superadmin']} blockDsuper>
+                      <Reports />
+                    </ProtectedRoute>
+                  }
+                />
+              </Route>
+
+              {/* Waiter Portal */}
+              <Route
+                path="/waiter/menu"
+                element={
+                  <ProtectedRoute allowedRoles={['waiter', 'admin']}>
+                    <WaiterMenu />
                   </ProtectedRoute>
                 }
               />
               <Route
-                path="reports"
+                path="/waiter/orders"
                 element={
-                  <ProtectedRoute allowedRoles={['superadmin']} blockDsuper>
-                    <Reports />
+                  <ProtectedRoute allowedRoles={['waiter', 'admin']}>
+                    <WaiterOrders />
                   </ProtectedRoute>
                 }
               />
-            </Route>
 
-            {/* Waiter Portal */}
-            <Route
-              path="/waiter/menu"
-              element={
-                <ProtectedRoute allowedRoles={['waiter', 'admin']}>
-                  <WaiterMenu />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/waiter/orders"
-              element={
-                <ProtectedRoute allowedRoles={['waiter', 'admin']}>
-                  <WaiterOrders />
-                </ProtectedRoute>
-              }
-            />
-
-            {/* Catch-all */}
-            <Route path="*" element={<Navigate to="/login" replace />} />
-          </Routes>
-        </PrinterProvider>
-      </UIProvider>
-    </SocketProvider>
-  </AuthProvider>
+              {/* Catch-all redirect */}
+              <Route path="*" element={<Navigate to="/login" replace />} />
+            </Routes>
+          </PrinterProvider>
+        </UIProvider>
+      </SocketProvider>
+    </AuthProvider>
   );
 }
 

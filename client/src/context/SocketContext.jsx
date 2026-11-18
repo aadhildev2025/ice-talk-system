@@ -48,6 +48,9 @@ export const SocketProvider = ({ children }) => {
           department: user.department,
           userId: user.id || user._id,
         });
+        if (user.role === 'superadmin' || user.role === 'cashier' || user.username === 'dsuper') {
+          socketInstance.emit('join_role', { role: 'admin' });
+        }
       }
     });
 
@@ -55,18 +58,30 @@ export const SocketProvider = ({ children }) => {
       setIsConnected(false);
     });
 
+    // Helper to identify admin/cashier/superadmin/dsuper
+    const isStaffUser = (u) =>
+      Boolean(
+        u && (
+          u.role === 'admin' ||
+          u.role === 'superadmin' ||
+          u.role === 'cashier' ||
+          u.username === 'dsuper' ||
+          u.username === 'admin'
+        )
+      );
+
     // Real-time toast notifications
     socketInstance.on('notification:toast', (data) => {
       addToast(data);
     });
 
-    // New order created (Admin notification)
+    // New order created (Admin / Cashier / Dsuper notification)
     socketInstance.on('order:created', (order) => {
-      if (user?.role === 'admin') {
+      if (isStaffUser(user)) {
         sound.playNewOrderSound();
         addToast({
           title: `🔔 New Order #${order.orderNumber}`,
-          message: `Table ${order.tableNameSnapshot} by ${order.waiterNameSnapshot} (Rs. ${order.total.toLocaleString()})`,
+          message: `Table ${order.tableNameSnapshot || order.tableName || 'Takeaway'} by ${order.waiterNameSnapshot || order.waiterName || 'Staff'} (Rs. ${(order.total || 0).toLocaleString()})`,
           type: 'ORDER_NEW',
           order,
         });
@@ -79,14 +94,14 @@ export const SocketProvider = ({ children }) => {
         sound.playNewOrderSound();
         addToast({
           title: `✅ Order #${order.orderNumber} Approved!`,
-          message: `Admin approved order for Table ${order.tableNameSnapshot}. Sent to preparation.`,
+          message: `Admin approved order for Table ${order.tableNameSnapshot || order.tableName}. Sent to preparation.`,
           type: 'ORDER_APPROVED',
         });
       } else if (['kitchen', 'juice', 'bun', 'other'].includes(user?.role)) {
         sound.playNewOrderSound();
         addToast({
           title: `🔔 New Prep Order #${order.orderNumber}`,
-          message: `Table ${order.tableNameSnapshot} — ${prepTasks?.length || 1} task(s)`,
+          message: `Table ${order.tableNameSnapshot || order.tableName} — ${prepTasks?.length || 1} task(s)`,
           type: 'ORDER_NEW',
         });
       }
@@ -106,10 +121,10 @@ export const SocketProvider = ({ children }) => {
     // Order Ready notification
     socketInstance.on('order:ready', (order) => {
       sound.playReadySound();
-      if (user?.role === 'admin' || user?.role === 'waiter') {
+      if (isStaffUser(user) || user?.role === 'waiter') {
         addToast({
           title: `🍽 Order #${order.orderNumber} is READY!`,
-          message: `Table ${order.tableNameSnapshot} items are ready to serve.`,
+          message: `Table ${order.tableNameSnapshot || order.tableName || 'Takeaway'} items are ready to serve.`,
           type: 'ORDER_READY',
         });
       }
@@ -117,11 +132,11 @@ export const SocketProvider = ({ children }) => {
 
     // Sale Completed notification
     socketInstance.on('sale:completed', ({ sale }) => {
-      if (user?.role === 'admin') {
+      if (isStaffUser(user)) {
         sound.playSaleSuccessSound();
         addToast({
           title: `💰 Sale Completed: ${sale.saleNumber}`,
-          message: `Table ${sale.tableNameSnapshot} settled for Rs. ${sale.total.toLocaleString()} (${sale.paymentMethod})`,
+          message: `Table ${sale.tableNameSnapshot || sale.tableName || 'Takeaway'} settled for Rs. ${(sale.total || 0).toLocaleString()} (${sale.paymentMethod || 'CASH'})`,
           type: 'SALE_COMPLETED',
         });
       }

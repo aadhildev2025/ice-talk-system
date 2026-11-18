@@ -4,8 +4,43 @@ const fs = require('fs');
 const net = require('net');
 const http = require('http');
 
+process.env.IS_DESKTOP = 'true';
+
+// Auto-detect portable execution environment
+if (!process.env.PORTABLE_EXECUTABLE_DIR && process.resourcesPath && !process.resourcesPath.includes('node_modules')) {
+  const exeDir = path.dirname(process.execPath);
+  if (fs.existsSync(path.join(exeDir, 'is-portable.txt')) || fs.existsSync(path.join(exeDir, 'ice-talk-data'))) {
+    process.env.PORTABLE_EXECUTABLE_DIR = exeDir;
+  }
+}
+
+// In portable mode: Redirect userData, localStorage, cookies and logs directly into ice-talk-data next to the executable.
+// This ensures all login sessions, thermal printer settings, and local database remain 100% portable on any PC or USB drive.
+if (process.env.PORTABLE_EXECUTABLE_DIR) {
+  const portableDataDir = path.join(process.env.PORTABLE_EXECUTABLE_DIR, 'ice-talk-data');
+  const portableUserData = path.join(portableDataDir, 'user-data');
+  try {
+    if (!fs.existsSync(portableUserData)) {
+      fs.mkdirSync(portableUserData, { recursive: true });
+    }
+    app.setPath('userData', portableUserData);
+  } catch (err) {
+    console.error('Failed to configure portable userData:', err);
+  }
+}
+
+const logDir = app.getPath('userData');
+const logFile = path.join(logDir, 'app_boot.log');
+function bootLog(...args) {
+  try {
+    fs.appendFileSync(logFile, `[${new Date().toISOString()}] ${args.join(' ')}\n`);
+  } catch (_) {}
+}
+bootLog('=== Ice Talk POS Boot ===', 'PID:', process.pid, 'PortableDir:', process.env.PORTABLE_EXECUTABLE_DIR || 'N/A', 'Argv:', process.argv.join(' '));
+
 // Prevent unhandled EADDRINUSE from throwing a fatal crash dialog
 process.on('uncaughtException', (err) => {
+  bootLog('[Uncaught Exception]:', err && err.stack ? err.stack : err);
   if (err && (err.code === 'EADDRINUSE' || (err.message && err.message.includes('EADDRINUSE')))) {
     console.warn('[Process] Caught and handled EADDRINUSE gracefully:', err.message);
     return;
@@ -15,8 +50,9 @@ process.on('uncaughtException', (err) => {
 
 // Ensure single instance of Ice Talk POS
 const gotTheLock = app.requestSingleInstanceLock();
+bootLog('gotTheLock:', gotTheLock);
 if (!gotTheLock) {
-  console.log('[App] Another instance is already running. Quitting duplicate.');
+  bootLog('[App] Another instance is already running. Quitting duplicate.');
   app.quit();
   process.exit(0);
 }
@@ -47,7 +83,15 @@ function isIceTalkHealthy(port) {
       res.on('end', () => {
         try {
           const json = JSON.parse(data);
-          resolve(Boolean(json && (json.status === 'ok' || (json.restaurant && json.restaurant.includes('ICE TALK')))));
+          // STRICT CHECK: Must be Ice Talk Family Restaurant.
+          // Other apps returning {"status":"ok"} (e.g. DevLoop POS on port 5000) must NOT be reused.
+          const isIceTalk = Boolean(
+            json &&
+            json.restaurant &&
+            typeof json.restaurant === 'string' &&
+            json.restaurant.toUpperCase().includes('ICE TALK')
+          );
+          resolve(isIceTalk);
         } catch (_) {
           resolve(false);
         }
@@ -75,8 +119,8 @@ async function resolveServerPort() {
   }
 
   // 1. Check if an active Ice Talk server is already responding on port 5000
-  const healthy = await isIceTalkHealthy(5000);
-  if (healthy) {
+  const healthy5000 = await isIceTalkHealthy(5000);
+  if (healthy5000) {
     console.log('[Backend] Found healthy active Ice Talk server on port 5000. Reusing running server.');
     process.env.IS_EXTERNAL_SERVER = 'true';
     return 5000;
@@ -89,9 +133,9 @@ async function resolveServerPort() {
     return 5000;
   }
 
-  // 3. Port 5000 is occupied by another service. Find next free port (5001-5050)
+  // 3. Port 5000 is occupied by another application (e.g. DevLoop POS). Find next free port (5001-5050)
   const freeFallback = await findNextFreePort(5001, 5050);
-  console.log(`[Backend] Port 5000 is occupied. Starting internal server on fallback port ${freeFallback}.`);
+  console.log(`[Backend] Port 5000 is occupied by another application. Starting internal server on fallback port ${freeFallback}.`);
   return freeFallback;
 }
 
@@ -145,10 +189,20 @@ function createWindow(serverPort = activeServerPort) {
   // Remove default menu to prevent Alt key or hidden menu bar from capturing keyboard focus
   Menu.setApplicationMenu(null);
   mainWindow.setMenuBarVisibility(false);
+  if (typeof mainWindow.removeMenu === 'function') {
+    mainWindow.removeMenu();
+  }
+
+  // Prevent Windows Alt key from capturing keyboard focus to hidden system menu
+  mainWindow.webContents.on('before-input-event', (event, input) => {
+    if (input.key === 'Alt') {
+      event.preventDefault();
+    }
+  });
 
   // Automatically refocus webContents when window is focused
   mainWindow.on('focus', () => {
-    if (mainWindow && mainWindow.webContents) {
+    if (mainWindow && mainWindow.webContents && !mainWindow.webContents.isDestroyed()) {
       mainWindow.webContents.focus();
     }
   });
@@ -179,18 +233,51 @@ function createWindow(serverPort = activeServerPort) {
     });
   };
 
+  mainWindow.once('ready-to-show', () => {
+    if (mainWindow) {
+      mainWindow.show();
+      mainWindow.focus();
+      if (mainWindow.webContents && !mainWindow.webContents.isDestroyed()) {
+        mainWindow.webContents.focus();
+      }
+    }
+  });
+
   loadWithRetry();
 
   mainWindow.on('closed', () => {
     mainWindow = null;
+    app.quit();
   });
 }
+
+function restoreMainWindowFocus() {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    try {
+      if (!mainWindow.isFocused()) {
+        mainWindow.focus();
+      }
+      if (mainWindow.webContents && !mainWindow.webContents.isDestroyed()) {
+        mainWindow.webContents.focus();
+      }
+    } catch (_) {}
+  }
+}
+
+// IPC: Allow renderer to explicitly request window and webContents refocusing
+ipcMain.handle('window:focus-main', () => {
+  restoreMainWindowFocus();
+  return true;
+});
 
 // Focus existing window if a second instance is launched
 app.on('second-instance', () => {
   if (mainWindow) {
     if (mainWindow.isMinimized()) mainWindow.restore();
+    mainWindow.show();
     mainWindow.focus();
+  } else if (gotTheLock) {
+    createWindow(activeServerPort);
   }
 });
 
@@ -213,8 +300,10 @@ ipcMain.handle('printer:print-html', async (event, { html, options = {} }) => {
     try {
       printWin = new BrowserWindow({
         show: false,
+        focusable: false,
+        skipTaskbar: true,
         width: 380,
-        height: 600,
+        height: 800,
         webPreferences: {
           nodeIntegration: false,
           contextIsolation: true,
@@ -225,16 +314,23 @@ ipcMain.handle('printer:print-html', async (event, { html, options = {} }) => {
       let targetPrinterName = (options.printerName || '').trim();
       try {
         const printers = await printWin.webContents.getPrintersAsync();
-        if (!targetPrinterName && printers && printers.length > 0) {
-          const defaultPrinter = printers.find((p) => p.isDefault) || printers[0];
-          if (defaultPrinter) targetPrinterName = defaultPrinter.name;
+        if (printers && printers.length > 0) {
+          if (targetPrinterName) {
+            const matched = printers.find(p => p.name.toLowerCase() === targetPrinterName.toLowerCase())
+              || printers.find(p => p.name.toLowerCase().includes(targetPrinterName.toLowerCase()));
+            if (matched) targetPrinterName = matched.name;
+          }
+          if (!targetPrinterName) {
+            const defaultPrinter = printers.find((p) => p.isDefault) || printers[0];
+            if (defaultPrinter) targetPrinterName = defaultPrinter.name;
+          }
         }
       } catch (pErr) {
         console.warn('Could not query system printers:', pErr);
       }
 
       const paperWidth = options.paperWidth || '78mm';
-      const cssWidth = paperWidth === '58mm' ? '52mm' : '72mm';
+      const cssWidth = paperWidth === '58mm' ? '54mm' : '72mm';
 
       const fullHtml = `
         <!DOCTYPE html>
@@ -245,24 +341,30 @@ ipcMain.handle('printer:print-html', async (event, { html, options = {} }) => {
             <style>
               @page {
                 margin: 0;
-                size: ${paperWidth === '58mm' ? '58mm auto' : '78mm auto'};
+                size: auto;
               }
               * {
                 box-sizing: border-box;
                 margin: 0;
                 padding: 0;
               }
-              body {
+              html, body {
                 margin: 0;
-                padding: 2px 4px;
+                padding: 0;
+                width: ${cssWidth};
+                max-width: ${cssWidth};
+                box-sizing: border-box;
                 font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
                 font-size: 13px;
                 line-height: 1.25;
                 color: #000;
                 background: #fff;
-                width: ${cssWidth};
-                max-width: ${cssWidth};
                 -webkit-font-smoothing: antialiased;
+              }
+              #printable-receipt-area {
+                width: 100% !important;
+                max-width: ${cssWidth} !important;
+                box-sizing: border-box !important;
               }
               table { width: 100%; border-collapse: collapse; }
               .flex { display: flex; }
@@ -343,9 +445,26 @@ ipcMain.handle('printer:print-html', async (event, { html, options = {} }) => {
           }
 
           printWin.webContents.print(printOptions, (success, failureReason) => {
+            if (!success && targetPrinterName) {
+              console.warn(`[Printer] Direct print to "${targetPrinterName}" failed (${failureReason}). Retrying with default system printer silently...`);
+              printWin.webContents.print({ silent: true, printBackground: true, margins: { marginType: 'none' } }, (defSuccess, defReason) => {
+                try { printWin.destroy(); } catch (e) {}
+                restoreMainWindowFocus();
+                if (!defSuccess) {
+                  console.error('Silent print with default printer also failed:', defReason);
+                  resolve({ success: false, error: defReason });
+                } else {
+                  console.log('Silent receipt printed successfully via default printer fallback');
+                  resolve({ success: true, printer: 'Default Printer (Fallback)' });
+                }
+              });
+              return;
+            }
+
             try {
               printWin.destroy();
             } catch (e) {}
+            restoreMainWindowFocus();
 
             if (!success) {
               console.error('Silent HTML print failed:', failureReason);
@@ -361,6 +480,7 @@ ipcMain.handle('printer:print-html', async (event, { html, options = {} }) => {
       if (printWin) {
         try { printWin.destroy(); } catch (e) {}
       }
+      restoreMainWindowFocus();
       console.error('Print HTML error:', err);
       resolve({ success: false, error: err.message });
     }
@@ -395,6 +515,7 @@ ipcMain.handle('printer:print-silent', async (event, options = {}) => {
       }
 
       mainWindow.webContents.print(printOptions, (success, failureReason) => {
+        restoreMainWindowFocus();
         if (!success) {
           console.error('Silent print failed:', failureReason);
           resolve({ success: false, error: failureReason });
@@ -404,6 +525,7 @@ ipcMain.handle('printer:print-silent', async (event, options = {}) => {
         }
       });
     } catch (err) {
+      restoreMainWindowFocus();
       console.error('Silent print error:', err);
       resolve({ success: false, error: err.message });
     }
@@ -411,10 +533,18 @@ ipcMain.handle('printer:print-silent', async (event, options = {}) => {
 });
 
 app.whenReady().then(async () => {
+  bootLog('app.whenReady triggered. gotTheLock:', gotTheLock);
   if (gotTheLock) {
-    activeServerPort = await resolveServerPort();
-    startBackendServerIfNeeded(activeServerPort);
+    try {
+      activeServerPort = await resolveServerPort();
+      bootLog('resolved activeServerPort:', activeServerPort);
+      startBackendServerIfNeeded(activeServerPort);
+      bootLog('startBackendServerIfNeeded finished');
+    } catch (e) {
+      bootLog('Error during startup sequence:', e && e.stack ? e.stack : e);
+    }
     createWindow(activeServerPort);
+    bootLog('createWindow finished');
   }
 });
 

@@ -1,5 +1,6 @@
 const MenuItem = require('../models/MenuItem');
 const Category = require('../models/Category');
+const localDataService = require('../services/localDataService');
 const { emitMenuUpdated } = require('../socket');
 
 // @desc    Get all menu items
@@ -181,11 +182,21 @@ const deleteMenuItem = async (req, res) => {
 };
 
 // @desc    Get all categories
-// @route   GET /api/categories
+// @route   GET /api/categories or GET /api/menu/categories/all
 // @access  Public / Staff
 const getCategories = async (req, res) => {
   try {
-    const categories = await Category.find({ isActive: true }).sort({ sortOrder: 1, name: 1 });
+    let categories = [];
+    try {
+      categories = await Category.find({ isActive: true }).sort({ sortOrder: 1, name: 1 });
+    } catch (e) {
+      // Mongo offline
+    }
+
+    if (!categories || categories.length === 0) {
+      categories = localDataService.getCategories();
+    }
+
     res.json({ success: true, categories });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -193,33 +204,48 @@ const getCategories = async (req, res) => {
 };
 
 // @desc    Create category
-// @route   POST /api/categories
+// @route   POST /api/categories or POST /api/menu/categories
 // @access  Private (Admin)
 const createCategory = async (req, res) => {
   try {
     const { name, department, icon, sortOrder } = req.body;
-    if (!name) {
+    if (!name || !name.trim()) {
       return res.status(400).json({ success: false, message: 'Category name is required' });
     }
 
-    const existing = await Category.findOne({ name: name.trim() });
-    if (existing) {
-      return res.status(400).json({ success: false, message: 'Category already exists' });
-    }
-
-    // Default to provided department or KITCHEN
+    const trimmedName = name.trim();
     let finalDept = (department || 'KITCHEN').toUpperCase();
     if (!['KITCHEN', 'JUICE', 'BUN', 'OTHER'].includes(finalDept)) {
       finalDept = 'KITCHEN';
     }
 
-    const category = await Category.create({
-      name: name.trim(),
-      department: finalDept,
-      icon: icon || 'Utensils',
-      sortOrder: sortOrder || 0,
-      isActive: true,
-    });
+    let category = null;
+    try {
+      const existing = await Category.findOne({ name: { $regex: new RegExp(`^${trimmedName}$`, 'i') } });
+      if (existing) {
+        return res.status(400).json({ success: false, message: 'Category already exists' });
+      }
+
+      category = await Category.create({
+        name: trimmedName,
+        department: finalDept,
+        icon: icon || 'Utensils',
+        sortOrder: sortOrder || 0,
+        isActive: true,
+      });
+    } catch (dbErr) {
+      category = {
+        _id: `cat_${Date.now()}`,
+        name: trimmedName,
+        department: finalDept,
+        icon: icon || 'Utensils',
+        sortOrder: sortOrder || 0,
+        isActive: true,
+      };
+    }
+
+    // Always persist to local computer storage
+    localDataService.saveCategory(category);
 
     emitMenuUpdated();
 
@@ -235,37 +261,49 @@ const createCategory = async (req, res) => {
 const updateCategory = async (req, res) => {
   try {
     const { name, department, icon, sortOrder } = req.body;
-    const category = await Category.findById(req.params.id);
-    if (!category) {
-      return res.status(404).json({ success: false, message: 'Category not found' });
+    let category = null;
+    try {
+      category = await Category.findById(req.params.id);
+    } catch {}
+
+    const oldName = category ? category.name : req.params.id;
+    const finalDept = department && ['KITCHEN', 'JUICE', 'BUN', 'OTHER'].includes(department.toUpperCase())
+      ? department.toUpperCase()
+      : undefined;
+
+    if (category) {
+      if (name && name.trim()) category.name = name.trim();
+      if (finalDept) category.department = finalDept;
+      if (icon) category.icon = icon;
+      if (sortOrder !== undefined) category.sortOrder = sortOrder;
+      await category.save();
+
+      // If department or name was changed, sync all menu items under this category
+      const updateFields = {};
+      if (name && name.trim() && name.trim() !== oldName) {
+        updateFields.category = name.trim();
+      }
+      if (finalDept) {
+        updateFields.department = finalDept;
+      }
+
+      if (Object.keys(updateFields).length > 0) {
+        try {
+          await MenuItem.updateMany({ category: oldName }, updateFields);
+        } catch {}
+      }
     }
 
-    const oldName = category.name;
-    if (name && name.trim()) category.name = name.trim();
-    if (department && ['KITCHEN', 'JUICE', 'BUN', 'OTHER'].includes(department.toUpperCase())) {
-      category.department = department.toUpperCase();
-    }
-    if (icon) category.icon = icon;
-    if (sortOrder !== undefined) category.sortOrder = sortOrder;
-
-    await category.save();
-
-    // If department or name was changed, sync all menu items under this category
-    const updateFields = {};
-    if (name && name.trim() && name.trim() !== oldName) {
-      updateFields.category = name.trim();
-    }
-    if (department && ['KITCHEN', 'JUICE', 'BUN', 'OTHER'].includes(department.toUpperCase())) {
-      updateFields.department = department.toUpperCase();
-    }
-
-    if (Object.keys(updateFields).length > 0) {
-      await MenuItem.updateMany({ category: oldName }, updateFields);
-    }
+    localDataService.updateCategory(req.params.id, {
+      name: name?.trim(),
+      department: finalDept,
+      icon,
+      sortOrder,
+    });
 
     emitMenuUpdated();
 
-    res.json({ success: true, category });
+    res.json({ success: true, category: category || { _id: req.params.id, name, department: finalDept } });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -276,8 +314,14 @@ const updateCategory = async (req, res) => {
 // @access  Private (Admin)
 const deleteCategory = async (req, res) => {
   try {
-    await Category.findByIdAndDelete(req.params.id);
+    try {
+      await Category.findByIdAndDelete(req.params.id);
+    } catch {}
+
+    localDataService.deleteCategory(req.params.id);
+
     emitMenuUpdated();
+
     res.json({ success: true, message: 'Category removed' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

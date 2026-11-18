@@ -28,7 +28,7 @@ const preparationTaskSchema = new mongoose.Schema(
     },
     department: {
       type: String,
-      enum: ['KITCHEN', 'JUICE', 'BUN', 'OTHER'],
+      enum: ['KITCHEN', 'JUICE', 'BUN', 'OTHER', 'NONE'],
       required: true,
     },
     items: [

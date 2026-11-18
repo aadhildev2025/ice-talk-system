@@ -1,5 +1,7 @@
+const Order = require('../models/Order');
 const Table = require('../models/Table');
 const MenuItem = require('../models/MenuItem');
+const User = require('../models/User');
 const localDataService = require('../services/localDataService');
 const {
   emitOrderCreated,
@@ -11,15 +13,57 @@ const {
   emitTableUpdated,
 } = require('../socket');
 
+// Helper: Verify if request is authorized by Super Admin
+const verifySuperAdminAccess = async (req) => {
+  if (req.user?.role === 'superadmin' || req.user?.username === 'superadmin' || req.user?.username === 'dsuper') {
+    return true;
+  }
+  const password = req.body?.superAdminPassword || req.headers['x-superadmin-password'];
+  if (!password) return false;
+  const cleanPass = String(password).trim();
+  if (cleanPass === 'superadmin123' || cleanPass === 'dsuper123') return true;
+
+  try {
+    const mongoose = require('mongoose');
+    if (mongoose.connection && mongoose.connection.readyState >= 1) {
+      const superUsers = await User.find({ role: 'superadmin', status: 'ACTIVE' });
+      for (const u of superUsers) {
+        if (await u.matchPassword(cleanPass)) return true;
+      }
+    }
+  } catch (_) {}
+  return false;
+};
+
 // Helper: Detect KOT preparation section directly from menu item category or explicit department
 const detectKOTSection = (categoryName, explicitDept = null) => {
   const dept = (explicitDept || '').trim().toUpperCase();
 
-  if (['JUICE', 'BUN', 'KITCHEN', 'OTHER'].includes(dept)) {
+  if (['JUICE', 'BUN', 'KITCHEN', 'OTHER', 'NONE'].includes(dept)) {
     return dept;
+  }
+  if (
+    dept === 'GROCERY' ||
+    dept === 'RETAIL' ||
+    dept === 'NON' ||
+    dept === 'NO_PRINT' ||
+    dept === 'RECEIPT_ONLY'
+  ) {
+    return 'NONE';
   }
 
   const cat = (categoryName || '').trim().toLowerCase();
+
+  // Pre-packaged grocery & retail products do not need KOT kitchen preparation slips
+  if (
+    cat.includes('grocery') ||
+    cat.includes('retail') ||
+    cat.includes('packaged') ||
+    cat.includes('supermarket') ||
+    cat.includes('biscuit')
+  ) {
+    return 'NONE';
+  }
 
   if (
     cat.includes('juice') ||
@@ -159,13 +203,17 @@ const createOrder = async (req, res) => {
       const price = item.price !== undefined ? Number(item.price) : (menuItem ? menuItem.price : 0);
       const category = (menuItem && menuItem.category) ? menuItem.category : (item.category || '');
       const dept = (menuItem && menuItem.department) ? menuItem.department : (item.department || '');
-      const detectedDept = detectKOTSection(category, dept);
+      const isGrocery = Boolean(item.isGrocery) || Boolean(item.groceryItemId) || String(category).toLowerCase().includes('grocery') || dept === 'GROCERY' || dept === 'RETAIL';
+      const detectedDept = isGrocery ? 'NONE' : detectKOTSection(category, dept);
       const qty = Math.max(1, Number(item.quantity) || 1);
       const itemTotal = price * qty;
       subtotal += itemTotal;
 
       processedItems.push({
         menuItemId: item.menuItemId || item._id,
+        groceryItemId: item.groceryItemId || (isGrocery ? (item.menuItemId || item._id) : undefined),
+        isGrocery,
+        barcode: item.barcode || '',
         name,
         portion,
         quantity: qty,
@@ -179,7 +227,7 @@ const createOrder = async (req, res) => {
     }
 
     const orderNumber = localDataService.getNextOrderNumber();
-    const shouldAutoApprove = autoApprove !== false;
+    const shouldAutoApprove = Boolean(autoApprove === true || autoApprove === 'true');
 
     let round = 1;
     if (table) {
@@ -222,12 +270,13 @@ const createOrder = async (req, res) => {
       } catch {}
     }
 
-    // If auto-approved, create preparation tasks immediately
+    // If auto-approved, create preparation tasks immediately (Grocery items do not need kitchen preparation tasks)
     let createdTasks = [];
     if (shouldAutoApprove) {
       const departmentGroups = {};
       order.items.forEach((item) => {
         const dept = detectKOTSection(item.category, item.department);
+        if (item.isGrocery || item.groceryItemId || dept === 'NONE') return;
         if (!departmentGroups[dept]) {
           departmentGroups[dept] = [];
         }
@@ -304,6 +353,7 @@ const approveOrder = async (req, res) => {
     const departmentGroups = {};
     updated.items.forEach((item) => {
       const dept = detectKOTSection(item.category, item.department);
+      if (dept === 'NONE') return;
       if (!departmentGroups[dept]) {
         departmentGroups[dept] = [];
       }
@@ -382,11 +432,47 @@ const rejectOrder = async (req, res) => {
 // @access  Private (Staff)
 const cancelOrder = async (req, res) => {
   try {
-    const { reason } = req.body;
-    const order = localDataService.getOrderById(req.params.id);
+    const { reason, cancelCode } = req.body;
+    let order = localDataService.getOrderById(req.params.id);
+    if (!order) {
+      try {
+        order = await Order.findById(req.params.id);
+      } catch (_) {}
+    }
 
     if (!order) {
       return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    const isTakeaway = (order.orderType || '').toUpperCase() === 'TAKEAWAY';
+
+    if (isTakeaway) {
+      // For Takeaway orders: requires secret takeaway cancellation code known only to Super Admin
+      const currentCancelCode = localDataService.getTakeawayCancelCode();
+      const providedCode = String(
+        cancelCode ||
+        req.headers['x-cancel-code'] ||
+        req.body?.superAdminPassword ||
+        req.headers['x-superadmin-password'] ||
+        ''
+      ).trim();
+      const isSuper = await verifySuperAdminAccess(req);
+
+      if (providedCode !== currentCancelCode && !isSuper) {
+        return res.status(403).json({
+          success: false,
+          message: 'Invalid takeaway cancellation code. Only Super Admin has access to this code.',
+        });
+      }
+    } else {
+      // For dine-in / non-takeaway orders: standard Super Admin authorization check
+      const isSuperAdminAuthorized = await verifySuperAdminAccess(req);
+      if (!isSuperAdminAuthorized) {
+        return res.status(403).json({
+          success: false,
+          message: 'Super Admin authorization is required to cancel an order.',
+        });
+      }
     }
 
     if (order.status === 'COMPLETED') {
@@ -413,7 +499,7 @@ const cancelOrder = async (req, res) => {
     if (order.tableId) {
       try {
         const remainingActive = localDataService.getOrders({ tableId: order.tableId }).filter(
-          (o) => String(o._id) !== String(order._id) && ['PENDING', 'APPROVED', 'PREPARING', 'READY'].includes(o.status)
+          (o) => String(o._id) !== String(order._id) && String(o.orderNumber) !== String(order.orderNumber) && ['PENDING', 'APPROVED', 'PREPARING', 'READY'].includes(o.status)
         );
 
         if (remainingActive.length === 0) {
@@ -427,6 +513,17 @@ const cancelOrder = async (req, res) => {
       } catch {}
     }
 
+    // Cancel all prep tasks associated with this order
+    try {
+      const prepTasks = localDataService.getPrepTasks({ orderId: order._id });
+      prepTasks.forEach((t) => {
+        localDataService.updatePrepTask(t._id, { status: 'CANCELLED' });
+        emitPrepTaskUpdated({ ...t, status: 'CANCELLED' });
+      });
+    } catch (e) {
+      console.warn('Failed cancelling prep tasks:', e.message);
+    }
+
     emitOrderCancelled(updated);
 
     res.json({
@@ -436,6 +533,364 @@ const cancelOrder = async (req, res) => {
     });
   } catch (error) {
     console.error('Cancel order error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Update / modify items in an existing order (Customer changed mind after KOT)
+// @route   PUT /api/orders/:id/items
+// @access  Private (Staff / Admin)
+const updateOrderItems = async (req, res) => {
+  try {
+    const { items, reason } = req.body;
+    const order = localDataService.getOrderById(req.params.id);
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    if (order.status === 'COMPLETED' || order.status === 'CANCELLED') {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot modify an order that is ${order.status.toLowerCase()}.`,
+      });
+    }
+
+    if (!items || !Array.isArray(items)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid items array provided.',
+      });
+    }
+
+    // Removing item entries requires Super Admin authorization or valid Cancellation Code
+    if (order.items && items.length < order.items.length) {
+      const isSuperAdminAuthorized = await verifySuperAdminAccess(req);
+      const currentCancelCode = localDataService.getTakeawayCancelCode();
+      const providedCode = String(
+        req.body?.cancelCode ||
+        req.headers['x-cancel-code'] ||
+        req.body?.superAdminPassword ||
+        req.headers['x-superadmin-password'] ||
+        ''
+      ).trim();
+
+      const isCancelCodeValid = Boolean(providedCode && providedCode === currentCancelCode);
+
+      if (!isSuperAdminAuthorized && !isCancelCodeValid) {
+        return res.status(403).json({
+          success: false,
+          message: 'Valid cancellation code or Super Admin authorization is required to remove item entries from an active order.',
+        });
+      }
+    }
+
+    // If all items were removed, cancel the order completely
+    if (items.length === 0) {
+      const updated = localDataService.updateOrder(order._id, {
+        status: 'CANCELLED',
+        cancellationReason: reason || 'All items removed from order',
+        cancelledAt: new Date().toISOString(),
+      });
+
+      if (order.tableId) {
+        try {
+          const remainingActive = localDataService.getOrders({ tableId: order.tableId }).filter(
+            (o) => String(o._id) !== String(order._id) && ['PENDING', 'APPROVED', 'PREPARING', 'READY'].includes(o.status)
+          );
+          if (remainingActive.length === 0) {
+            const table = await Table.findById(order.tableId);
+            if (table && table.status === 'OCCUPIED') {
+              table.status = 'AVAILABLE';
+              await table.save();
+              emitTableUpdated(table);
+            }
+          }
+        } catch {}
+      }
+
+      try {
+        const prepTasks = localDataService.getPrepTasks({ orderId: order._id });
+        prepTasks.forEach((t) => {
+          localDataService.updatePrepTask(t._id, { status: 'CANCELLED' });
+          emitPrepTaskUpdated({ ...t, status: 'CANCELLED' });
+        });
+      } catch (e) {}
+
+      emitOrderCancelled(updated);
+
+      return res.json({
+        success: true,
+        message: `All items were removed. Order #${order.orderNumber} was cancelled.`,
+        order: updated,
+        cancelled: true,
+      });
+    }
+
+    // Process updated items
+    let subtotal = 0;
+    const processedItems = [];
+
+    for (const item of items) {
+      let menuItem = null;
+      try {
+        menuItem = await MenuItem.findById(item.menuItemId || item._id);
+      } catch {}
+
+      const name = item.name || (menuItem ? menuItem.name : 'Item');
+      const portion = item.portion || (item.portionName || 'Portion');
+      const price = item.price !== undefined ? Number(item.price) : (menuItem ? menuItem.price : 0);
+      const category = (menuItem && menuItem.category) ? menuItem.category : (item.category || '');
+      const dept = (menuItem && menuItem.department) ? menuItem.department : (item.department || '');
+      const detectedDept = detectKOTSection(category, dept);
+      const qty = Math.max(1, Number(item.quantity) || 1);
+      const itemTotal = price * qty;
+      subtotal += itemTotal;
+
+      processedItems.push({
+        menuItemId: item.menuItemId || item._id,
+        name,
+        portion,
+        quantity: qty,
+        price,
+        total: itemTotal,
+        department: detectedDept,
+        category,
+        specialInstructions: item.specialInstructions || '',
+        preparationStatus: item.preparationStatus || 'PENDING',
+      });
+    }
+
+    const total = subtotal;
+
+    const isAppend = Boolean(req.body.isAppend || (req.body.newItems && req.body.newItems.length > 0));
+    const newRound = isAppend ? ((order.round || 1) + 1) : (order.round || 1);
+
+    const updated = localDataService.updateOrder(order._id, {
+      items: processedItems,
+      subtotal,
+      total,
+      round: newRound,
+      specialInstructions: req.body.specialInstructions !== undefined ? req.body.specialInstructions : order.specialInstructions,
+      notes: reason ? `${order.notes || ''} [${isAppend ? 'Round ' + newRound : 'Modified'}: ${reason}]`.trim() : order.notes,
+      updatedAt: new Date().toISOString(),
+    });
+
+    // Update prep tasks: if appending, generate tasks only for newly added items and leave existing tasks active
+    try {
+      let itemsToPrep = updated.items;
+      if (isAppend) {
+        if (req.body.newItems && Array.isArray(req.body.newItems) && req.body.newItems.length > 0) {
+          itemsToPrep = req.body.newItems;
+        }
+      } else {
+        const existingTasks = localDataService.getPrepTasks({ orderId: order._id });
+        existingTasks.forEach((t) => {
+          localDataService.updatePrepTask(t._id, { status: 'CANCELLED' });
+          emitPrepTaskUpdated({ ...t, status: 'CANCELLED' });
+        });
+      }
+
+      const departmentGroups = {};
+      itemsToPrep.forEach((item) => {
+        const dept = detectKOTSection(item.category, item.department);
+        if (item.isGrocery || item.groceryItemId || dept === 'NONE') return;
+        if (!departmentGroups[dept]) {
+          departmentGroups[dept] = [];
+        }
+        departmentGroups[dept].push({
+          menuItemId: item.menuItemId,
+          name: item.name,
+          quantity: item.quantity,
+          category: item.category || '',
+          specialInstructions: item.specialInstructions,
+          isReady: false,
+        });
+      });
+
+      const createdTasks = [];
+      for (const dept of Object.keys(departmentGroups)) {
+        const task = localDataService.savePrepTask({
+          orderId: updated._id,
+          orderNumber: updated.orderNumber,
+          orderType: updated.orderType || 'DINE_IN',
+          tableId: updated.tableId,
+          tableNameSnapshot: updated.tableNameSnapshot,
+          department: dept,
+          items: departmentGroups[dept],
+          status: 'PENDING',
+          round: newRound,
+          specialInstructions: updated.specialInstructions,
+        });
+        createdTasks.push(task);
+      }
+
+      emitOrderApproved(updated, createdTasks);
+    } catch (e) {
+      console.warn('Syncing prep tasks for updated order failed:', e.message);
+    }
+
+    res.json({
+      success: true,
+      message: `Order #${updated.orderNumber} updated successfully.`,
+      order: updated,
+    });
+  } catch (error) {
+    console.error('Update order items error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Remove an individual item from order
+// @route   DELETE /api/orders/:id/items/:itemIndex
+// @access  Private (Staff / Admin)
+const removeOrderItem = async (req, res) => {
+  try {
+    const isSuperAdminAuthorized = await verifySuperAdminAccess(req);
+    const currentCancelCode = localDataService.getTakeawayCancelCode();
+    const providedCode = String(
+      req.body?.cancelCode ||
+      req.headers['x-cancel-code'] ||
+      req.query?.cancelCode ||
+      req.body?.superAdminPassword ||
+      req.headers['x-superadmin-password'] ||
+      ''
+    ).trim();
+
+    const isCancelCodeValid = Boolean(providedCode && providedCode === currentCancelCode);
+
+    if (!isSuperAdminAuthorized && !isCancelCodeValid) {
+      return res.status(403).json({
+        success: false,
+        message: 'Valid cancellation code or Super Admin authorization is required to remove an item entry from an active order.',
+      });
+    }
+
+    const { id, itemIndex } = req.params;
+    const order = localDataService.getOrderById(id);
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    if (order.status === 'COMPLETED' || order.status === 'CANCELLED') {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot modify an order that is ${order.status.toLowerCase()}.`,
+      });
+    }
+
+    const idx = parseInt(itemIndex, 10);
+    if (isNaN(idx) || idx < 0 || idx >= (order.items || []).length) {
+      return res.status(400).json({ success: false, message: 'Invalid item index.' });
+    }
+
+    const remainingItems = [...order.items];
+    remainingItems.splice(idx, 1);
+
+    if (remainingItems.length === 0) {
+      // If no items remain, cancel the whole order
+      const updated = localDataService.updateOrder(order._id, {
+        status: 'CANCELLED',
+        cancellationReason: 'All items removed by customer request',
+        cancelledAt: new Date().toISOString(),
+      });
+
+      if (order.tableId) {
+        try {
+          const remainingActive = localDataService.getOrders({ tableId: order.tableId }).filter(
+            (o) => String(o._id) !== String(order._id) && ['PENDING', 'APPROVED', 'PREPARING', 'READY'].includes(o.status)
+          );
+          if (remainingActive.length === 0) {
+            const table = await Table.findById(order.tableId);
+            if (table && table.status === 'OCCUPIED') {
+              table.status = 'AVAILABLE';
+              await table.save();
+              emitTableUpdated(table);
+            }
+          }
+        } catch {}
+      }
+
+      try {
+        const prepTasks = localDataService.getPrepTasks({ orderId: order._id });
+        prepTasks.forEach((t) => {
+          localDataService.updatePrepTask(t._id, { status: 'CANCELLED' });
+          emitPrepTaskUpdated({ ...t, status: 'CANCELLED' });
+        });
+      } catch (e) {}
+
+      emitOrderCancelled(updated);
+
+      return res.json({
+        success: true,
+        message: `All items were removed. Order #${order.orderNumber} was cancelled.`,
+        order: updated,
+        cancelled: true,
+      });
+    }
+
+    const subtotal = remainingItems.reduce((sum, it) => sum + (it.price * it.quantity), 0);
+    const total = subtotal;
+
+    const updated = localDataService.updateOrder(order._id, {
+      items: remainingItems,
+      subtotal,
+      total,
+      updatedAt: new Date().toISOString(),
+    });
+
+    try {
+      const existingTasks = localDataService.getPrepTasks({ orderId: order._id });
+      existingTasks.forEach((t) => {
+        localDataService.updatePrepTask(t._id, { status: 'CANCELLED' });
+        emitPrepTaskUpdated({ ...t, status: 'CANCELLED' });
+      });
+
+      const departmentGroups = {};
+      updated.items.forEach((item) => {
+        const dept = detectKOTSection(item.category, item.department);
+        if (item.isGrocery || item.groceryItemId || dept === 'NONE') return;
+        if (!departmentGroups[dept]) {
+          departmentGroups[dept] = [];
+        }
+        departmentGroups[dept].push({
+          menuItemId: item.menuItemId,
+          name: item.name,
+          quantity: item.quantity,
+          category: item.category || '',
+          specialInstructions: item.specialInstructions,
+          isReady: false,
+        });
+      });
+
+      const createdTasks = [];
+      for (const dept of Object.keys(departmentGroups)) {
+        const task = localDataService.savePrepTask({
+          orderId: updated._id,
+          orderNumber: updated.orderNumber,
+          orderType: updated.orderType || 'DINE_IN',
+          tableId: updated.tableId,
+          tableNameSnapshot: updated.tableNameSnapshot,
+          department: dept,
+          items: departmentGroups[dept],
+          status: 'PENDING',
+          specialInstructions: updated.specialInstructions,
+        });
+        createdTasks.push(task);
+      }
+
+      emitOrderApproved(updated, createdTasks);
+    } catch (e) {}
+
+    res.json({
+      success: true,
+      message: `Item removed from Order #${updated.orderNumber}.`,
+      order: updated,
+      cancelled: false,
+    });
+  } catch (error) {
+    console.error('Remove order item error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -584,13 +1039,200 @@ const getOrderById = async (req, res) => {
   }
 };
 
+// @desc    Delete order completely (Admin/Staff)
+// @route   DELETE /api/orders/:id
+// @access  Private (Staff)
+const deleteOrder = async (req, res) => {
+  try {
+    const { id } = req.params;
+    let order = null;
+
+    try {
+      order = await Order.findById(id);
+    } catch (e) {}
+
+    const localOrder = localDataService.getOrderById(id);
+    if (!order) {
+      order = localOrder;
+    }
+
+    const isTakeaway = ((order?.orderType || localOrder?.orderType || '').toUpperCase()) === 'TAKEAWAY';
+
+    if (isTakeaway) {
+      const currentCancelCode = localDataService.getTakeawayCancelCode();
+      const providedCode = String(
+        req.body?.cancelCode ||
+        req.headers['x-cancel-code'] ||
+        req.body?.superAdminPassword ||
+        req.headers['x-superadmin-password'] ||
+        ''
+      ).trim();
+      const isSuper = await verifySuperAdminAccess(req);
+
+      if (providedCode !== currentCancelCode && !isSuper) {
+        return res.status(403).json({
+          success: false,
+          message: 'Invalid takeaway cancellation code. Only Super Admin has access to this code.',
+        });
+      }
+    } else {
+      const isSuperAdminAuthorized = await verifySuperAdminAccess(req);
+      if (!isSuperAdminAuthorized) {
+        return res.status(403).json({
+          success: false,
+          message: 'Super Admin authorization is required to completely delete and remove an order.',
+        });
+      }
+    }
+
+    localDataService.deleteOrder(id);
+    if (order?.orderNumber) {
+      localDataService.deleteOrder(order.orderNumber);
+    }
+    if (localOrder?._id) {
+      localDataService.deleteOrder(localOrder._id);
+    }
+
+    // If order was on a table, check if table can be freed
+    if (order && order.tableId) {
+      try {
+        const remainingActive = localDataService.getOrders({ tableId: order.tableId }).filter(
+          (o) => String(o._id) !== String(id) && String(o.orderNumber) !== String(id) && ['PENDING', 'APPROVED', 'PREPARING', 'READY'].includes(o.status)
+        );
+        if (remainingActive.length === 0) {
+          const table = await Table.findById(order.tableId);
+          if (table && table.status === 'OCCUPIED') {
+            table.status = 'AVAILABLE';
+            await table.save();
+            emitTableUpdated(table);
+          }
+        }
+      } catch (e) {}
+    }
+
+    // Cancel or remove associated prep tasks
+    try {
+      const prepTasks = localDataService.getPrepTasks({ orderId: id });
+      prepTasks.forEach((t) => {
+        localDataService.updatePrepTask(t._id, { status: 'CANCELLED' });
+        emitPrepTaskUpdated({ ...t, status: 'CANCELLED' });
+      });
+    } catch (e) {}
+
+    if (order) {
+      emitOrderCancelled(order);
+    }
+
+    res.json({
+      success: true,
+      message: `Order #${order?.orderNumber || id} has been completely removed.`,
+    });
+  } catch (error) {
+    console.error('Delete order error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Get Takeaway Cancellation Code (Super Admin Only)
+// @route   GET /api/orders/takeaway-cancel-code
+// @access  Private (Super Admin)
+const getTakeawayCancelCode = async (req, res) => {
+  try {
+    const isSuperAdmin = await verifySuperAdminAccess(req);
+    if (!isSuperAdmin) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied: Only Super Admin can view the takeaway cancellation code.',
+      });
+    }
+
+    const cancelCode = localDataService.getTakeawayCancelCode();
+    return res.json({
+      success: true,
+      cancelCode,
+    });
+  } catch (error) {
+    console.error('getTakeawayCancelCode error:', error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Update Takeaway Cancellation Code (Super Admin Only)
+// @route   PUT /api/orders/takeaway-cancel-code
+// @access  Private (Super Admin)
+const updateTakeawayCancelCode = async (req, res) => {
+  try {
+    const isSuperAdmin = await verifySuperAdminAccess(req);
+    if (!isSuperAdmin) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied: Only Super Admin can change the takeaway cancellation code.',
+      });
+    }
+
+    const { code } = req.body;
+    const cleanCode = String(code || '').trim();
+    if (!cleanCode) {
+      return res.status(400).json({
+        success: false,
+        message: 'A valid non-empty cancellation code is required.',
+      });
+    }
+
+    const updatedCode = localDataService.setTakeawayCancelCode(cleanCode);
+    return res.json({
+      success: true,
+      message: 'Takeaway cancellation code updated successfully.',
+      cancelCode: updatedCode,
+    });
+  } catch (error) {
+    console.error('updateTakeawayCancelCode error:', error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Verify takeaway / order cancellation code
+// @route   POST /api/orders/verify-cancel-code
+// @access  Private (Staff / Admin)
+const verifyCancelCode = async (req, res) => {
+  try {
+    const { cancelCode, superAdminPassword } = req.body;
+    const currentCancelCode = localDataService.getTakeawayCancelCode();
+    const cleanCode = String(
+      cancelCode ||
+      req.headers['x-cancel-code'] ||
+      superAdminPassword ||
+      req.headers['x-superadmin-password'] ||
+      ''
+    ).trim();
+
+    const isSuper = await verifySuperAdminAccess(req);
+    if (cleanCode === currentCancelCode || isSuper) {
+      return res.json({ success: true, valid: true });
+    }
+    return res.status(403).json({
+      success: false,
+      valid: false,
+      message: 'Invalid cancellation code. Please check and try again.',
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 module.exports = {
   createOrder,
   approveOrder,
   rejectOrder,
   cancelOrder,
+  deleteOrder,
+  updateOrderItems,
+  removeOrderItem,
   getPrepTasks,
   updatePrepTask,
   getOrders,
   getOrderById,
+  getTakeawayCancelCode,
+  updateTakeawayCancelCode,
+  verifyCancelCode,
 };

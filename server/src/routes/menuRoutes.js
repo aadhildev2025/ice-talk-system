@@ -26,6 +26,7 @@ router.delete('/:id', protect, authorize('admin'), deleteMenuItem);
 
 // Categories
 router.get('/categories/all', protect, getCategories);
+router.get('/categories', protect, getCategories);
 router.post('/categories', protect, authorize('admin'), createCategory);
 router.put('/categories/:id', protect, authorize('admin'), updateCategory);
 router.delete('/categories/:id', protect, authorize('admin'), deleteCategory);

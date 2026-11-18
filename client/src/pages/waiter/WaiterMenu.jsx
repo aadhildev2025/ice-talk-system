@@ -252,6 +252,7 @@ const WaiterMenu = () => {
         waiterNameSnapshot: waiterName,
         items: cart,
         specialInstructions: orderInstructions,
+        autoApprove: false,
       };
 
       const res = await axios.post('/api/orders', payload);

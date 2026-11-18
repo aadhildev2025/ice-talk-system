@@ -15,6 +15,8 @@ const orderRoutes = require('./routes/orderRoutes');
 const posRoutes = require('./routes/posRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const expenseRoutes = require('./routes/expenseRoutes');
+const customerRoutes = require('./routes/customerRoutes');
+const groceryRoutes = require('./routes/groceryRoutes');
 const { initDemoUser } = require('./utils/demoSalesService');
 
 const path = require('path');
@@ -23,6 +25,18 @@ dotenv.config({ path: path.join(__dirname, '../.env') });
 dotenv.config({ path: path.join(__dirname, '../../.env') });
 dotenv.config();
 
+// Load custom .env from portable folder if user provided custom configuration
+if (process.env.PORTABLE_EXECUTABLE_DIR) {
+  const portableEnv = path.join(process.env.PORTABLE_EXECUTABLE_DIR, '.env');
+  if (fs.existsSync(portableEnv)) {
+    dotenv.config({ path: portableEnv, override: true });
+  }
+  const portableDataEnv = path.join(process.env.PORTABLE_EXECUTABLE_DIR, 'ice-talk-data', '.env');
+  if (fs.existsSync(portableDataEnv)) {
+    dotenv.config({ path: portableDataEnv, override: true });
+  }
+}
+
 // Fallback defaults for standalone desktop POS executable
 process.env.PORT = process.env.PORT || '5000';
 process.env.MONGODB_URI =
@@ -30,9 +44,57 @@ process.env.MONGODB_URI =
   'mongodb+srv://mubeeth17_db_user:omDriAeanrm9g1qM@cluster0.hctj1le.mongodb.net/icetalk_restaurant?retryWrites=true&w=majority&appName=Cluster0';
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'icetalk_restaurant_secret_key_2026';
 
+async function syncFullDishNames() {
+  try {
+    const MenuItem = require('./models/MenuItem');
+    const updateMap = [
+      { cat: 'BIRIYANI (PORTION ONLY)', from: 'Chicken (Portion)', to: 'Chicken Biriyani (Portion)' },
+      { cat: 'BIRIYANI (PORTION ONLY)', from: 'Beef (Portion)', to: 'Beef Biriyani (Portion)' },
+      { cat: 'BIRIYANI (PORTION ONLY)', from: 'Mutton (Portion)', to: 'Mutton Biriyani (Portion)' },
+      { cat: 'BIRIYANI (PORTION ONLY)', from: 'Prawn (Portion)', to: 'Prawn Biriyani (Portion)' },
+      { cat: 'BIRIYANI (PORTION ONLY)', from: 'Fish (Portion)', to: 'Fish Biriyani (Portion)' },
+
+      { cat: 'DEVILED (PORTION ONLY)', from: 'Chicken (Portion)', to: 'Deviled Chicken (Portion)' },
+      { cat: 'DEVILED (PORTION ONLY)', from: 'Beef (Portion)', to: 'Deviled Beef (Portion)' },
+      { cat: 'DEVILED (PORTION ONLY)', from: 'Prawn (Portion)', to: 'Deviled Prawn (Portion)' },
+      { cat: 'DEVILED (PORTION ONLY)', from: 'Cuttle Fish (Portion)', to: 'Deviled Cuttle Fish (Portion)' },
+      { cat: 'DEVILED (PORTION ONLY)', from: 'Fish (Portion)', to: 'Deviled Fish (Portion)' },
+      { cat: 'DEVILED (PORTION ONLY)', from: 'Mix (Portion)', to: 'Deviled Mix (Portion)' },
+
+      { cat: 'GHEE FRIED RICE (PORTION ONLY)', from: 'Chicken (Portion)', to: 'Chicken Ghee Fried Rice (Portion)' },
+      { cat: 'GHEE FRIED RICE (PORTION ONLY)', from: 'Beef (Portion)', to: 'Beef Ghee Fried Rice (Portion)' },
+      { cat: 'GHEE FRIED RICE (PORTION ONLY)', from: 'Sea Food (Portion)', to: 'Sea Food Ghee Fried Rice (Portion)' },
+      { cat: 'GHEE FRIED RICE (PORTION ONLY)', from: 'Mix (Portion)', to: 'Mix Ghee Fried Rice (Portion)' },
+
+      { cat: 'CHOPSUEY RICE (PORTION ONLY)', from: 'Vegetable (Portion)', to: 'Vegetable Chopsuey Rice (Portion)' },
+      { cat: 'CHOPSUEY RICE (PORTION ONLY)', from: 'Chicken (Portion)', to: 'Chicken Chopsuey Rice (Portion)' },
+      { cat: 'CHOPSUEY RICE (PORTION ONLY)', from: 'Sea Food (Portion)', to: 'Sea Food Chopsuey Rice (Portion)' },
+
+      { cat: 'CHOPSUEY NOODLES (PORTION ONLY)', from: 'Vegetable (Portion)', to: 'Vegetable Chopsuey Noodles (Portion)' },
+      { cat: 'CHOPSUEY NOODLES (PORTION ONLY)', from: 'Chicken (Portion)', to: 'Chicken Chopsuey Noodles (Portion)' },
+      { cat: 'CHOPSUEY NOODLES (PORTION ONLY)', from: 'Sea Food (Portion)', to: 'Sea Food Chopsuey Noodles (Portion)' },
+
+      { cat: 'HAWAIIAN KOTTU (PORTION ONLY)', from: 'Chicken (Portion)', to: 'Chicken Hawaiian Kottu (Portion)' },
+      { cat: 'HAWAIIAN KOTTU (PORTION ONLY)', from: 'Mix (Portion)', to: 'Mix Hawaiian Kottu (Portion)' },
+
+      { cat: 'PEPPER KOTTU (PORTION ONLY)', from: 'Chicken (Portion)', to: 'Chicken Pepper Kottu (Portion)' },
+      { cat: 'PEPPER KOTTU (PORTION ONLY)', from: 'Beef (Portion)', to: 'Beef Pepper Kottu (Portion)' },
+      { cat: 'PEPPER KOTTU (PORTION ONLY)', from: 'Mix (Portion)', to: 'Mix Pepper Kottu (Portion)' },
+    ];
+
+    for (const item of updateMap) {
+      await MenuItem.updateMany(
+        { category: item.cat, name: item.from },
+        { $set: { name: item.to } }
+      );
+    }
+  } catch (_) {}
+}
+
 // Connect to MongoDB
 connectDB().then(() => {
   initDemoUser();
+  syncFullDishNames();
 }).catch(() => {});
 
 const app = express();
@@ -68,7 +130,11 @@ app.use(async (req, res, next) => {
     req.path.startsWith('/api/orders') ||
     req.path.startsWith('/orders') ||
     req.path.startsWith('/api/expenses') ||
-    req.path.startsWith('/expenses');
+    req.path.startsWith('/expenses') ||
+    req.path.startsWith('/api/customers') ||
+    req.path.startsWith('/customers') ||
+    req.path.startsWith('/api/grocery') ||
+    req.path.startsWith('/grocery');
 
   if (isLocalComputerStorageRoute) {
     const mongoose = require('mongoose');
@@ -99,10 +165,18 @@ app.use(async (req, res, next) => {
 app.use(['/api/auth', '/auth'], authRoutes);
 app.use(['/api/tables', '/tables'], tableRoutes);
 app.use(['/api/menu', '/menu'], menuRoutes);
+app.use(['/api/categories', '/categories'], (req, res, next) => {
+  if (req.url === '/' || req.url === '') req.url = '/categories';
+  else if (req.url === '/all') req.url = '/categories/all';
+  else if (!req.url.startsWith('/categories')) req.url = `/categories${req.url}`;
+  return menuRoutes(req, res, next);
+});
 app.use(['/api/orders', '/orders'], orderRoutes);
 app.use(['/api/pos', '/pos'], posRoutes);
 app.use(['/api/reports', '/reports'], reportRoutes);
 app.use(['/api/expenses', '/expenses'], expenseRoutes);
+app.use(['/api/customers', '/customers'], customerRoutes);
+app.use(['/api/grocery', '/grocery'], groceryRoutes);
 
 // Health check endpoint
 app.get(['/api/health', '/health'], (req, res) => {

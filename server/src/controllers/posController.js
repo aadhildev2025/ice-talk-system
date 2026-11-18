@@ -1,5 +1,6 @@
 const Table = require('../models/Table');
-const { emitSaleCompleted, emitTableUpdated } = require('../socket');
+const GroceryItem = require('../models/GroceryItem');
+const { emitSaleCompleted, emitTableUpdated, emitGroceryUpdated } = require('../socket');
 const localDataService = require('../services/localDataService');
 
 // @desc    Get active unpaid orders for a specific table
@@ -33,10 +34,14 @@ const getTableActiveOrders = async (req, res) => {
     // Flatten all items across multiple orders for billing
     const aggregatedItems = [];
     activeOrders.forEach((order) => {
-      (order.items || []).forEach((item) => {
+      (order.items || []).forEach((item, idx) => {
         aggregatedItems.push({
+          orderId: order._id,
           orderNumber: order.orderNumber,
+          itemIndex: idx,
+          menuItemId: item.menuItemId || item._id,
           name: item.name,
+          portion: item.portion || null,
           quantity: item.quantity,
           price: item.price,
           total: item.total || item.price * item.quantity,
@@ -87,6 +92,38 @@ const getChannelActiveOrders = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Helper: Deduct grocery stock when a sale is completed
+const deductGroceryStockForOrders = async (orders) => {
+  try {
+    const soldItems = [];
+    (orders || []).forEach((ord) => {
+      (ord.items || []).forEach((it) => {
+        soldItems.push({
+          groceryItemId: it.groceryItemId || it.menuItemId,
+          barcode: it.barcode,
+          name: it.name,
+          quantity: it.quantity,
+        });
+      });
+    });
+
+    if (soldItems.length === 0) return;
+
+    // 1. Deduct from local computer storage
+    const updatedLocalItems = localDataService.reduceGroceryStockFromSale(soldItems);
+
+    // 2. Also update MongoDB if connected
+    for (const u of updatedLocalItems) {
+      try {
+        await GroceryItem.findByIdAndUpdate(u._id, { stockQuantity: u.stockQuantity });
+      } catch (_) {}
+      emitGroceryUpdated(u);
+    }
+  } catch (err) {
+    console.warn('[POS] Failed to deduct grocery stock on sale:', err.message);
   }
 };
 
@@ -187,11 +224,15 @@ const settleTable = async (req, res) => {
         }
 
         itemsSnapshot.push({
+          menuItemId: item.menuItemId,
+          groceryItemId: item.groceryItemId,
+          isGrocery: Boolean(item.isGrocery),
+          barcode: item.barcode || '',
           name: item.name,
           quantity: item.quantity,
           price: item.price,
           total: (item.price * item.quantity) + itemNoteAmount,
-          department: item.department || 'KITCHEN',
+          department: item.department || (item.isGrocery ? 'NONE' : 'KITCHEN'),
           specialInstructions: item.specialInstructions || '',
           noteAmount: itemNoteAmount,
         });
@@ -229,6 +270,13 @@ const settleTable = async (req, res) => {
     const tendered = Number(amountTendered) || finalTotal;
     const change = paymentMethod === 'CASH' ? Math.max(0, tendered - finalTotal) : 0;
 
+    const resolvedWaiterName =
+      req.body.waiterNameSnapshot ||
+      req.body.waiterName ||
+      (orders.find((o) => o.waiterNameSnapshot || o.waiterName)?.waiterNameSnapshot) ||
+      (orders.find((o) => o.waiterNameSnapshot || o.waiterName)?.waiterName) ||
+      '';
+
     // Per requirement: Only the sales records should not be entered in dsuper
     if (req.user?.username === 'dsuper' || req.user?.isDemo) {
       const demoSaleNumber = `INV-D${String(Date.now()).slice(-5)}`;
@@ -253,6 +301,8 @@ const settleTable = async (req, res) => {
         changeAmount: change,
         cashierId: req.user ? req.user._id : null,
         cashierNameSnapshot: 'SuperADMIN',
+        waiterName: resolvedWaiterName,
+        waiterNameSnapshot: resolvedWaiterName,
         isDemo: true,
         createdAt: new Date().toISOString(),
       };
@@ -266,6 +316,9 @@ const settleTable = async (req, res) => {
           saleId: demoSale._id,
         });
       });
+
+      // Deduct grocery stock if any grocery items were sold
+      await deductGroceryStockForOrders(orders);
 
       if (table) {
         try {
@@ -307,6 +360,8 @@ const settleTable = async (req, res) => {
       changeAmount: change,
       cashierId: req.user ? req.user._id : null,
       cashierNameSnapshot: req.user ? req.user.name : 'Staff',
+      waiterName: resolvedWaiterName,
+      waiterNameSnapshot: resolvedWaiterName,
       isDemo: Boolean(req.user?.isDemo),
     });
 
@@ -319,6 +374,24 @@ const settleTable = async (req, res) => {
         saleId: sale._id,
       });
     });
+
+    // Deduct grocery stock if any grocery items were sold
+    await deductGroceryStockForOrders(orders);
+
+    // Update customer metrics if customerName is attached
+    const resolvedCustomerName = req.body.customerName || (orders.find((o) => o.customerName)?.customerName);
+    const resolvedCustomerPhone = req.body.customerPhone || (orders.find((o) => o.customerPhone)?.customerPhone);
+    if (resolvedCustomerName && resolvedCustomerName.trim()) {
+      try {
+        localDataService.findOrCreateCustomer({
+          name: resolvedCustomerName,
+          phone: resolvedCustomerPhone,
+          orderAmount: finalTotal,
+        });
+      } catch (e) {
+        console.warn('Customer tracking on sale failed:', e.message);
+      }
+    }
 
     // Update MongoDB Table status back to AVAILABLE if applicable
     if (table) {

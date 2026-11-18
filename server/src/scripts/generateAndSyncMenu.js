@@ -111,14 +111,14 @@ const menuItemsData = [
   { name: 'Special Mix Fried Rice', category: 'SPECIAL FRIED RICE', department: 'KITCHEN', hasPortions: true, availablePortions: ['Normal', 'Full'], portionPrices: { normal: 1550, full: 2400, portion: 1550 }, price: 1550 },
 
   // 7. GHEE FRIED RICE (PORTION ONLY)
-  { name: 'Chicken (Portion)', category: 'GHEE FRIED RICE (PORTION ONLY)', department: 'KITCHEN', price: 1300, hasPortions: false, availablePortions: ['Portion'], portionPrices: { portion: 1300 } },
-  { name: 'Beef (Portion)', category: 'GHEE FRIED RICE (PORTION ONLY)', department: 'KITCHEN', price: 1400, hasPortions: false, availablePortions: ['Portion'], portionPrices: { portion: 1400 } },
-  { name: 'Sea Food (Portion)', category: 'GHEE FRIED RICE (PORTION ONLY)', department: 'KITCHEN', price: 1550, hasPortions: false, availablePortions: ['Portion'], portionPrices: { portion: 1550 } },
+  { name: 'Chicken Ghee Fried Rice (Portion)', category: 'GHEE FRIED RICE (PORTION ONLY)', department: 'KITCHEN', price: 1300, hasPortions: false, availablePortions: ['Portion'], portionPrices: { portion: 1300 } },
+  { name: 'Beef Ghee Fried Rice (Portion)', category: 'GHEE FRIED RICE (PORTION ONLY)', department: 'KITCHEN', price: 1400, hasPortions: false, availablePortions: ['Portion'], portionPrices: { portion: 1400 } },
+  { name: 'Sea Food Ghee Fried Rice (Portion)', category: 'GHEE FRIED RICE (PORTION ONLY)', department: 'KITCHEN', price: 1550, hasPortions: false, availablePortions: ['Portion'], portionPrices: { portion: 1550 } },
   { name: 'Mix (Portion)', category: 'GHEE FRIED RICE (PORTION ONLY)', department: 'KITCHEN', price: 1550, hasPortions: false, availablePortions: ['Portion'], portionPrices: { portion: 1550 } },
 
   // 8. CHOPSUEY RICE (PORTION ONLY)
-  { name: 'Vegetable (Portion)', category: 'CHOPSUEY RICE (PORTION ONLY)', department: 'KITCHEN', price: 1050, hasPortions: false, availablePortions: ['Portion'], portionPrices: { portion: 1050 } },
-  { name: 'Chicken (Portion)', category: 'CHOPSUEY RICE (PORTION ONLY)', department: 'KITCHEN', price: 1450, hasPortions: false, availablePortions: ['Portion'], portionPrices: { portion: 1450 } },
+  { name: 'Vegetable Chopsuey Rice (Portion)', category: 'CHOPSUEY RICE (PORTION ONLY)', department: 'KITCHEN', price: 1050, hasPortions: false, availablePortions: ['Portion'], portionPrices: { portion: 1050 } },
+  { name: 'Chicken Chopsuey Rice (Portion)', category: 'CHOPSUEY RICE (PORTION ONLY)', department: 'KITCHEN', price: 1450, hasPortions: false, availablePortions: ['Portion'], portionPrices: { portion: 1450 } },
   { name: 'Sea Food (Portion)', category: 'CHOPSUEY RICE (PORTION ONLY)', department: 'KITCHEN', price: 1850, hasPortions: false, availablePortions: ['Portion'], portionPrices: { portion: 1850 } },
 
   // 9. MONGOLIAN RICE (Normal & Full)
@@ -145,15 +145,15 @@ const menuItemsData = [
   { name: 'Mix Noodles', category: 'NOODLES', department: 'KITCHEN', hasPortions: true, availablePortions: ['Normal', 'Full'], portionPrices: { normal: 950, full: 1500, portion: 950 }, price: 950 },
 
   // 12. CHOPSUEY NOODLES (PORTION ONLY)
-  { name: 'Vegetable (Portion)', category: 'CHOPSUEY NOODLES (PORTION ONLY)', department: 'KITCHEN', price: 1050, hasPortions: false, availablePortions: ['Portion'], portionPrices: { portion: 1050 } },
-  { name: 'Chicken (Portion)', category: 'CHOPSUEY NOODLES (PORTION ONLY)', department: 'KITCHEN', price: 1400, hasPortions: false, availablePortions: ['Portion'], portionPrices: { portion: 1400 } },
+  { name: 'Vegetable Chopsuey Noodles (Portion)', category: 'CHOPSUEY NOODLES (PORTION ONLY)', department: 'KITCHEN', price: 1050, hasPortions: false, availablePortions: ['Portion'], portionPrices: { portion: 1050 } },
+  { name: 'Chicken Biriyani (Portion)', category: 'CHOPSUEY NOODLES (PORTION ONLY)', department: 'KITCHEN', price: 1400, hasPortions: false, availablePortions: ['Portion'], portionPrices: { portion: 1400 } },
   { name: 'Sea Food (Portion)', category: 'CHOPSUEY NOODLES (PORTION ONLY)', department: 'KITCHEN', price: 1800, hasPortions: false, availablePortions: ['Portion'], portionPrices: { portion: 1800 } },
 
   // 13. BIRIYANI (PORTION ONLY)
-  { name: 'Chicken (Portion)', category: 'BIRIYANI (PORTION ONLY)', department: 'KITCHEN', price: 1650, hasPortions: false, availablePortions: ['Portion'], portionPrices: { portion: 1650 } },
-  { name: 'Beef (Portion)', category: 'BIRIYANI (PORTION ONLY)', department: 'KITCHEN', price: 2000, hasPortions: false, availablePortions: ['Portion'], portionPrices: { portion: 2000 } },
-  { name: 'Mutton (Portion)', category: 'BIRIYANI (PORTION ONLY)', department: 'KITCHEN', price: 2500, hasPortions: false, availablePortions: ['Portion'], portionPrices: { portion: 2500 } },
-  { name: 'Prawn (Portion)', category: 'BIRIYANI (PORTION ONLY)', department: 'KITCHEN', price: 2000, hasPortions: false, availablePortions: ['Portion'], portionPrices: { portion: 2000 } },
+  { name: 'Chicken Biriyani (Portion)', category: 'BIRIYANI (PORTION ONLY)', department: 'KITCHEN', price: 1650, hasPortions: false, availablePortions: ['Portion'], portionPrices: { portion: 1650 } },
+  { name: 'Beef Biriyani (Portion)', category: 'BIRIYANI (PORTION ONLY)', department: 'KITCHEN', price: 2000, hasPortions: false, availablePortions: ['Portion'], portionPrices: { portion: 2000 } },
+  { name: 'Mutton Biriyani (Portion)', category: 'BIRIYANI (PORTION ONLY)', department: 'KITCHEN', price: 2500, hasPortions: false, availablePortions: ['Portion'], portionPrices: { portion: 2500 } },
+  { name: 'Prawn Biriyani (Portion)', category: 'BIRIYANI (PORTION ONLY)', department: 'KITCHEN', price: 2000, hasPortions: false, availablePortions: ['Portion'], portionPrices: { portion: 2000 } },
   { name: 'Fish (Portion)', category: 'BIRIYANI (PORTION ONLY)', department: 'KITCHEN', price: 2000, hasPortions: false, availablePortions: ['Portion'], portionPrices: { portion: 2000 } },
 
   // 14. SPECIAL PACKS & SAWANS
@@ -206,12 +206,12 @@ const menuItemsData = [
   { name: 'Mix Kottu Rotty', category: 'KOTTU ROTTY', department: 'KITCHEN', hasPortions: true, availablePortions: ['Normal', 'Full'], portionPrices: { normal: 950, full: 1500, portion: 950 }, price: 950 },
 
   // 20. HAWAIIAN KOTTU (PORTION ONLY)
-  { name: 'Chicken (Portion)', category: 'HAWAIIAN KOTTU (PORTION ONLY)', department: 'KITCHEN', price: 1500, hasPortions: false, availablePortions: ['Portion'], portionPrices: { portion: 1500 } },
-  { name: 'Mix (Portion)', category: 'HAWAIIAN KOTTU (PORTION ONLY)', department: 'KITCHEN', price: 1800, hasPortions: false, availablePortions: ['Portion'], portionPrices: { portion: 1800 } },
+  { name: 'Chicken Hawaiian Kottu (Portion)', category: 'HAWAIIAN KOTTU (PORTION ONLY)', department: 'KITCHEN', price: 1500, hasPortions: false, availablePortions: ['Portion'], portionPrices: { portion: 1500 } },
+  { name: 'Mix Pepper Kottu (Portion)', category: 'HAWAIIAN KOTTU (PORTION ONLY)', department: 'KITCHEN', price: 1800, hasPortions: false, availablePortions: ['Portion'], portionPrices: { portion: 1800 } },
 
   // 21. PEPPER KOTTU (PORTION ONLY)
-  { name: 'Chicken (Portion)', category: 'PEPPER KOTTU (PORTION ONLY)', department: 'KITCHEN', price: 1350, hasPortions: false, availablePortions: ['Portion'], portionPrices: { portion: 1350 } },
-  { name: 'Beef (Portion)', category: 'PEPPER KOTTU (PORTION ONLY)', department: 'KITCHEN', price: 1450, hasPortions: false, availablePortions: ['Portion'], portionPrices: { portion: 1450 } },
+  { name: 'Chicken Pepper Kottu (Portion)', category: 'PEPPER KOTTU (PORTION ONLY)', department: 'KITCHEN', price: 1350, hasPortions: false, availablePortions: ['Portion'], portionPrices: { portion: 1350 } },
+  { name: 'Beef Pepper Kottu (Portion)', category: 'PEPPER KOTTU (PORTION ONLY)', department: 'KITCHEN', price: 1450, hasPortions: false, availablePortions: ['Portion'], portionPrices: { portion: 1450 } },
   { name: 'Mix (Portion)', category: 'PEPPER KOTTU (PORTION ONLY)', department: 'KITCHEN', price: 1650, hasPortions: false, availablePortions: ['Portion'], portionPrices: { portion: 1650 } },
 
   // 22. KURUMA
@@ -243,11 +243,11 @@ const menuItemsData = [
   { name: 'Naan Family Pack', price: 7000, category: 'NAAN ROTTY', department: 'KITCHEN' },
 
   // 27. DEVILED (PORTION ONLY)
-  { name: 'Chicken (Portion)', category: 'DEVILED (PORTION ONLY)', department: 'KITCHEN', price: 1450, hasPortions: false, availablePortions: ['Portion'], portionPrices: { portion: 1450 } },
-  { name: 'Beef (Portion)', category: 'DEVILED (PORTION ONLY)', department: 'KITCHEN', price: 1600, hasPortions: false, availablePortions: ['Portion'], portionPrices: { portion: 1600 } },
-  { name: 'Prawn (Portion)', category: 'DEVILED (PORTION ONLY)', department: 'KITCHEN', price: 1600, hasPortions: false, availablePortions: ['Portion'], portionPrices: { portion: 1600 } },
-  { name: 'Cuttle Fish (Portion)', category: 'DEVILED (PORTION ONLY)', department: 'KITCHEN', price: 1600, hasPortions: false, availablePortions: ['Portion'], portionPrices: { portion: 1600 } },
-  { name: 'Fish (Portion)', category: 'DEVILED (PORTION ONLY)', department: 'KITCHEN', price: 1600, hasPortions: false, availablePortions: ['Portion'], portionPrices: { portion: 1600 } },
+  { name: 'Deviled Chicken (Portion)', category: 'DEVILED (PORTION ONLY)', department: 'KITCHEN', price: 1450, hasPortions: false, availablePortions: ['Portion'], portionPrices: { portion: 1450 } },
+  { name: 'Deviled Beef (Portion)', category: 'DEVILED (PORTION ONLY)', department: 'KITCHEN', price: 1600, hasPortions: false, availablePortions: ['Portion'], portionPrices: { portion: 1600 } },
+  { name: 'Deviled Prawn (Portion)', category: 'DEVILED (PORTION ONLY)', department: 'KITCHEN', price: 1600, hasPortions: false, availablePortions: ['Portion'], portionPrices: { portion: 1600 } },
+  { name: 'Deviled Cuttle Fish (Portion)', category: 'DEVILED (PORTION ONLY)', department: 'KITCHEN', price: 1600, hasPortions: false, availablePortions: ['Portion'], portionPrices: { portion: 1600 } },
+  { name: 'Deviled Fish (Portion)', category: 'DEVILED (PORTION ONLY)', department: 'KITCHEN', price: 1600, hasPortions: false, availablePortions: ['Portion'], portionPrices: { portion: 1600 } },
   { name: 'Mix (Portion)', category: 'DEVILED (PORTION ONLY)', department: 'KITCHEN', price: 2200, hasPortions: false, availablePortions: ['Portion'], portionPrices: { portion: 2200 } },
 
   // 28. BBQ & TANDOORI

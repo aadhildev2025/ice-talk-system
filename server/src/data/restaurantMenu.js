@@ -928,7 +928,7 @@ const defaultMenuItems = [
     }
   },
   {
-    "name": "Chicken (Portion)",
+    "name": "Chicken Ghee Fried Rice (Portion)",
     "description": "",
     "price": 1300,
     "category": "GHEE FRIED RICE (PORTION ONLY)",
@@ -945,7 +945,7 @@ const defaultMenuItems = [
     }
   },
   {
-    "name": "Beef (Portion)",
+    "name": "Beef Ghee Fried Rice (Portion)",
     "description": "",
     "price": 1400,
     "category": "GHEE FRIED RICE (PORTION ONLY)",
@@ -962,7 +962,7 @@ const defaultMenuItems = [
     }
   },
   {
-    "name": "Sea Food (Portion)",
+    "name": "Sea Food Ghee Fried Rice (Portion)",
     "description": "",
     "price": 1550,
     "category": "GHEE FRIED RICE (PORTION ONLY)",
@@ -979,7 +979,7 @@ const defaultMenuItems = [
     }
   },
   {
-    "name": "Mix (Portion)",
+    "name": "Mix Ghee Fried Rice (Portion)",
     "description": "",
     "price": 1550,
     "category": "GHEE FRIED RICE (PORTION ONLY)",
@@ -996,7 +996,7 @@ const defaultMenuItems = [
     }
   },
   {
-    "name": "Vegetable (Portion)",
+    "name": "Vegetable Chopsuey Rice (Portion)",
     "description": "",
     "price": 1050,
     "category": "CHOPSUEY RICE (PORTION ONLY)",
@@ -1013,7 +1013,7 @@ const defaultMenuItems = [
     }
   },
   {
-    "name": "Chicken (Portion)",
+    "name": "Chicken Chopsuey Rice (Portion)",
     "description": "",
     "price": 1450,
     "category": "CHOPSUEY RICE (PORTION ONLY)",
@@ -1030,7 +1030,7 @@ const defaultMenuItems = [
     }
   },
   {
-    "name": "Sea Food (Portion)",
+    "name": "Sea Food Chopsuey Rice (Portion)",
     "description": "",
     "price": 1850,
     "category": "CHOPSUEY RICE (PORTION ONLY)",
@@ -1387,7 +1387,7 @@ const defaultMenuItems = [
     }
   },
   {
-    "name": "Vegetable (Portion)",
+    "name": "Vegetable Chopsuey Noodles (Portion)",
     "description": "",
     "price": 1050,
     "category": "CHOPSUEY NOODLES (PORTION ONLY)",
@@ -1404,7 +1404,7 @@ const defaultMenuItems = [
     }
   },
   {
-    "name": "Chicken (Portion)",
+    "name": "Chicken Chopsuey Noodles (Portion)",
     "description": "",
     "price": 1400,
     "category": "CHOPSUEY NOODLES (PORTION ONLY)",
@@ -1421,7 +1421,7 @@ const defaultMenuItems = [
     }
   },
   {
-    "name": "Sea Food (Portion)",
+    "name": "Sea Food Chopsuey Noodles (Portion)",
     "description": "",
     "price": 1800,
     "category": "CHOPSUEY NOODLES (PORTION ONLY)",
@@ -1438,7 +1438,7 @@ const defaultMenuItems = [
     }
   },
   {
-    "name": "Chicken (Portion)",
+    "name": "Chicken Biriyani (Portion)",
     "description": "",
     "price": 1650,
     "category": "BIRIYANI (PORTION ONLY)",
@@ -1455,7 +1455,7 @@ const defaultMenuItems = [
     }
   },
   {
-    "name": "Beef (Portion)",
+    "name": "Beef Biriyani (Portion)",
     "description": "",
     "price": 2000,
     "category": "BIRIYANI (PORTION ONLY)",
@@ -1472,7 +1472,7 @@ const defaultMenuItems = [
     }
   },
   {
-    "name": "Mutton (Portion)",
+    "name": "Mutton Biriyani (Portion)",
     "description": "",
     "price": 2500,
     "category": "BIRIYANI (PORTION ONLY)",
@@ -1489,7 +1489,7 @@ const defaultMenuItems = [
     }
   },
   {
-    "name": "Prawn (Portion)",
+    "name": "Prawn Biriyani (Portion)",
     "description": "",
     "price": 2000,
     "category": "BIRIYANI (PORTION ONLY)",
@@ -1506,7 +1506,7 @@ const defaultMenuItems = [
     }
   },
   {
-    "name": "Fish (Portion)",
+    "name": "Fish Biriyani (Portion)",
     "description": "",
     "price": 2000,
     "category": "BIRIYANI (PORTION ONLY)",
@@ -2239,7 +2239,7 @@ const defaultMenuItems = [
     }
   },
   {
-    "name": "Chicken (Portion)",
+    "name": "Chicken Hawaiian Kottu (Portion)",
     "description": "",
     "price": 1500,
     "category": "HAWAIIAN KOTTU (PORTION ONLY)",
@@ -2256,7 +2256,7 @@ const defaultMenuItems = [
     }
   },
   {
-    "name": "Mix (Portion)",
+    "name": "Mix Hawaiian Kottu (Portion)",
     "description": "",
     "price": 1800,
     "category": "HAWAIIAN KOTTU (PORTION ONLY)",
@@ -2273,7 +2273,7 @@ const defaultMenuItems = [
     }
   },
   {
-    "name": "Chicken (Portion)",
+    "name": "Chicken Pepper Kottu (Portion)",
     "description": "",
     "price": 1350,
     "category": "PEPPER KOTTU (PORTION ONLY)",
@@ -2290,7 +2290,7 @@ const defaultMenuItems = [
     }
   },
   {
-    "name": "Beef (Portion)",
+    "name": "Beef Pepper Kottu (Portion)",
     "description": "",
     "price": 1450,
     "category": "PEPPER KOTTU (PORTION ONLY)",
@@ -2307,7 +2307,7 @@ const defaultMenuItems = [
     }
   },
   {
-    "name": "Mix (Portion)",
+    "name": "Mix Pepper Kottu (Portion)",
     "description": "",
     "price": 1650,
     "category": "PEPPER KOTTU (PORTION ONLY)",
@@ -2630,7 +2630,7 @@ const defaultMenuItems = [
     }
   },
   {
-    "name": "Chicken (Portion)",
+    "name": "Deviled Chicken (Portion)",
     "description": "",
     "price": 1450,
     "category": "DEVILED (PORTION ONLY)",
@@ -2647,7 +2647,7 @@ const defaultMenuItems = [
     }
   },
   {
-    "name": "Beef (Portion)",
+    "name": "Deviled Beef (Portion)",
     "description": "",
     "price": 1600,
     "category": "DEVILED (PORTION ONLY)",
@@ -2664,7 +2664,7 @@ const defaultMenuItems = [
     }
   },
   {
-    "name": "Prawn (Portion)",
+    "name": "Deviled Prawn (Portion)",
     "description": "",
     "price": 1600,
     "category": "DEVILED (PORTION ONLY)",
@@ -2681,7 +2681,7 @@ const defaultMenuItems = [
     }
   },
   {
-    "name": "Cuttle Fish (Portion)",
+    "name": "Deviled Cuttle Fish (Portion)",
     "description": "",
     "price": 1600,
     "category": "DEVILED (PORTION ONLY)",
@@ -2698,7 +2698,7 @@ const defaultMenuItems = [
     }
   },
   {
-    "name": "Fish (Portion)",
+    "name": "Deviled Fish (Portion)",
     "description": "",
     "price": 1600,
     "category": "DEVILED (PORTION ONLY)",
@@ -2715,7 +2715,7 @@ const defaultMenuItems = [
     }
   },
   {
-    "name": "Mix (Portion)",
+    "name": "Deviled Mix (Portion)",
     "description": "",
     "price": 2200,
     "category": "DEVILED (PORTION ONLY)",

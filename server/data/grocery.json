@@ -1,0 +1,17 @@
+[
+  {
+    "_id": "6ad76da5ae0e46542b78f943",
+    "name": "Choco",
+    "barcode": "890918390707",
+    "price": 300,
+    "costPrice": 280,
+    "stockQuantity": 30,
+    "lowStockThreshold": 5,
+    "category": "Food",
+    "unit": "pcs",
+    "isAvailable": true,
+    "description": "",
+    "createdAt": "2026-10-20T13:33:25.151Z",
+    "updatedAt": "2026-10-20T13:33:25.151Z"
+  }
+]

@@ -25,10 +25,14 @@ const getDataDir = () => {
     return targetDir;
   }
 
-  // 3. Next to executable if packaged without asar
+  // 3. Next to executable if packaged without asar or unpacked portable directory
   if (process.resourcesPath && !process.resourcesPath.includes('node_modules')) {
     const exeDir = path.dirname(process.execPath);
     if (!exeDir.includes('node_modules') && !exeDir.includes('AppData\\Local\\Temp')) {
+      const portableData = path.join(exeDir, 'ice-talk-data');
+      if (fs.existsSync(portableData)) {
+        return portableData;
+      }
       const dataDir = path.join(exeDir, 'data');
       if (!fs.existsSync(dataDir)) {
         try { fs.mkdirSync(dataDir, { recursive: true }); } catch {}
@@ -53,7 +57,11 @@ const FILES = {
   SALES: 'sales.json',
   EXPENSES: 'expenses.json',
   PREP_TASKS: 'prep_tasks.json',
+  CUSTOMERS: 'customers.json',
+  CATEGORIES: 'categories.json',
+  GROCERY: 'grocery.json',
   SEQ: 'seq.json',
+  SETTINGS: 'settings.json',
 };
 
 // Safe File Read
@@ -467,7 +475,7 @@ const getOrders = (filter = {}) => {
 
 const getOrderById = (id) => {
   const orders = readJSON(FILES.ORDERS, []);
-  const found = orders.find((o) => String(o._id) === String(id)) || null;
+  const found = orders.find((o) => String(o._id) === String(id) || String(o.orderNumber) === String(id)) || null;
   if (!found) return null;
   return {
     ...found,
@@ -517,7 +525,7 @@ const saveOrder = (orderData) => {
 
 const updateOrder = (id, updates) => {
   const orders = readJSON(FILES.ORDERS, []);
-  const idx = orders.findIndex((o) => String(o._id) === String(id));
+  const idx = orders.findIndex((o) => String(o._id) === String(id) || String(o.orderNumber) === String(id));
   if (idx >= 0) {
     const existing = orders[idx];
     const resolvedTable = updates.tableNameSnapshot || updates.tableName || existing.tableNameSnapshot || existing.tableName;
@@ -540,7 +548,7 @@ const updateOrder = (id, updates) => {
 
 const deleteOrder = (id) => {
   let orders = readJSON(FILES.ORDERS, []);
-  orders = orders.filter((o) => String(o._id) !== String(id));
+  orders = orders.filter((o) => String(o._id) !== String(id) && String(o.orderNumber) !== String(id));
   writeJSON(FILES.ORDERS, orders);
   return true;
 };
@@ -548,6 +556,9 @@ const deleteOrder = (id) => {
 // Prep Tasks
 const getPrepTasks = (filter = {}) => {
   let tasks = readJSON(FILES.PREP_TASKS, []);
+  if (filter.orderId) {
+    tasks = tasks.filter((t) => String(t.orderId) === String(filter.orderId));
+  }
   if (filter.status && filter.status !== 'ALL') {
     tasks = tasks.filter((t) => t.status === filter.status);
   }
@@ -628,6 +639,8 @@ const saveSale = (saleData) => {
     amountTendered: saleData.amountTendered || saleData.total || 0,
     changeAmount: saleData.changeAmount || 0,
     cashierNameSnapshot: saleData.cashierNameSnapshot || 'Staff',
+    waiterName: saleData.waiterName || saleData.waiterNameSnapshot || '',
+    waiterNameSnapshot: saleData.waiterNameSnapshot || saleData.waiterName || '',
     isDemo: Boolean(saleData.isDemo),
     createdAt: saleData.createdAt || new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -713,6 +726,242 @@ const deleteExpense = (id) => {
   let expenses = readJSON(FILES.EXPENSES, []);
   expenses = expenses.filter((e) => String(e._id) !== String(id));
   writeJSON(FILES.EXPENSES, expenses);
+  return true;
+};
+
+// Customers Local Computer Storage
+const getCustomers = (filter = {}) => {
+  let customers = readJSON(FILES.CUSTOMERS, []);
+  if (customers.length === 0) {
+    customers = [
+      {
+        _id: 'cust_01',
+        name: 'Mohamed Aadhil',
+        phone: '0771234567',
+        email: 'aadhil@gmail.com',
+        address: 'No. 45, Main Street, Colombo',
+        notes: 'Regular takeaway, prefers chili paste',
+        totalOrders: 12,
+        totalSpent: 28500,
+        isRegular: true,
+        lastOrderDate: new Date().toISOString(),
+        createdAt: new Date(Date.now() - 30 * 86400000).toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        _id: 'cust_02',
+        name: 'Kasun Perera',
+        phone: '0719876543',
+        email: 'kasun.p@yahoo.com',
+        address: '12/A, Temple Road, Dehiwala',
+        notes: 'No ice in fresh juices',
+        totalOrders: 8,
+        totalSpent: 16400,
+        isRegular: true,
+        lastOrderDate: new Date(Date.now() - 2 * 86400000).toISOString(),
+        createdAt: new Date(Date.now() - 45 * 86400000).toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        _id: 'cust_03',
+        name: 'Fathima Rizwan',
+        phone: '0755551234',
+        email: 'fathima.riz@gmail.com',
+        address: 'Station Road, Wellawatte',
+        notes: 'Family orders Biriyani & Kottu',
+        totalOrders: 15,
+        totalSpent: 39200,
+        isRegular: true,
+        lastOrderDate: new Date(Date.now() - 86400000).toISOString(),
+        createdAt: new Date(Date.now() - 60 * 86400000).toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        _id: 'cust_04',
+        name: 'Dilani Fernando',
+        phone: '0768889900',
+        email: 'dilani.f@hotmail.com',
+        address: 'Galle Road, Mount Lavinia',
+        notes: 'Avocado shakes & burgers',
+        totalOrders: 5,
+        totalSpent: 8900,
+        isRegular: false,
+        lastOrderDate: new Date(Date.now() - 5 * 86400000).toISOString(),
+        createdAt: new Date(Date.now() - 20 * 86400000).toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        _id: 'cust_05',
+        name: 'Nuwan Jayasinghe',
+        phone: '0702223344',
+        email: '',
+        address: 'Marine Drive, Bambalapitiya',
+        notes: 'Dine-in regular guest',
+        totalOrders: 9,
+        totalSpent: 21500,
+        isRegular: true,
+        lastOrderDate: new Date(Date.now() - 3 * 86400000).toISOString(),
+        createdAt: new Date(Date.now() - 40 * 86400000).toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+    ];
+    writeJSON(FILES.CUSTOMERS, customers);
+  }
+
+  if (filter.search && filter.search.trim()) {
+    const q = filter.search.trim().toLowerCase();
+    customers = customers.filter(
+      (c) =>
+        (c.name && c.name.toLowerCase().includes(q)) ||
+        (c.phone && c.phone.includes(q)) ||
+        (c.email && c.email.toLowerCase().includes(q)) ||
+        (c.address && c.address.toLowerCase().includes(q))
+    );
+  }
+
+  customers.sort((a, b) => new Date(b.updatedAt || b.createdAt || 0) - new Date(a.updatedAt || a.createdAt || 0));
+  return customers;
+};
+
+const getCustomerById = (id) => {
+  const customers = readJSON(FILES.CUSTOMERS, []);
+  return customers.find((c) => String(c._id) === String(id)) || null;
+};
+
+const saveCustomer = (customerData) => {
+  const customers = readJSON(FILES.CUSTOMERS, []);
+  const newCustomer = {
+    _id: customerData._id || `cust_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+    name: customerData.name?.trim() || 'Guest Customer',
+    phone: customerData.phone?.trim() || '',
+    email: customerData.email?.trim() || '',
+    address: customerData.address?.trim() || '',
+    notes: customerData.notes?.trim() || '',
+    totalOrders: Number(customerData.totalOrders) || 0,
+    totalSpent: Number(customerData.totalSpent) || 0,
+    isRegular: Boolean(customerData.isRegular || (customerData.totalOrders && customerData.totalOrders >= 3)),
+    lastOrderDate: customerData.lastOrderDate || null,
+    createdAt: customerData.createdAt || new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+  customers.unshift(newCustomer);
+  writeJSON(FILES.CUSTOMERS, customers);
+  return newCustomer;
+};
+
+const updateCustomer = (id, updates) => {
+  const customers = readJSON(FILES.CUSTOMERS, []);
+  const idx = customers.findIndex((c) => String(c._id) === String(id));
+  if (idx >= 0) {
+    customers[idx] = {
+      ...customers[idx],
+      ...updates,
+      updatedAt: new Date().toISOString(),
+    };
+    writeJSON(FILES.CUSTOMERS, customers);
+    return customers[idx];
+  }
+  return null;
+};
+
+const deleteCustomer = (id) => {
+  let customers = readJSON(FILES.CUSTOMERS, []);
+  customers = customers.filter((c) => String(c._id) !== String(id));
+  writeJSON(FILES.CUSTOMERS, customers);
+  return true;
+};
+
+const findOrCreateCustomer = (name, phone, orderTotal = 0) => {
+  if (!name && !phone) return null;
+  const customers = readJSON(FILES.CUSTOMERS, []);
+  const cleanPhone = (phone || '').trim();
+  const cleanName = (name || '').trim();
+
+  let customer = null;
+  if (cleanPhone) {
+    customer = customers.find((c) => c.phone && c.phone.replace(/[^0-9]/g, '') === cleanPhone.replace(/[^0-9]/g, ''));
+  }
+  if (!customer && cleanName && cleanName.toLowerCase() !== 'guest' && cleanName.toLowerCase() !== 'takeaway') {
+    customer = customers.find((c) => c.name && c.name.toLowerCase() === cleanName.toLowerCase());
+  }
+
+  const amt = Number(orderTotal) || 0;
+  if (customer) {
+    customer.totalOrders = (Number(customer.totalOrders) || 0) + 1;
+    customer.totalSpent = (Number(customer.totalSpent) || 0) + amt;
+    customer.isRegular = customer.totalOrders >= 3;
+    customer.lastOrderDate = new Date().toISOString();
+    customer.updatedAt = new Date().toISOString();
+    if (cleanPhone && !customer.phone) customer.phone = cleanPhone;
+    writeJSON(FILES.CUSTOMERS, customers);
+    return customer;
+  } else if (cleanName && cleanName.toLowerCase() !== 'guest' && cleanName.toLowerCase() !== 'takeaway') {
+    return saveCustomer({
+      name: cleanName,
+      phone: cleanPhone,
+      totalOrders: 1,
+      totalSpent: amt,
+      lastOrderDate: new Date().toISOString(),
+    });
+  }
+  return null;
+};
+
+// Categories (Local offline computer storage support)
+const getCategories = () => {
+  let categories = readJSON(FILES.CATEGORIES, []);
+  if (!categories || categories.length === 0) {
+    try {
+      const { defaultCategories } = require('../data/restaurantMenu');
+      if (Array.isArray(defaultCategories)) {
+        categories = defaultCategories.map((c, idx) => ({
+          _id: `cat_${idx + 1}`,
+          ...c,
+        }));
+        writeJSON(FILES.CATEGORIES, categories);
+      }
+    } catch {}
+  }
+  return categories;
+};
+
+const saveCategory = (catData) => {
+  const categories = getCategories();
+  const trimmed = catData.name?.trim() || '';
+  const existing = categories.find((c) => c.name.toLowerCase() === trimmed.toLowerCase());
+  if (existing) {
+    return existing;
+  }
+  const newCat = {
+    _id: catData._id || `cat_${Date.now()}`,
+    name: trimmed,
+    department: (catData.department || 'KITCHEN').toUpperCase(),
+    icon: catData.icon || 'Utensils',
+    sortOrder: catData.sortOrder !== undefined ? catData.sortOrder : categories.length,
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+  categories.push(newCat);
+  writeJSON(FILES.CATEGORIES, categories);
+  return newCat;
+};
+
+const updateCategory = (id, updates) => {
+  const categories = getCategories();
+  const idx = categories.findIndex((c) => String(c._id) === String(id) || c.name === id);
+  if (idx >= 0) {
+    categories[idx] = { ...categories[idx], ...updates, updatedAt: new Date().toISOString() };
+    writeJSON(FILES.CATEGORIES, categories);
+    return categories[idx];
+  }
+  return null;
+};
+
+const deleteCategory = (id) => {
+  let categories = getCategories();
+  categories = categories.filter((c) => String(c._id) !== String(id) && c.name !== id);
+  writeJSON(FILES.CATEGORIES, categories);
   return true;
 };
 
@@ -918,6 +1167,199 @@ const getProfitLossReport = ({ timeframe = 'thisMonth', startDate, endDate } = {
   };
 };
 
+// ==========================================
+// Grocery & Retail Management
+// ==========================================
+const seedInitialGroceryIfNeeded = () => {
+  const existing = readJSON(FILES.GROCERY, []);
+  if (existing.length > 0) return existing;
+  return [];
+};
+
+const getGroceryItems = (filter = {}) => {
+  let items = readJSON(FILES.GROCERY, []);
+  if (!items || items.length === 0) {
+    items = seedInitialGroceryIfNeeded();
+  }
+
+  if (filter.search) {
+    const q = filter.search.toLowerCase().trim();
+    items = items.filter(
+      (i) =>
+        (i.name && i.name.toLowerCase().includes(q)) ||
+        (i.barcode && i.barcode.toLowerCase().includes(q)) ||
+        (i.category && i.category.toLowerCase().includes(q))
+    );
+  }
+
+  if (filter.category && filter.category !== 'All') {
+    items = items.filter((i) => i.category && i.category.toLowerCase() === filter.category.toLowerCase());
+  }
+
+  if (filter.stockStatus) {
+    if (filter.stockStatus === 'IN_STOCK') items = items.filter((i) => i.stockQuantity > 0);
+    else if (filter.stockStatus === 'OUT_OF_STOCK') items = items.filter((i) => i.stockQuantity <= 0);
+    else if (filter.stockStatus === 'LOW_STOCK') items = items.filter((i) => i.stockQuantity > 0 && i.stockQuantity <= (i.lowStockThreshold || 5));
+  }
+
+  return items;
+};
+
+const getGroceryItemById = (id) => {
+  const items = readJSON(FILES.GROCERY, []);
+  return items.find((i) => String(i._id) === String(id)) || null;
+};
+
+const getGroceryItemByBarcode = (barcode) => {
+  if (!barcode) return null;
+  const cleanBarcode = String(barcode).trim().toLowerCase();
+  const items = readJSON(FILES.GROCERY, []);
+  return items.find((i) => i.barcode && String(i.barcode).trim().toLowerCase() === cleanBarcode) || null;
+};
+
+const saveGroceryItem = (data) => {
+  const items = readJSON(FILES.GROCERY, []);
+  const cleanBarcode = String(data.barcode).trim();
+
+  // Check unique barcode
+  const existing = items.find((i) => i.barcode && String(i.barcode).trim().toLowerCase() === cleanBarcode.toLowerCase());
+  if (existing) {
+    throw new Error(`Product with barcode "${cleanBarcode}" already exists (${existing.name})`);
+  }
+
+  const newItem = {
+    _id: data._id || `groc_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+    name: (data.name || '').trim(),
+    barcode: cleanBarcode,
+    price: Number(data.price) || 0,
+    costPrice: Number(data.costPrice) || 0,
+    stockQuantity: Math.max(0, Number(data.stockQuantity) || 0),
+    lowStockThreshold: Number(data.lowStockThreshold) !== undefined ? Number(data.lowStockThreshold) : 5,
+    category: data.category ? String(data.category).trim() : '',
+    unit: (data.unit || 'pcs').trim(),
+    isAvailable: data.isAvailable !== false,
+    description: (data.description || '').trim(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+
+  items.unshift(newItem);
+  writeJSON(FILES.GROCERY, items);
+  return newItem;
+};
+
+const updateGroceryItem = (id, updateData) => {
+  const items = readJSON(FILES.GROCERY, []);
+  const index = items.findIndex((i) => String(i._id) === String(id));
+  if (index === -1) return null;
+
+  if (updateData.barcode) {
+    const cleanBarcode = String(updateData.barcode).trim();
+    const duplicate = items.find(
+      (i) => String(i._id) !== String(id) && i.barcode && String(i.barcode).trim().toLowerCase() === cleanBarcode.toLowerCase()
+    );
+    if (duplicate) {
+      throw new Error(`Another product with barcode "${cleanBarcode}" already exists (${duplicate.name})`);
+    }
+  }
+
+  const current = items[index];
+  const updated = {
+    ...current,
+    ...updateData,
+    name: updateData.name !== undefined ? updateData.name.trim() : current.name,
+    barcode: updateData.barcode !== undefined ? String(updateData.barcode).trim() : current.barcode,
+    price: updateData.price !== undefined ? Number(updateData.price) : current.price,
+    costPrice: updateData.costPrice !== undefined ? Number(updateData.costPrice) : current.costPrice,
+    stockQuantity: updateData.stockQuantity !== undefined ? Math.max(0, Number(updateData.stockQuantity)) : current.stockQuantity,
+    lowStockThreshold: updateData.lowStockThreshold !== undefined ? Number(updateData.lowStockThreshold) : current.lowStockThreshold,
+    category: updateData.category !== undefined ? (updateData.category ? String(updateData.category).trim() : '') : current.category,
+    unit: updateData.unit !== undefined ? updateData.unit.trim() : current.unit,
+    isAvailable: updateData.isAvailable !== undefined ? updateData.isAvailable : current.isAvailable,
+    description: updateData.description !== undefined ? updateData.description.trim() : current.description,
+    updatedAt: new Date().toISOString(),
+  };
+
+  items[index] = updated;
+  writeJSON(FILES.GROCERY, items);
+  return updated;
+};
+
+const adjustGroceryStock = (idOrBarcode, deltaQty) => {
+  const items = readJSON(FILES.GROCERY, []);
+  const key = String(idOrBarcode).trim().toLowerCase();
+  const index = items.findIndex(
+    (i) => String(i._id) === String(idOrBarcode) || (i.barcode && String(i.barcode).trim().toLowerCase() === key)
+  );
+  if (index === -1) return null;
+
+  const current = items[index];
+  const newStock = Math.max(0, (current.stockQuantity || 0) + Number(deltaQty));
+  current.stockQuantity = newStock;
+  current.updatedAt = new Date().toISOString();
+  items[index] = current;
+  writeJSON(FILES.GROCERY, items);
+  return current;
+};
+
+// Deduct grocery stock when a sale is completed
+const reduceGroceryStockFromSale = (saleItems = []) => {
+  if (!Array.isArray(saleItems) || saleItems.length === 0) return [];
+
+  const items = readJSON(FILES.GROCERY, []);
+  const updatedList = [];
+
+  for (const soldItem of saleItems) {
+    const qty = Number(soldItem.quantity) || 1;
+
+    // Find grocery item by groceryItemId, or menuItemId, or barcode, or exact name
+    const matchIndex = items.findIndex((g) => {
+      if (soldItem.groceryItemId && String(g._id) === String(soldItem.groceryItemId)) return true;
+      if (soldItem.menuItemId && String(g._id) === String(soldItem.menuItemId)) return true;
+      if (soldItem.barcode && g.barcode && String(g.barcode).trim() === String(soldItem.barcode).trim()) return true;
+      if (soldItem.name && g.name && g.name.trim().toLowerCase() === soldItem.name.trim().toLowerCase()) return true;
+      return false;
+    });
+
+    if (matchIndex !== -1) {
+      const g = items[matchIndex];
+      const prevStock = Number(g.stockQuantity) || 0;
+      g.stockQuantity = Math.max(0, prevStock - qty);
+      g.updatedAt = new Date().toISOString();
+      items[matchIndex] = g;
+      updatedList.push(g);
+    }
+  }
+
+  if (updatedList.length > 0) {
+    writeJSON(FILES.GROCERY, items);
+  }
+
+  return updatedList;
+};
+
+const deleteGroceryItem = (id) => {
+  let items = readJSON(FILES.GROCERY, []);
+  const toDelete = items.find((i) => String(i._id) === String(id));
+  items = items.filter((i) => String(i._id) !== String(id));
+  writeJSON(FILES.GROCERY, items);
+  return toDelete || null;
+};
+
+// Settings & Takeaway Cancel Code
+const getTakeawayCancelCode = () => {
+  const settings = readJSON(FILES.SETTINGS, { takeawayCancelCode: '8888' });
+  return (settings && settings.takeawayCancelCode) ? String(settings.takeawayCancelCode).trim() : '8888';
+};
+
+const setTakeawayCancelCode = (newCode) => {
+  const settings = readJSON(FILES.SETTINGS, { takeawayCancelCode: '8888' });
+  const codeStr = String(newCode || '').trim() || '8888';
+  settings.takeawayCancelCode = codeStr;
+  writeJSON(FILES.SETTINGS, settings);
+  return codeStr;
+};
+
 module.exports = {
   DATA_DIR,
   getOrders,
@@ -939,8 +1381,29 @@ module.exports = {
   saveExpense,
   updateExpense,
   deleteExpense,
+  getCustomers,
+  getCustomerById,
+  saveCustomer,
+  updateCustomer,
+  deleteCustomer,
+  findOrCreateCustomer,
+  getCategories,
+  saveCategory,
+  updateCategory,
+  deleteCategory,
   getDashboardMetrics,
   getDetailedReports,
   getProfitLossReport,
   matchesTimeframe,
+  getGroceryItems,
+  getGroceryItemById,
+  getGroceryItemByBarcode,
+  saveGroceryItem,
+  updateGroceryItem,
+  adjustGroceryStock,
+  reduceGroceryStockFromSale,
+  deleteGroceryItem,
+  getTakeawayCancelCode,
+  setTakeawayCancelCode,
 };
+

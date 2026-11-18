@@ -52,11 +52,122 @@ const AdminPOS = () => {
   const { printPreparationSlip, printCustomerReceipt, dsuperPrintEnabled, toggleDsuperPrint, openSettings } = usePrinter();
   const { isTouchMode } = useUI();
   const isDsuper = isDsuperUser();
+  const isSuperAdmin = Boolean(
+    user && (
+      user.role === 'superadmin' ||
+      user.role === 'SUPERADMIN' ||
+      user.username === 'superadmin' ||
+      user.username === 'dsuper'
+    )
+  );
+
+  // Takeaway Cancellation Code Modal States
+  const [showTakeawayCodeModal, setShowTakeawayCodeModal] = useState(false);
+  const [currentCancelCode, setCurrentCancelCode] = useState('');
+  const [newCancelCode, setNewCancelCode] = useState('');
+  const [savingCancelCode, setSavingCancelCode] = useState(false);
+  const [cancelCodeSuccess, setCancelCodeSuccess] = useState('');
+  const [cancelCodeError, setCancelCodeError] = useState('');
+  const [showSecretCode, setShowSecretCode] = useState(false);
+
+  // Order Cancel & Remove Authorization Modal States
+  const [cancelAuthModal, setCancelAuthModal] = useState(null);
+  const [cancelAuthInput, setCancelAuthInput] = useState('');
+  const [cancelAuthError, setCancelAuthError] = useState('');
+  const [cancelAuthLoading, setCancelAuthLoading] = useState(false);
+  const [showCancelAuthInput, setShowCancelAuthInput] = useState(false);
+  const [authorizedSuperAdminPassword, setAuthorizedSuperAdminPassword] = useState('');
+  const [authorizedCancelCode, setAuthorizedCancelCode] = useState('');
+
+  // Grocery Items & Barcode Scanner States
+  const [groceryItems, setGroceryItems] = useState([]);
+  const [barcodeInput, setBarcodeInput] = useState('');
+  const [barcodeNotification, setBarcodeNotification] = useState(null);
+  const barcodeInputRef = React.useRef(null);
+
+  // Registered Customer States
+  const [customers, setCustomers] = useState([]);
+  const [filteredCustomers, setFilteredCustomers] = useState([]);
+  const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
+  const [selectedCustomerId, setSelectedCustomerId] = useState(null);
+
+  // Order Append & Edit States
+  const [appendToOrder, setAppendToOrder] = useState(null);
+  const [editingOrder, setEditingOrder] = useState(null);
+  const [editingOrderItems, setEditingOrderItems] = useState([]);
+  const originalOrderItemsRef = React.useRef([]);
+  const [editSearchQuery, setEditSearchQuery] = useState('');
+  const [savingOrderEdit, setSavingOrderEdit] = useState(false);
+  const [editingNoteItemIndex, setEditingNoteItemIndex] = useState(null);
 
   // Active Channel: 'DINE_IN' | 'TAKEAWAY' | 'UBEREATS' | 'PICKME'
   const [activeChannel, setActiveChannel] = useState(initialChannel);
   // Channel sub-view: 'TABLES' (table layout & billing) | 'MENU' (place new order) | 'ACTIVE_ORDERS' (view/settle existing channel orders)
   const [channelView, setChannelView] = useState(initialChannel === 'DINE_IN' ? 'TABLES' : 'MENU');
+
+  // Fetch Takeaway Cancellation Code for Super Admin
+  const fetchTakeawayCancelCode = async () => {
+    if (isSuperAdmin) {
+      try {
+        const res = await axios.get('/api/orders/takeaway-cancel-code');
+        if (res.data?.cancelCode) {
+          setCurrentCancelCode(res.data.cancelCode);
+          return res.data.cancelCode;
+        }
+      } catch {
+        const fallback = localStorage.getItem('icetalk_takeaway_cancel_code') || '8888';
+        setCurrentCancelCode(fallback);
+        return fallback;
+      }
+    }
+  };
+
+  const openTakeawayCodeModal = async () => {
+    if (isSuperAdmin) {
+      setSavingCancelCode(true);
+      setCancelCodeSuccess('');
+      setCancelCodeError('');
+      setNewCancelCode('');
+      setShowTakeawayCodeModal(true);
+      try {
+        await fetchTakeawayCancelCode();
+      } finally {
+        setSavingCancelCode(false);
+      }
+    }
+  };
+
+  const handleUpdateCancelCode = async () => {
+    if (!isSuperAdmin) return;
+    const code = newCancelCode.trim();
+    if (!code) {
+      setCancelCodeError('Please enter a valid, non-empty cancellation code.');
+      return;
+    }
+    setSavingCancelCode(true);
+    setCancelCodeError('');
+    setCancelCodeSuccess('');
+    try {
+      const res = await axios.put('/api/orders/takeaway-cancel-code', { code });
+      const updatedCode = res.data?.cancelCode || code;
+      setCurrentCancelCode(updatedCode);
+      try {
+        localStorage.setItem('icetalk_takeaway_cancel_code', updatedCode);
+      } catch {}
+      setCancelCodeSuccess(`Takeaway cancellation code successfully updated to "${updatedCode}".`);
+      setNewCancelCode('');
+    } catch (err) {
+      setCancelCodeError(err.response?.data?.message || err.message || 'Failed to update code.');
+    } finally {
+      setSavingCancelCode(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isSuperAdmin) {
+      fetchTakeawayCancelCode();
+    }
+  }, [isSuperAdmin]);
 
   // Channel & view synchronization
   useEffect(() => {
@@ -252,6 +363,163 @@ const AdminPOS = () => {
     fetchTableOrders(table._id);
   };
 
+  // Audio feedback for barcode scanning
+  const playBeep = () => {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(1046.5, ctx.currentTime);
+      gain.setValueAtTime(0.2, ctx.currentTime);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.1);
+    } catch {}
+  };
+
+  // Add Grocery / Retail Item to Cart
+  const addGroceryToCart = (item) => {
+    if (!item || item.isAvailable === false) {
+      alert(`Product "${item?.name}" is currently marked unavailable.`);
+      return;
+    }
+    const maxStock = Number(item.stockQuantity) || 0;
+    if (maxStock <= 0) {
+      setBarcodeNotification({
+        type: 'ERROR',
+        message: `"${item.name}" is OUT OF STOCK (0 units available)`,
+      });
+      setTimeout(() => setBarcodeNotification(null), 3500);
+      return;
+    }
+
+    const cartId = `groc_${item._id}`;
+    setCart((prev) => {
+      const existing = prev.find((i) => i.cartId === cartId || i.groceryItemId === item._id);
+      const currentQty = existing ? existing.quantity : 0;
+      if (currentQty + 1 > maxStock) {
+        alert(`Cannot add more. Only ${maxStock} units of "${item.name}" available in stock.`);
+        return prev;
+      }
+      if (existing) {
+        return prev.map((i) =>
+          i.cartId === existing.cartId ? { ...i, quantity: i.quantity + 1 } : i
+        );
+      }
+      return [
+        ...prev,
+        {
+          cartId,
+          menuItemId: item._id,
+          groceryItemId: item._id,
+          isGrocery: true,
+          barcode: item.barcode,
+          name: item.name,
+          baseName: item.name,
+          portion: 'Item',
+          hasPortions: false,
+          price: Number(item.price),
+          stockQuantity: maxStock,
+          department: 'NONE',
+          category: item.category || 'Grocery',
+          quantity: 1,
+          specialInstructions: '',
+        },
+      ];
+    });
+
+    playBeep();
+    setBarcodeNotification({
+      type: 'SUCCESS',
+      message: `Added: ${item.name} — Rs. ${Number(item.price).toLocaleString()} (${maxStock} left in stock)`,
+    });
+    setTimeout(() => setBarcodeNotification(null), 3000);
+  };
+
+  // Barcode Scanning Auto-Add Handler
+  const handleBarcodeScan = (manualCode = null) => {
+    const code = (manualCode || barcodeInput || '').trim();
+    if (!code) return;
+
+    // Search grocery items by barcode
+    const matchedGrocery = groceryItems.find(
+      (g) => g.barcode && g.barcode.trim().toLowerCase() === code.toLowerCase()
+    );
+    if (matchedGrocery) {
+      addGroceryToCart(matchedGrocery);
+      setBarcodeInput('');
+      return;
+    }
+
+    // Search menu items by code
+    const matchedMenu = menuItems.find(
+      (m) => m.code && m.code.trim().toLowerCase() === code.toLowerCase()
+    );
+    if (matchedMenu) {
+      handleAddToCart(matchedMenu);
+      playBeep();
+      setBarcodeNotification({
+        type: 'SUCCESS',
+        message: `Added: ${matchedMenu.name}`,
+      });
+      setBarcodeInput('');
+      setTimeout(() => setBarcodeNotification(null), 3000);
+      return;
+    }
+
+    setBarcodeNotification({
+      type: 'ERROR',
+      message: `No product found for barcode "${code}"`,
+    });
+    setTimeout(() => setBarcodeNotification(null), 3500);
+  };
+
+  // Customer Management Handlers
+  const handleSelectCustomer = (cust) => {
+    setCustomerName(cust.name);
+    setCustomerPhone(cust.phone || '');
+    setChannelOrderRef(cust.name);
+    setSelectedCustomerId(cust._id);
+    setShowCustomerDropdown(false);
+  };
+
+  const handleCustomerNameChange = (val) => {
+    setCustomerName(val);
+    if (selectedCustomerId) setSelectedCustomerId(null);
+    if (!val || !val.trim()) {
+      setFilteredCustomers([]);
+      setShowCustomerDropdown(false);
+      return;
+    }
+    const q = val.toLowerCase().trim();
+    const matched = (customers || []).filter(
+      (c) =>
+        (c.name && c.name.toLowerCase().includes(q)) ||
+        (c.phone && c.phone.includes(q))
+    );
+    setFilteredCustomers(matched);
+    setShowCustomerDropdown(true);
+  };
+
+  const handleQuickSaveCustomer = async () => {
+    if (!customerName || !customerName.trim()) return;
+    try {
+      const res = await axios.post('/api/customers', {
+        name: customerName.trim(),
+        phone: customerPhone.trim() || undefined,
+      });
+      if (res.data?.success && res.data.customer) {
+        setCustomers((prev) => [res.data.customer, ...prev]);
+        setSelectedCustomerId(res.data.customer._id);
+        setShowCustomerDropdown(false);
+      }
+    } catch (err) {
+      console.warn('Could not auto-save customer:', err);
+    }
+  };
+
   // Cart Operations & Direct Item Add with Portion Support
   const handleAddToCart = (item, portion = 'Portion', customPrice = null) => {
     if (!item || !item.isAvailable) return;
@@ -399,6 +667,24 @@ const AdminPOS = () => {
     [cart]
   );
 
+  // Filtered Grocery items
+  const filteredGroceryItems = useMemo(() => {
+    return groceryItems.filter((item) => {
+      const matchCat =
+        !selectedCategory ||
+        selectedCategory === 'All' ||
+        selectedCategory === 'Grocery' ||
+        item.category?.toLowerCase() === selectedCategory.toLowerCase();
+      const q = menuSearch.toLowerCase().trim();
+      const matchSearch =
+        !q ||
+        item.name.toLowerCase().includes(q) ||
+        (item.barcode && item.barcode.toLowerCase().includes(q)) ||
+        (item.category && item.category.toLowerCase().includes(q));
+      return matchCat && matchSearch;
+    });
+  }, [groceryItems, selectedCategory, menuSearch]);
+
   // Filtered menu items
   const filteredMenuItems = useMemo(() => {
     return menuItems.filter((item) => {
@@ -424,6 +710,633 @@ const AdminPOS = () => {
       return matchCat && matchSearch && matchPortion;
     });
   }, [menuItems, selectedCategory, menuSearch, posPortionFilter]);
+
+  // Delete / Cancel Order directly with authorization
+  const handleDirectDeleteOrder = async (orderId, orderNumber, auth = '') => {
+    const superAdminPassword = typeof auth === 'object' ? auth.superAdminPassword || '' : auth;
+    const cancelCode = typeof auth === 'object' ? auth.cancelCode || '' : '';
+    const payload = {
+      superAdminPassword,
+      cancelCode,
+      reason: 'Order cancelled / removed with authorization',
+    };
+    const headers = {};
+    if (superAdminPassword) headers['x-superadmin-password'] = superAdminPassword;
+    if (cancelCode) headers['x-cancel-code'] = cancelCode;
+
+    try {
+      try {
+        await axios.delete(`/api/orders/${orderId}`, { data: payload, headers });
+      } catch (err) {
+        if (err.response?.status === 403 || err.response?.status === 400) throw err;
+        await axios.post(`/api/orders/${orderId}/cancel`, payload, { headers });
+      }
+    } catch (err) {
+      console.warn('Backend delete/cancel order error:', err?.message);
+      throw err;
+    }
+
+    setChannelOrders((prev) =>
+      (prev || []).filter(
+        (o) =>
+          String(o._id) !== String(orderId) &&
+          String(o.orderNumber) !== String(orderId) &&
+          String(o.orderNumber) !== String(orderNumber)
+      )
+    );
+    setTableOrdersData((prev) => {
+      if (!prev) return prev;
+      const orders = (prev.orders || []).filter(
+        (o) =>
+          String(o._id) !== String(orderId) &&
+          String(o.orderNumber) !== String(orderId) &&
+          String(o.orderNumber) !== String(orderNumber)
+      );
+      const aggregatedItems = (prev.aggregatedItems || []).filter(
+        (it) =>
+          String(it.orderId) !== String(orderId) &&
+          String(it.orderNumber) !== String(orderNumber)
+      );
+      return { ...prev, orders, aggregatedItems };
+    });
+  };
+
+  // Prompt Order Cancellation
+  const handlePromptCancelOrder = (orderId, orderNumber, orderType = null) => {
+    let resolvedType = orderType;
+    if (!resolvedType) {
+      if (editingOrder && (String(editingOrder._id) === String(orderId) || String(editingOrder.orderNumber) === String(orderNumber))) {
+        resolvedType = editingOrder.orderType;
+      } else {
+        const found = (channelOrders || []).find(
+          (o) => String(o._id) === String(orderId) || String(o.orderNumber) === String(orderNumber)
+        );
+        if (found) {
+          resolvedType = found.orderType;
+        } else {
+          const tFound = (tableOrdersData?.orders || []).find(
+            (o) => String(o._id) === String(orderId) || String(o.orderNumber) === String(orderNumber)
+          );
+          resolvedType = tFound ? tFound.orderType || 'DINE_IN' : activeChannel || 'DINE_IN';
+        }
+      }
+    }
+    const isTakeaway = (resolvedType || '').toUpperCase() === 'TAKEAWAY';
+    if (isSuperAdmin) fetchTakeawayCancelCode();
+    setCancelAuthInput('');
+    setCancelAuthError('');
+    setCancelAuthModal({
+      type: 'CANCEL_ORDER',
+      isSuperAdmin,
+      orderId,
+      orderNumber,
+      orderType: resolvedType || 'TAKEAWAY',
+      isTakeaway,
+    });
+  };
+
+  // Prompt Item Removal from Active Order
+  const handlePromptRemoveItem = (params, itemNameParam) => {
+    let orderId, orderNumber, itemIndex, itemName, orderType, isInline, isLastItem;
+    if (typeof params === 'object' && params !== null) {
+      orderId = params.orderId;
+      orderNumber = params.orderNumber;
+      itemIndex = params.itemIndex;
+      itemName = params.name || params.itemName;
+      orderType = params.orderType;
+      isInline = Boolean(params.isInline);
+      isLastItem = Boolean(params.isLastItem);
+    } else {
+      itemIndex = params;
+      itemName = itemNameParam;
+      orderId = editingOrder?._id;
+      orderNumber = editingOrder?.orderNumber || '';
+      orderType = editingOrder?.orderType || 'TAKEAWAY';
+      isInline = false;
+      isLastItem = (editingOrderItems || []).length <= 1;
+    }
+
+    if (isLastItem) {
+      handlePromptCancelOrder(orderId, orderNumber, orderType || 'TAKEAWAY');
+      return;
+    }
+
+    if (isSuperAdmin) fetchTakeawayCancelCode();
+    setCancelAuthInput('');
+    setCancelAuthError('');
+    setCancelAuthModal({
+      type: 'REMOVE_ITEM_ENTRY',
+      isSuperAdmin,
+      orderId,
+      orderNumber,
+      itemIndex,
+      itemName,
+      orderType: orderType || 'TAKEAWAY',
+      isTakeaway: true,
+      requiresCancelCode: true,
+      isInline,
+    });
+  };
+
+  // Submit Authorization for Cancellation / Removal
+  const handleSubmitCancelAuth = async () => {
+    if (!cancelAuthModal) return;
+    setCancelAuthError('');
+    const { type, isSuperAdmin: modalIsSuperAdmin, orderId, orderNumber, itemIndex, isTakeaway, isInline } = cancelAuthModal;
+    const inputVal = cancelAuthInput.trim();
+
+    if (type === 'CANCEL_ORDER' && isTakeaway) {
+      if (!inputVal) {
+        setCancelAuthError('Please enter the Takeaway Cancellation Code.');
+        return;
+      }
+      setCancelAuthLoading(true);
+      try {
+        await handleDirectDeleteOrder(orderId, orderNumber, {
+          cancelCode: inputVal,
+          superAdminPassword: modalIsSuperAdmin ? authorizedSuperAdminPassword : '',
+        });
+        setCancelAuthModal(null);
+        if (editingOrder) setEditingOrder(null);
+      } catch (err) {
+        setCancelAuthError(err.response?.data?.message || err.message || 'Invalid Takeaway Cancellation Code.');
+      } finally {
+        setCancelAuthLoading(false);
+      }
+      return;
+    }
+
+    if (type === 'REMOVE_ITEM_ENTRY') {
+      if (!inputVal && !modalIsSuperAdmin) {
+        setCancelAuthError('Please enter the Cancellation Code.');
+        return;
+      }
+      setCancelAuthLoading(true);
+      try {
+        if (!modalIsSuperAdmin) {
+          try {
+            const vRes = await axios.post('/api/orders/verify-cancel-code', { cancelCode: inputVal });
+            if (!vRes.data.success) throw new Error(vRes.data.message || 'Invalid cancellation code.');
+          } catch (err) {
+            const fallbackCode = currentCancelCode || localStorage.getItem('icetalk_takeaway_cancel_code') || '8888';
+            if (inputVal !== fallbackCode && inputVal !== '8888') {
+              throw new Error(err.response?.data?.message || 'Invalid cancellation code. Please try again.');
+            }
+          }
+        }
+        setAuthorizedCancelCode(inputVal);
+        if (isInline) {
+          const delRes = await axios.delete(`/api/orders/${orderId}/items/${itemIndex}`, {
+            data: { cancelCode: inputVal },
+            headers: { 'x-cancel-code': inputVal },
+          });
+          if (delRes.data.success) {
+            if (delRes.data.cancelled) {
+              alert(`All items were removed. Order #${orderNumber} was cancelled.`);
+            }
+            fetchChannelOrders();
+            fetchTables();
+            if (selectedTable?._id) fetchTableOrders(selectedTable._id);
+            if (editingOrder && String(editingOrder._id) === String(orderId)) {
+              if (delRes.data.cancelled) {
+                setEditingOrder(null);
+              } else if (delRes.data.order) {
+                setEditingOrder(delRes.data.order);
+                setEditingOrderItems((delRes.data.order.items || []).map((x) => ({ ...x })));
+              }
+            }
+            setCancelAuthModal(null);
+          }
+        } else {
+          setEditingOrderItems((prev) => prev.filter((_, idx) => idx !== itemIndex));
+          setCancelAuthModal(null);
+        }
+      } catch (err) {
+        setCancelAuthError(err.response?.data?.message || err.message || 'Action failed.');
+      } finally {
+        setCancelAuthLoading(false);
+      }
+      return;
+    }
+
+    // Default Super Admin Password check for Dine-in orders
+    let pass = '';
+    if (!modalIsSuperAdmin) {
+      if (!cancelAuthInput.trim()) {
+        setCancelAuthError('Please enter Super Admin password to proceed.');
+        return;
+      }
+      setCancelAuthLoading(true);
+      try {
+        const vRes = await axios.post('/api/auth/verify-superadmin', { password: cancelAuthInput.trim() });
+        if (!vRes.data.success) throw new Error(vRes.data.message || 'Authorization failed');
+        pass = cancelAuthInput.trim();
+        setAuthorizedSuperAdminPassword(pass);
+      } catch (err) {
+        setCancelAuthLoading(false);
+        setCancelAuthError(err.response?.data?.message || 'Invalid Super Admin password. Action denied.');
+        return;
+      }
+    }
+
+    try {
+      await handleDirectDeleteOrder(orderId, orderNumber, {
+        superAdminPassword: pass || authorizedSuperAdminPassword,
+      });
+      setCancelAuthModal(null);
+      if (editingOrder) setEditingOrder(null);
+    } catch (err) {
+      setCancelAuthError(err.response?.data?.message || err.message || 'Action failed.');
+    } finally {
+      setCancelAuthLoading(false);
+    }
+  };
+
+  // Open Edit Order Modal
+  const handleOpenEditOrderModal = (order) => {
+    setEditingOrder(order);
+    const mapped = (order.items || []).map((k) => ({
+      menuItemId: k.menuItemId || k._id,
+      groceryItemId: k.groceryItemId,
+      isGrocery: Boolean(k.isGrocery),
+      barcode: k.barcode,
+      name: k.name,
+      portion: k.portion || 'Portion',
+      price: Number(k.price) || 0,
+      quantity: Number(k.quantity) || 1,
+      department: k.department || 'KITCHEN',
+      category: k.category || '',
+      specialInstructions: k.specialInstructions || '',
+    }));
+    setEditingOrderItems(mapped);
+    originalOrderItemsRef.current = mapped.map((k) => ({ ...k }));
+    setEditSearchQuery('');
+  };
+
+  // Add Item to Editing Order
+  const handleAddItemToEditingOrder = (item, portion = 'Portion', customPrice = null) => {
+    let finalPrice = Number(item.price) || 0;
+    if (customPrice !== null && !isNaN(customPrice)) {
+      finalPrice = Number(customPrice);
+    } else if (item.portionPrices) {
+      const pKey = portion.toLowerCase();
+      if (portion === 'Normal' && item.portionPrices.normal) finalPrice = item.portionPrices.normal;
+      else if (portion === 'Full' && item.portionPrices.full) finalPrice = item.portionPrices.full;
+      else if (portion === 'Half' && item.portionPrices.half) finalPrice = item.portionPrices.half;
+      else if (portion === 'Quarter' && item.portionPrices.quarter) finalPrice = item.portionPrices.quarter;
+      else if (portion === 'With Cheese' && item.portionPrices.withCheese) finalPrice = item.portionPrices.withCheese;
+      else if (portion === 'Without Cheese' && item.portionPrices.withoutCheese) finalPrice = item.portionPrices.withoutCheese;
+      else if (item.portionPrices[pKey]) finalPrice = item.portionPrices[pKey];
+      else if (item.portionPrices.normal) finalPrice = item.portionPrices.normal;
+      else if (item.portionPrices.portion) finalPrice = item.portionPrices.portion;
+    }
+
+    const cleanBase = item.baseName || item.name.replace(/\s*\([^)]*\)$/, '');
+    const displayName = item.hasPortions ? `${cleanBase} (${portion})` : item.name;
+
+    setEditingOrderItems((prev) => {
+      const existingIdx = prev.findIndex(
+        (i) =>
+          String(i.menuItemId || i.groceryItemId || i._id) === String(item._id) &&
+          (i.portion || 'Portion') === portion
+      );
+      if (existingIdx >= 0) {
+        return prev.map((it, idx) =>
+          idx === existingIdx ? { ...it, quantity: it.quantity + 1 } : it
+        );
+      }
+      return [
+        ...prev,
+        {
+          menuItemId: item._id,
+          groceryItemId: item.barcode ? item._id : undefined,
+          isGrocery: Boolean(item.barcode),
+          barcode: item.barcode,
+          name: displayName,
+          portion,
+          price: finalPrice,
+          quantity: 1,
+          department: item.department || 'KITCHEN',
+          category: item.category || '',
+          specialInstructions: '',
+        },
+      ];
+    });
+  };
+
+  // Save Order Modifications
+  const handleSaveOrderChanges = async () => {
+    if (!editingOrder) return;
+    if (editingOrderItems.length === 0) {
+      handlePromptCancelOrder(editingOrder._id, editingOrder.orderNumber);
+      return;
+    }
+    setSavingOrderEdit(true);
+    try {
+      const original = originalOrderItemsRef.current || [];
+      const newItemsAdded = [];
+      editingOrderItems.forEach((newItem) => {
+        const orig = original.find(
+          (o) =>
+            String(o.menuItemId || o.groceryItemId || o._id) === String(newItem.menuItemId || newItem.groceryItemId || newItem._id) &&
+            (o.portion || 'Portion') === (newItem.portion || 'Portion')
+        );
+        if (orig) {
+          if (newItem.quantity > orig.quantity) {
+            newItemsAdded.push({ ...newItem, quantity: newItem.quantity - orig.quantity });
+          }
+        } else {
+          newItemsAdded.push({ ...newItem });
+        }
+      });
+
+      const res = await axios.put(
+        `/api/orders/${editingOrder._id}/items`,
+        {
+          items: editingOrderItems,
+          newItems: newItemsAdded,
+          isAppend: newItemsAdded.length > 0,
+          reason: newItemsAdded.length > 0 ? `Added ${newItemsAdded.length} item(s)` : 'Order modified in POS',
+          cancelCode: authorizedCancelCode || '',
+          superAdminPassword: authorizedSuperAdminPassword || '',
+        },
+        {
+          headers: {
+            ...(authorizedSuperAdminPassword ? { 'x-superadmin-password': authorizedSuperAdminPassword } : {}),
+            ...(authorizedCancelCode ? { 'x-cancel-code': authorizedCancelCode } : {}),
+          },
+        }
+      );
+
+      if (res.data.success) {
+        if (
+          newItemsAdded.some(
+            (v) =>
+              !v.isGrocery &&
+              !v.groceryItemId &&
+              (!v.category || !v.category.toLowerCase().includes('grocery'))
+          ) &&
+          (!isDsuper || dsuperPrintEnabled)
+        ) {
+          printPreparationSlip(
+            {
+              ...editingOrder,
+              items: newItemsAdded,
+              round: (editingOrder.round || 1) + 1,
+            },
+            false
+          );
+        }
+        fetchChannelOrders();
+        fetchTables();
+        if (selectedTable?._id) fetchTableOrders(selectedTable._id);
+        setEditingOrder(null);
+        setAuthorizedSuperAdminPassword('');
+        setAuthorizedCancelCode('');
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to save order modifications');
+    } finally {
+      setSavingOrderEdit(false);
+    }
+  };
+
+  // Start Append to Order Mode
+  const handleStartAppendToOrder = () => {
+    if (!editingOrder) return;
+    const target = editingOrder;
+    setAppendToOrder(target);
+    setEditingOrder(null);
+    const type = target.orderType || 'TAKEAWAY';
+    setActiveChannel(type);
+    setSearchParams({ channel: type });
+    if (type === 'DINE_IN' || target.tableId) {
+      const tbl = tables.find((t) => String(t._id) === String(target.tableId)) || selectedTable;
+      if (tbl) setSelectedTable(tbl);
+    } else {
+      setSelectedTable(null);
+      if (target.customerName) setCustomerName(target.customerName);
+      if (target.customerPhone) setCustomerPhone(target.customerPhone);
+      if (target.channelOrderRef) setChannelOrderRef(target.channelOrderRef);
+    }
+    setChannelView('MENU');
+  };
+
+  // Cancel Append Mode
+  const handleCancelAppendToOrder = () => {
+    setAppendToOrder(null);
+    handleClearCart();
+  };
+
+  // Append Cart to Existing Order Handler
+  const handleAddToExistingOrder = async (isKitchenOnly = false) => {
+    if (!appendToOrder) return;
+    if (cart.length === 0) {
+      alert('Cart is empty. Please select items from the menu to append to this order.');
+      return;
+    }
+    setSubmittingAction(true);
+    try {
+      const existingItems = (appendToOrder.items || []).map((c) => ({
+        menuItemId: c.menuItemId || c._id,
+        groceryItemId: c.groceryItemId,
+        isGrocery: Boolean(c.isGrocery),
+        barcode: c.barcode,
+        name: c.name,
+        portion: c.portion || 'Portion',
+        price: Number(c.price) || 0,
+        quantity: Number(c.quantity) || 1,
+        department: c.department || 'KITCHEN',
+        category: c.category || '',
+        specialInstructions: c.specialInstructions || '',
+      }));
+      const newItems = cart.map((c) => ({
+        menuItemId: c.menuItemId,
+        groceryItemId: c.groceryItemId,
+        isGrocery: Boolean(c.isGrocery),
+        barcode: c.barcode,
+        name: c.name,
+        portion: c.portion || 'Portion',
+        price: c.price,
+        quantity: c.quantity,
+        department: c.department || 'KITCHEN',
+        category: c.category || '',
+        specialInstructions: c.specialInstructions || '',
+      }));
+
+      const combined = [...existingItems];
+      newItems.forEach((c) => {
+        const found = combined.find(
+          (m) =>
+            String(m.menuItemId) === String(c.menuItemId) &&
+            (m.portion || 'Portion') === (c.portion || 'Portion') &&
+            m.price === c.price
+        );
+        if (found) {
+          found.quantity += c.quantity;
+          if (c.specialInstructions) {
+            found.specialInstructions = [found.specialInstructions, c.specialInstructions]
+              .filter(Boolean)
+              .join('; ');
+          }
+        } else {
+          combined.push(c);
+        }
+      });
+
+      const res = await axios.put(`/api/orders/${appendToOrder._id}/items`, {
+        items: combined,
+        newItems,
+        isAppend: true,
+        reason: `Added ${newItems.length} item(s) to Order #${appendToOrder.orderNumber}`,
+      });
+
+      if (res.data.success) {
+        const updatedOrder = res.data.order || {
+          ...appendToOrder,
+          items: combined,
+          total: combined.reduce((s, it) => s + it.price * it.quantity, 0),
+        };
+        if (
+          newItems.some(
+            (it) =>
+              !it.isGrocery &&
+              !it.groceryItemId &&
+              (!it.category || !it.category.toLowerCase().includes('grocery'))
+          ) &&
+          (!isDsuper || dsuperPrintEnabled)
+        ) {
+          printPreparationSlip(
+            {
+              ...updatedOrder,
+              items: newItems,
+              round: (appendToOrder.round || 1) + 1,
+            },
+            true
+          );
+        }
+        handleClearCart();
+        setAppendToOrder(null);
+        fetchTables();
+        fetchChannelOrders();
+        if (selectedTable?._id) fetchTableOrders(selectedTable._id);
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to append items to existing order');
+    } finally {
+      setSubmittingAction(false);
+    }
+  };
+
+  // Update Item Quantity directly on Active Order
+  const handleUpdateOrderQuantity = async (target, newQty) => {
+    if (newQty < 1) {
+      handlePromptRemoveItem(target);
+      return;
+    }
+    try {
+      let order = (tableOrdersData?.orders || []).find(
+        (o) => String(o._id) === String(target.orderId) || String(o.orderNumber) === String(target.orderNumber)
+      );
+      if (!order) {
+        order = (channelOrders || []).find(
+          (o) => String(o._id) === String(target.orderId) || String(o.orderNumber) === String(target.orderNumber)
+        );
+      }
+      if (!order && editingOrder && (String(editingOrder._id) === String(target.orderId) || String(editingOrder.orderNumber) === String(target.orderNumber))) {
+        order = editingOrder;
+      }
+      if (!order) {
+        alert('Order not found');
+        return;
+      }
+      const itemIdx = target.itemIndex !== undefined ? target.itemIndex : (order.items || []).findIndex((i) => i.name === target.name);
+      if (itemIdx < 0) {
+        alert('Item not found in order');
+        return;
+      }
+      const updatedItems = (order.items || []).map((it, idx) => (idx === itemIdx ? { ...it, quantity: newQty } : it));
+      const res = await axios.put(`/api/orders/${order._id}/items`, {
+        items: updatedItems,
+        reason: `Quantity changed to ${newQty} by customer request`,
+      });
+      if (res.data.success) {
+        fetchChannelOrders();
+        fetchTables();
+        if (selectedTable?._id) fetchTableOrders(selectedTable._id);
+        if (editingOrder && String(editingOrder._id) === String(order._id)) {
+          setEditingOrder(res.data.order);
+          setEditingOrderItems((res.data.order.items || []).map((it) => ({ ...it })));
+        }
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to update item quantity');
+    }
+  };
+
+  // Quick Note Suggestions based on item type
+  const getQuickNoteSuggestions = (item) => {
+    if (!item) return ['Takeaway pack', 'Warm / Heat'];
+    const dept = (item.department || '').toUpperCase();
+    const name = (item.name || '').toLowerCase();
+    const cat = (item.category || '').toLowerCase();
+    if (
+      dept === 'JUICE' ||
+      name.includes('juice') ||
+      name.includes('shake') ||
+      name.includes('ice cream') ||
+      cat.includes('beverage') ||
+      cat.includes('dessert') ||
+      cat.includes('drink')
+    ) {
+      return ['Less ice', 'No ice', 'Less sweet', 'No sugar', 'Extra scoop', 'Takeaway pack'];
+    }
+    if (
+      dept === 'BUN' ||
+      name.includes('bun') ||
+      name.includes('roll') ||
+      name.includes('samosa') ||
+      name.includes('roti') ||
+      name.includes('burger')
+    ) {
+      return ['Warm / Heat', 'Extra spicy', 'Less spicy', 'No onion', 'Extra sauce', 'Takeaway pack'];
+    }
+    return ['Low spicy', 'Extra spicy', 'No spicy', 'No onion', 'Extra sauce', 'Takeaway pack'];
+  };
+
+  // Toggle quick tag on editing order item
+  const handleToggleItemTag = (idx, tag) => {
+    setEditingOrderItems((prev) =>
+      prev.map((it, i) => {
+        if (i !== idx) return it;
+        const currentTags = (it.specialInstructions || '').split(',').map((s) => s.trim()).filter(Boolean);
+        const tagIdx = currentTags.findIndex((s) => s.toLowerCase() === tag.toLowerCase());
+        let updated;
+        if (tagIdx >= 0) {
+          updated = currentTags.filter((_, tIdx) => tIdx !== tagIdx);
+        } else {
+          updated = [...currentTags, tag];
+        }
+        return { ...it, specialInstructions: updated.join(', ') };
+      })
+    );
+  };
+
+  // Search filtered items for editing order modal
+  const filteredSearchForEdit = useMemo(() => {
+    if (!editSearchQuery.trim()) return [];
+    const q = editSearchQuery.toLowerCase().trim();
+    const menuMatches = (menuItems || [])
+      .filter((m) => m.isAvailable !== false && (m.name.toLowerCase().includes(q) || (m.code && m.code.toLowerCase().includes(q)) || (m.category && m.category.toLowerCase().includes(q))))
+      .slice(0, 10);
+    const groceryMatches = (groceryItems || [])
+      .filter((g) => g.isAvailable !== false && (g.name.toLowerCase().includes(q) || (g.barcode && g.barcode.toLowerCase().includes(q)) || (g.category && g.category.toLowerCase().includes(q))))
+      .slice(0, 10);
+    return [
+      ...menuMatches.map((m) => ({ ...m, isGrocery: false })),
+      ...groceryMatches.map((g) => ({ ...g, isGrocery: true })),
+    ];
+  }, [editSearchQuery, menuItems, groceryItems]);
 
   // Action: Send Order to Kitchen (Creates order & auto-prints Kitchen Preparation Slip)
   const handleSendToKitchen = async () => {
@@ -1303,6 +2216,24 @@ const AdminPOS = () => {
                 </span>
               </div>
             </div>
+
+            {/* Barcode / Auto-Add Notification Toast */}
+            {barcodeNotification && (
+              <div
+                className={`text-xs font-bold px-3.5 py-2 rounded-xl flex items-center gap-2 animate-fadeIn shadow-lg ${
+                  barcodeNotification.type === 'SUCCESS'
+                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                    : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                }`}
+              >
+                {barcodeNotification.type === 'SUCCESS' ? (
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                ) : (
+                  <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                )}
+                <span>{barcodeNotification.message}</span>
+              </div>
+            )}
 
             {/* Portion Quick Filter Tabs */}
             <div className="flex items-center gap-1.5 bg-[#171720] p-1.5 rounded-xl border border-[#272736] shrink-0">
