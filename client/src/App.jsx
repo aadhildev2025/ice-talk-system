@@ -5,6 +5,7 @@ import { SocketProvider } from './context/SocketContext';
 import { PrinterProvider } from './context/PrinterContext';
 import { UIProvider } from './context/UIContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import ToastNotifications from './components/ToastNotifications';
 import PrintModal from './components/PrintModal';
 import PrinterSettingsModal from './components/PrinterSettingsModal';
 
@@ -41,6 +42,7 @@ function App() {
       <SocketProvider>
         <UIProvider>
           <PrinterProvider>
+            <ToastNotifications />
             <PrintModal />
             <PrinterSettingsModal />
             <Routes>

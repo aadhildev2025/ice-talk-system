@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useSocket } from '../../context/SocketContext';
 import { usePrinter } from '../../context/PrinterContext';
 import { useAuth } from '../../context/AuthContext';
 import { useUI } from '../../context/UIContext';
 import {
+  Bell,
   CreditCard,
   Banknote,
   Globe,
@@ -199,6 +200,17 @@ const AdminPOS = () => {
 
   // Active channel orders (unsettled Takeaway, UberEats, PickMe)
   const [channelOrders, setChannelOrders] = useState([]);
+  const navigate = useNavigate();
+  const [pendingOrdersCount, setPendingOrdersCount] = useState(0);
+
+  const fetchPendingCount = async () => {
+    try {
+      const res = await axios.get('/api/orders?status=PENDING');
+      if (res.data.success) {
+        setPendingOrdersCount(Array.isArray(res.data.orders) ? res.data.orders.length : (res.data.count || 0));
+      }
+    } catch {}
+  };
   const [selectedChannelOrder, setSelectedChannelOrder] = useState(null);
   const [loadingChannelOrders, setLoadingChannelOrders] = useState(false);
 
@@ -315,8 +327,22 @@ const AdminPOS = () => {
     fetchTables();
     fetchChannelOrders();
     fetchWaiters();
+    fetchPendingCount();
+    const pendingTimer = setInterval(fetchPendingCount, 4000);
 
     if (socket) {
+      socket.on('order:created', () => {
+        fetchPendingCount();
+      });
+      socket.on('order:approved', () => {
+        fetchPendingCount();
+      });
+      socket.on('order:rejected', () => {
+        fetchPendingCount();
+      });
+      socket.on('order:cancelled', () => {
+        fetchPendingCount();
+      });
       socket.on('order:created', () => {
         fetchTables();
         fetchChannelOrders();
@@ -347,6 +373,7 @@ const AdminPOS = () => {
     }
 
     return () => {
+      clearInterval(pendingTimer);
       if (socket) {
         socket.off('order:created');
         socket.off('order:approved');
@@ -1741,6 +1768,31 @@ const AdminPOS = () => {
 
   return (
     <div className="space-y-4">
+      {/* Real-time Waiter Order Notification Banner in POS */}
+      {pendingOrdersCount > 0 && (
+        <div
+          onClick={() => navigate('/admin/order-receive')}
+          className="cursor-pointer bg-gradient-to-r from-orange-600 via-amber-600 to-orange-500 text-white p-3 md:p-3.5 rounded-2xl flex items-center justify-between shadow-xl shadow-orange-500/20 border border-orange-400/40 hover:brightness-110 transition-all animate-pulse"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+              <Bell className="w-4 h-4 text-white animate-bounce" />
+            </div>
+            <div>
+              <p className="text-sm font-black tracking-wide">
+                🔔 {pendingOrdersCount} New Waiter Order{pendingOrdersCount > 1 ? 's' : ''} Received!
+              </p>
+              <p className="text-[11px] text-orange-100 font-medium">
+                Click to open Order Receive queue and dispatch to kitchen.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5 text-xs font-bold bg-white/20 hover:bg-white/30 px-3.5 py-1.5 rounded-xl transition-all shrink-0">
+            <span>View & Approve</span>
+            <span>→</span>
+          </div>
+        </div>
+      )}
       {/* Top Channel Bar */}
       <div className="bg-[#141419] p-3 md:p-4 rounded-2xl border border-[#24242E] flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3">
         {/* Channel Selection Buttons */}

@@ -1,9 +1,11 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useSocket } from '../context/SocketContext';
-import { Bell, CheckCircle, XCircle, AlertTriangle, DollarSign, X } from 'lucide-react';
+import { Bell, CheckCircle, XCircle, AlertTriangle, DollarSign, X, ExternalLink } from 'lucide-react';
 
 const ToastNotifications = () => {
   const { toasts, removeToast } = useSocket();
+  const navigate = useNavigate();
 
   if (!toasts || toasts.length === 0) return null;
 
@@ -54,6 +56,19 @@ const ToastNotifications = () => {
           <div className="flex-1 min-w-0">
             <h4 className="font-bold text-sm text-white leading-snug">{toast.title}</h4>
             <p className="text-xs text-neutral-300 mt-0.5 leading-relaxed">{toast.message}</p>
+            {toast.type === 'ORDER_NEW' && (
+              <button
+                type="button"
+                onClick={() => {
+                  removeToast(toast.id);
+                  navigate('/admin/order-receive');
+                }}
+                className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 bg-[#FF6B00] hover:bg-[#e05e00] text-white text-xs font-bold rounded-lg shadow transition-all pointer-events-auto"
+              >
+                <span>View & Approve</span>
+                <ExternalLink className="w-3 h-3" />
+              </button>
+            )}
           </div>
           <button
             onClick={() => removeToast(toast.id)}
