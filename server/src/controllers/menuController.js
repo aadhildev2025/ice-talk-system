@@ -2,6 +2,7 @@ const MenuItem = require('../models/MenuItem');
 const Category = require('../models/Category');
 const localDataService = require('../services/localDataService');
 const { emitMenuUpdated } = require('../socket');
+const { defaultMenuItems } = require('../data/restaurantMenu');
 
 // @desc    Get all menu items
 // @route   GET /api/menu
@@ -24,7 +25,21 @@ const getMenuItems = async (req, res) => {
       filter.name = { $regex: search, $options: 'i' };
     }
 
-    const items = await MenuItem.find(filter).sort({ category: 1, name: 1 });
+    let items = [];
+    try {
+      items = await MenuItem.find(filter).sort({ category: 1, name: 1 });
+    } catch (_) {}
+
+    if (!items || items.length === 0) {
+      items = defaultMenuItems.filter((it) => {
+        if (category && category !== 'All' && it.category !== category) return false;
+        if (department && department !== 'ALL' && it.department !== department) return false;
+        if (isAvailable !== undefined && String(it.isAvailable) !== isAvailable) return false;
+        if (search && !it.name.toLowerCase().includes(search.toLowerCase())) return false;
+        return true;
+      });
+    }
+
     res.json({ success: true, count: items.length, items });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

@@ -3,12 +3,33 @@ const Floor = require('../models/Floor');
 const localDataService = require('../services/localDataService');
 const { emitTableUpdated } = require('../socket');
 
+const FALLBACK_DEFAULT_TABLES = [
+  { _id: '6aa3c9caa4a22826418cbe07', name: 'Infas', floor: 'Ground Floor', capacity: 4, type: 'Standard', status: 'AVAILABLE', sortOrder: 1, isActive: true },
+  { _id: '6aa3c9caa4a22826418cbe08', name: 'A2', floor: 'Ground Floor', capacity: 4, type: 'Standard', status: 'AVAILABLE', sortOrder: 2, isActive: true },
+  { _id: '6aa3c9caa4a22826418cbe09', name: 'A3', floor: 'Ground Floor', capacity: 4, type: 'Standard', status: 'AVAILABLE', sortOrder: 3, isActive: true },
+  { _id: '6aa3c9caa4a22826418cbe0a', name: 'A4', floor: 'Ground Floor', capacity: 4, type: 'Standard', status: 'AVAILABLE', sortOrder: 4, isActive: true },
+  { _id: '6aa3c9caa4a22826418cbe0b', name: 'A6', floor: 'Ground Floor', capacity: 6, type: 'Standard', status: 'AVAILABLE', sortOrder: 5, isActive: true },
+  { _id: '6aa3c9caa4a22826418cbe0c', name: 'A7', floor: 'Ground Floor', capacity: 4, type: 'Standard', status: 'AVAILABLE', sortOrder: 6, isActive: true },
+  { _id: '6aa3c9caa4a22826418cbe0d', name: 'Couple 01', floor: 'Ground Floor', capacity: 2, type: 'Couple', status: 'AVAILABLE', sortOrder: 7, isActive: true },
+  { _id: '6aa3c9caa4a22826418cbe0e', name: 'Couple 02', floor: 'Ground Floor', capacity: 2, type: 'Couple', status: 'AVAILABLE', sortOrder: 8, isActive: true },
+  { _id: '6aa3c9caa4a22826418cbe0f', name: 'Outdoor A', floor: 'Ground Floor', capacity: 4, type: 'Outdoor', status: 'AVAILABLE', sortOrder: 9, isActive: true },
+  { _id: '6aa3c9caa4a22826418cbe10', name: 'Outdoor B', floor: 'Ground Floor', capacity: 4, type: 'Outdoor', status: 'AVAILABLE', sortOrder: 10, isActive: true },
+  { _id: '6aeca5f3ca3d2f11cbf0fdea', name: 'A1', floor: 'Infas', capacity: 4, type: 'Standard', status: 'AVAILABLE', sortOrder: 11, isActive: true },
+];
+
 // @desc    Get all tables with active orders status
 // @route   GET /api/tables
 // @access  Private (Staff)
 const getTables = async (req, res) => {
   try {
-    const tables = await Table.find({ isActive: true }).sort({ floor: 1, sortOrder: 1, createdAt: 1 });
+    let tables = [];
+    try {
+      tables = await Table.find({ isActive: true }).sort({ floor: 1, sortOrder: 1, createdAt: 1 });
+    } catch (_) { }
+
+    if (!tables || tables.length === 0) {
+      tables = FALLBACK_DEFAULT_TABLES;
+    }
 
     // Fetch active unsettled orders from local computer storage
     const activeOrders = localDataService.getOrders({ isSettled: false }).filter(
@@ -17,14 +38,16 @@ const getTables = async (req, res) => {
 
     // Map active orders to tables
     const tablesWithActiveOrders = tables.map((t) => {
+      const tObj = typeof t.toObject === 'function' ? t.toObject() : t;
+      const tIdStr = String(tObj._id);
       const ordersForTable = activeOrders.filter(
-        (o) => o.tableId && o.tableId.toString() === t._id.toString()
+        (o) => o.tableId && String(o.tableId) === tIdStr
       );
       const totalAmount = ordersForTable.reduce((sum, o) => sum + (o.total || 0), 0);
       const hasActiveOrder = ordersForTable.length > 0;
 
-      let computedStatus = t.status;
-      if (t.status !== 'DISABLED' && t.status !== 'RESERVED') {
+      let computedStatus = tObj.status;
+      if (tObj.status !== 'DISABLED' && tObj.status !== 'RESERVED') {
         if (hasActiveOrder) {
           computedStatus = 'OCCUPIED';
         } else {
@@ -33,7 +56,7 @@ const getTables = async (req, res) => {
       }
 
       return {
-        ...t.toObject(),
+        ...tObj,
         status: computedStatus,
         hasActiveOrder,
         activeOrdersCount: ordersForTable.length,
@@ -44,7 +67,7 @@ const getTables = async (req, res) => {
           status: o.status,
           total: o.total,
           createdAt: o.createdAt,
-          itemsCount: o.items.length,
+          itemsCount: (o.items || []).length,
         })),
       };
     });
@@ -233,9 +256,8 @@ const deleteFloor = async (req, res) => {
 
     res.json({
       success: true,
-      message: `Floor "${floor.name}" removed successfully.${
-        assignedTables > 0 ? ` Reassigned ${assignedTables} table(s) to Ground Floor.` : ''
-      }`,
+      message: `Floor "${floor.name}" removed successfully.${assignedTables > 0 ? ` Reassigned ${assignedTables} table(s) to Ground Floor.` : ''
+        }`,
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

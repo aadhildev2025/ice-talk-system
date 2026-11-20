@@ -88,15 +88,28 @@ const WaiterMenu = () => {
     };
   }, [socket]);
 
-  // Clear selected table if it becomes occupied or disabled
+  // Clear selected table only if it is deleted or disabled
   useEffect(() => {
     if (selectedTableId) {
       const found = tables.find((t) => t._id === selectedTableId);
-      if (!found || found.status !== 'AVAILABLE' || found.hasActiveOrder || found.status === 'DISABLED') {
+      if (!found || found.status === 'DISABLED') {
         setSelectedTableId('');
       }
     }
   }, [tables, selectedTableId]);
+
+  // Handle Escape key to close drawer and modals
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        if (cartOpen) setCartOpen(false);
+        if (editingCartItem) setEditingCartItem(null);
+        if (orderSuccess) setOrderSuccess(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [cartOpen, editingCartItem, orderSuccess]);
 
   // Direct add item to cart with portion (Portion, Full, Half, etc.)
   const handleAddToCart = (item, portion = 'Portion', customPrice = null) => {
@@ -228,7 +241,7 @@ const WaiterMenu = () => {
   // Submit order -> PENDING -> Admin Receive
   const handlePlaceOrder = async () => {
     if (orderType === 'DINE_IN' && !selectedTableId) {
-      alert('Please select a table before placing order.');
+      alert('Please select a dining table before placing a Dine-In order (or choose Takeaway).');
       return;
     }
 
@@ -258,22 +271,24 @@ const WaiterMenu = () => {
       const res = await axios.post('/api/orders', payload);
 
       if (res.data.success) {
-        const orderToPrint = {
-          ...res.data.order,
-          tableNameSnapshot: res.data.order?.tableNameSnapshot || tableName,
-          tableName: res.data.order?.tableName || tableName,
-          waiterNameSnapshot: res.data.order?.waiterNameSnapshot || waiterName,
-          waiterName: res.data.order?.waiterName || waiterName,
+        const orderData = res.data.order || {};
+        const successOrder = {
+          ...orderData,
+          tableNameSnapshot: orderData.tableNameSnapshot || tableName,
+          tableName: orderData.tableName || tableName,
+          waiterNameSnapshot: orderData.waiterNameSnapshot || waiterName,
+          waiterName: orderData.waiterName || waiterName,
         };
-        setOrderSuccess(orderToPrint);
-        printPreparationSlip(orderToPrint, true);
+        setOrderSuccess(successOrder);
         setCart([]);
         setOrderInstructions('');
         setSelectedTableId('');
         setCartOpen(false);
+      } else {
+        alert(res.data.message || 'Failed to place order');
       }
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to submit order');
+      alert(err.response?.data?.message || err.message || 'Failed to submit order');
     } finally {
       setSubmittingOrder(false);
     }
@@ -751,8 +766,14 @@ const WaiterMenu = () => {
 
       {/* Cart & Table Selection Drawer */}
       {cartOpen && (
-        <div className="fixed inset-0 z-50 flex justify-end bg-black/80 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-[#141419] border-l border-[#24242E] max-w-md w-full h-full flex flex-col justify-between shadow-2xl overflow-hidden">
+        <div
+          className="fixed inset-0 z-50 flex justify-end bg-black/80 backdrop-blur-sm animate-fadeIn cursor-pointer"
+          onClick={() => setCartOpen(false)}
+        >
+          <div
+            className="bg-[#141419] border-l border-[#24242E] max-w-md w-full h-full flex flex-col justify-between shadow-2xl overflow-hidden cursor-default"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Drawer Header */}
             <div className="p-4 bg-[#1C1C24] border-b border-[#2B2B38] flex justify-between items-center">
               <div className="flex items-center gap-2.5">
@@ -763,12 +784,23 @@ const WaiterMenu = () => {
                 </div>
               </div>
 
-              <button
-                onClick={() => setCartOpen(false)}
-                className="p-1.5 text-neutral-400 hover:text-white rounded-lg"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setCartOpen(false)}
+                  className="px-2.5 py-1 text-xs font-bold text-neutral-300 hover:text-white bg-[#282834] hover:bg-[#323242] rounded-lg transition-colors"
+                >
+                  Close
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCartOpen(false)}
+                  className="p-1.5 text-neutral-400 hover:text-white rounded-lg hover:bg-[#282834] transition-colors"
+                  aria-label="Close"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
             {/* Drawer Body */}
@@ -845,29 +877,28 @@ const WaiterMenu = () => {
                     ))}
                   </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-36 overflow-y-auto pr-1">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-44 overflow-y-auto pr-1">
                     {(() => {
-                      const availableTables = tables.filter(
+                      const selectableTables = tables.filter(
                         (t) =>
-                          t.status === 'AVAILABLE' &&
-                          !t.hasActiveOrder &&
                           t.status !== 'DISABLED' &&
                           (selectedWaiterFloor === 'ALL' || (t.floor || 'Ground Floor') === selectedWaiterFloor)
                       );
 
-                      if (availableTables.length === 0) {
+                      if (selectableTables.length === 0) {
                         return (
                           <div className="col-span-full py-4 px-2 text-center bg-[#141418] rounded-xl border border-dashed border-[#2A2A38]">
-                            <p className="text-xs font-semibold text-neutral-400">No available tables</p>
+                            <p className="text-xs font-semibold text-neutral-400">No tables found</p>
                             <p className="text-[10px] text-neutral-500 mt-0.5">
-                              All tables on {selectedWaiterFloor === 'ALL' ? 'all floors' : selectedWaiterFloor} are currently occupied with active orders.
+                              No active tables configured for {selectedWaiterFloor === 'ALL' ? 'the restaurant' : selectedWaiterFloor}.
                             </p>
                           </div>
                         );
                       }
 
-                      return availableTables.map((tbl) => {
+                      return selectableTables.map((tbl) => {
                         const isSelected = selectedTableId === tbl._id;
+                        const isOccupied = tbl.status === 'OCCUPIED' || Boolean(tbl.hasActiveOrder);
                         return (
                           <button
                             key={tbl._id}
@@ -876,12 +907,21 @@ const WaiterMenu = () => {
                             className={`p-2 rounded-xl border text-center transition-all ${
                               isSelected
                                 ? 'bg-[#FF6B00] text-white border-white/30 font-bold shadow'
+                                : isOccupied
+                                ? 'bg-[#181512] text-amber-200 border-amber-500/30 hover:border-amber-400'
                                 : 'bg-[#141418] text-neutral-300 border-[#2A2A38] hover:border-orange-500/40'
                             }`}
                           >
-                            <span className="text-[8px] font-bold text-amber-400 block truncate">
-                              {tbl.floor || 'Ground Floor'}
-                            </span>
+                            <div className="flex items-center justify-between gap-1 mb-0.5">
+                              <span className="text-[8px] font-bold text-neutral-400 truncate">
+                                {tbl.floor || 'Ground Floor'}
+                              </span>
+                              <span className={`text-[8px] font-bold px-1 rounded ${
+                                isOccupied ? 'bg-amber-500/20 text-amber-300' : 'bg-emerald-500/20 text-emerald-300'
+                              }`}>
+                                {isOccupied ? 'Occupied' : 'Open'}
+                              </span>
+                            </div>
                             <p className="text-xs font-bold truncate">{tbl.name}</p>
                             <p
                               className={`text-[9px] ${
@@ -1031,21 +1071,30 @@ const WaiterMenu = () => {
                 </span>
               </div>
 
-              <button
-                type="button"
-                onClick={handlePlaceOrder}
-                disabled={submittingOrder || (orderType === 'DINE_IN' && !selectedTableId)}
-                className="w-full bg-gradient-to-r from-[#FF6B00] to-[#FF8A33] hover:from-[#E55A00] hover:to-[#FF6B00] text-white py-3.5 px-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-lg shadow-orange-500/25 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
-              >
-                {submittingOrder ? (
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                ) : (
-                  <>
-                    <CheckCircle2 className="w-5 h-5" />
-                    <span>Place Order → Send to Admin</span>
-                  </>
-                )}
-              </button>
+              <div className="flex items-center gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setCartOpen(false)}
+                  className="py-3.5 px-4 rounded-xl bg-[#282834] hover:bg-[#343444] text-neutral-300 hover:text-white font-bold text-xs uppercase tracking-wider transition-colors shrink-0"
+                >
+                  Close
+                </button>
+                <button
+                  type="button"
+                  onClick={handlePlaceOrder}
+                  disabled={submittingOrder}
+                  className="flex-1 bg-gradient-to-r from-[#FF6B00] to-[#FF8A33] hover:from-[#E55A00] hover:to-[#FF6B00] text-white py-3.5 px-4 rounded-xl font-black text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-orange-500/25 flex items-center justify-center gap-2 transition-all active:scale-[0.99] disabled:opacity-50"
+                >
+                  {submittingOrder ? (
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="w-5 h-5 shrink-0" />
+                      <span className="truncate">Place Order → Send to Admin</span>
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>

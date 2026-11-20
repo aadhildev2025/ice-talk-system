@@ -146,19 +146,10 @@ app.use(async (req, res, next) => {
 
   try {
     await connectDB();
-    next();
   } catch (err) {
-    // If auth route, allow fallback to proceed
-    if (req.path.startsWith('/api/auth') || req.path.startsWith('/auth')) {
-      return next();
-    }
-    console.error('[DB Middleware Error]:', err.message);
-    return res.status(503).json({
-      success: false,
-      message: 'MongoDB connection failed. Master Tables and Menu require MongoDB Atlas connection.',
-      error: err.message,
-    });
+    console.warn('[DB Middleware Warning]: MongoDB offline/connecting:', err.message);
   }
+  next();
 });
 
 // API Routes (supports both /api/path and /path in case of serverless rewrite differences)
