@@ -2,6 +2,7 @@ const Table = require('../models/Table');
 const GroceryItem = require('../models/GroceryItem');
 const { emitSaleCompleted, emitTableUpdated, emitGroceryUpdated } = require('../socket');
 const localDataService = require('../services/localDataService');
+const cloudSyncService = require('../services/cloudSyncService');
 
 // @desc    Get active unpaid orders for a specific table
 // @route   GET /api/pos/table/:tableId/orders
@@ -315,6 +316,14 @@ const settleTable = async (req, res) => {
           completedAt: new Date().toISOString(),
           saleId: demoSale._id,
         });
+        try {
+          cloudSyncService.updateOrderStatusInCloud(id, {
+            status: 'COMPLETED',
+            isSettled: true,
+            completedAt: new Date(),
+            saleId: demoSale._id,
+          });
+        } catch (_) {}
       });
 
       // Deduct grocery stock if any grocery items were sold
@@ -373,6 +382,14 @@ const settleTable = async (req, res) => {
         completedAt: new Date().toISOString(),
         saleId: sale._id,
       });
+      try {
+        cloudSyncService.updateOrderStatusInCloud(id, {
+          status: 'COMPLETED',
+          isSettled: true,
+          completedAt: new Date(),
+          saleId: sale._id,
+        });
+      } catch (_) {}
     });
 
     // Deduct grocery stock if any grocery items were sold

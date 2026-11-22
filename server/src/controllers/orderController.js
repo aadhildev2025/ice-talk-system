@@ -1,8 +1,10 @@
+const mongoose = require('mongoose');
 const Order = require('../models/Order');
 const Table = require('../models/Table');
 const MenuItem = require('../models/MenuItem');
 const User = require('../models/User');
 const localDataService = require('../services/localDataService');
+const cloudSyncService = require('../services/cloudSyncService');
 const {
   emitOrderCreated,
   emitOrderApproved,
@@ -226,7 +228,20 @@ const createOrder = async (req, res) => {
       });
     }
 
-    const orderNumber = localDataService.getNextOrderNumber();
+    // Align next order number with cloud database to guarantee zero sequence collisions
+    let orderNumber = null;
+    try {
+      if (mongoose.connection && mongoose.connection.readyState >= 1) {
+        const lastDbOrder = await Order.findOne({}).sort({ orderNumber: -1 }).select('orderNumber').lean();
+        if (lastDbOrder && typeof lastDbOrder.orderNumber === 'number') {
+          orderNumber = lastDbOrder.orderNumber + 1;
+        }
+      }
+    } catch (_) {}
+    if (!orderNumber) {
+      orderNumber = localDataService.getNextOrderNumber();
+    }
+
     const shouldAutoApprove = Boolean(autoApprove === true || autoApprove === 'true');
 
     let round = 1;
@@ -237,8 +252,12 @@ const createOrder = async (req, res) => {
       round = activeTableOrders.length + 1;
     }
 
+    // Generate a valid 24-character ObjectId string for compatibility with both MongoDB and local storage
+    const newOrderId = new mongoose.Types.ObjectId().toString();
+
     // Save order to local computer storage
     const order = localDataService.saveOrder({
+      _id: newOrderId,
       orderNumber,
       orderType,
       tableId: table ? table._id : (tableId || undefined),
@@ -260,6 +279,13 @@ const createOrder = async (req, res) => {
       specialInstructions: specialInstructions || '',
       isDemo: Boolean(req.user?.isDemo),
     });
+
+    // Push order to MongoDB Atlas cloud database
+    try {
+      await cloudSyncService.pushOrderToCloud(order);
+    } catch (pushErr) {
+      console.warn('[CloudSync Order Push]:', pushErr.message);
+    }
 
     // Update MongoDB Table status to OCCUPIED if table exists
     if (table) {
@@ -312,7 +338,7 @@ const createOrder = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: `Order #${orderNumber} placed successfully (Saved to Local Computer Storage).`,
+      message: `Order #${orderNumber} placed successfully.`,
       order,
       preparationTasks: createdTasks,
     });
@@ -348,6 +374,16 @@ const approveOrder = async (req, res) => {
       waiterName: order.waiterNameSnapshot || order.waiterName,
       waiterNameSnapshot: order.waiterNameSnapshot || order.waiterName,
     });
+
+    // Update status in MongoDB Atlas
+    try {
+      await cloudSyncService.updateOrderStatusInCloud(updated._id, {
+        status: 'APPROVED',
+        approvedAt: new Date(),
+      });
+    } catch (e) {
+      console.warn('[CloudSync Approve Warning]:', e.message);
+    }
 
     // Group items by department to create Preparation Tasks
     const departmentGroups = {};
@@ -414,6 +450,16 @@ const rejectOrder = async (req, res) => {
       status: 'REJECTED',
       rejectionReason: reason || 'Rejected by Admin',
     });
+
+    // Update status in MongoDB Atlas
+    try {
+      await cloudSyncService.updateOrderStatusInCloud(updated._id, {
+        status: 'REJECTED',
+        rejectionReason: reason || 'Rejected by Admin',
+      });
+    } catch (e) {
+      console.warn('[CloudSync Reject Warning]:', e.message);
+    }
 
     emitOrderRejected(updated);
 
@@ -494,6 +540,17 @@ const cancelOrder = async (req, res) => {
       cancellationReason: reason || `Cancelled by ${req.user?.role === 'admin' ? 'Admin' : 'Waiter'}`,
       cancelledAt: new Date().toISOString(),
     });
+
+    // Update status in MongoDB Atlas
+    try {
+      await cloudSyncService.updateOrderStatusInCloud(updated._id, {
+        status: 'CANCELLED',
+        cancellationReason: reason || `Cancelled by ${req.user?.role === 'admin' ? 'Admin' : 'Waiter'}`,
+        cancelledAt: new Date(),
+      });
+    } catch (e) {
+      console.warn('[CloudSync Cancel Warning]:', e.message);
+    }
 
     // Check table occupancy
     if (order.tableId) {
@@ -676,6 +733,10 @@ const updateOrderItems = async (req, res) => {
       updatedAt: new Date().toISOString(),
     });
 
+    try {
+      await cloudSyncService.pushOrderToCloud(updated);
+    } catch (_) {}
+
     // Update prep tasks: if appending, generate tasks only for newly added items and leave existing tasks active
     try {
       let itemsToPrep = updated.items;
@@ -841,6 +902,10 @@ const removeOrderItem = async (req, res) => {
     });
 
     try {
+      await cloudSyncService.pushOrderToCloud(updated);
+    } catch (_) {}
+
+    try {
       const existingTasks = localDataService.getPrepTasks({ orderId: order._id });
       existingTasks.forEach((t) => {
         localDataService.updatePrepTask(t._id, { status: 'CANCELLED' });
@@ -984,12 +1049,20 @@ const updatePrepTask = async (req, res) => {
   }
 };
 
-// @desc    Get all orders with rich filters (from local computer storage)
+// @desc    Get all orders with rich filters (from local computer storage + cloud synced)
 // @route   GET /api/orders
 // @access  Private (Staff)
 const getOrders = async (req, res) => {
   try {
     const { status, tableId, waiterId, orderType, limit = 50, page = 1 } = req.query;
+
+    // Fast cloud sync with MongoDB Atlas to pull any orders placed online (e.g. from Vercel waiter portal)
+    try {
+      await Promise.race([
+        cloudSyncService.syncOrdersFromCloud(),
+        new Promise((resolve) => setTimeout(resolve, 1500)),
+      ]);
+    } catch (_) {}
 
     let orders = localDataService.getOrders({
       status,
@@ -1092,6 +1165,15 @@ const deleteOrder = async (req, res) => {
     if (localOrder?._id) {
       localDataService.deleteOrder(localOrder._id);
     }
+
+    // Delete from MongoDB Atlas cloud database
+    try {
+      if (mongoose.isValidObjectId(id)) {
+        await Order.deleteOne({ _id: id });
+      } else if (order?.orderNumber) {
+        await Order.deleteOne({ orderNumber: order.orderNumber });
+      }
+    } catch (_) {}
 
     // If order was on a table, check if table can be freed
     if (order && order.tableId) {

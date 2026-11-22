@@ -18,6 +18,7 @@ const expenseRoutes = require('./routes/expenseRoutes');
 const customerRoutes = require('./routes/customerRoutes');
 const groceryRoutes = require('./routes/groceryRoutes');
 const { initDemoUser } = require('./utils/demoSalesService');
+const { startCloudSyncLoop } = require('./services/cloudSyncService');
 
 const path = require('path');
 const fs = require('fs');
@@ -222,6 +223,7 @@ if (!process.env.VERCEL) {
 
   server.listen(PORT, () => {
     console.log(`🍦 ICE TALK Server is running on http://localhost:${PORT}`);
+    startCloudSyncLoop(3500);
   });
 }
 
