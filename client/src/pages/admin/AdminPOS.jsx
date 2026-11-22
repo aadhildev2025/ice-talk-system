@@ -41,6 +41,7 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import QuickNoteModal from '../../components/QuickNoteModal';
+import TakeawayCancelQRModal from '../../components/TakeawayCancelQRModal';
 import { isDsuperUser } from '../../services/dsuperStorageService';
 
 const AdminPOS = () => {
@@ -70,6 +71,7 @@ const AdminPOS = () => {
   const [cancelCodeSuccess, setCancelCodeSuccess] = useState('');
   const [cancelCodeError, setCancelCodeError] = useState('');
   const [showSecretCode, setShowSecretCode] = useState(false);
+  const [takeawayQRModalOrder, setTakeawayQRModalOrder] = useState(null);
 
   // Order Cancel & Remove Authorization Modal States
   const [cancelAuthModal, setCancelAuthModal] = useState(null);
@@ -116,7 +118,7 @@ const AdminPOS = () => {
           return res.data.cancelCode;
         }
       } catch {
-        const fallback = localStorage.getItem('icetalk_takeaway_cancel_code') || '8888';
+        const fallback = localStorage.getItem('icetalk_takeaway_cancel_code') || '0000';
         setCurrentCancelCode(fallback);
         return fallback;
       }
@@ -788,27 +790,36 @@ const AdminPOS = () => {
     });
   };
 
-  // Prompt Order Cancellation
+  // Prompt Order Cancellation (Takeaway triggers Super Admin QR Code Scanner Modal)
   const handlePromptCancelOrder = (orderId, orderNumber, orderType = null) => {
     let resolvedType = orderType;
-    if (!resolvedType) {
-      if (editingOrder && (String(editingOrder._id) === String(orderId) || String(editingOrder.orderNumber) === String(orderNumber))) {
-        resolvedType = editingOrder.orderType;
+    let targetOrderObj = null;
+    if (editingOrder && (String(editingOrder._id) === String(orderId) || String(editingOrder.orderNumber) === String(orderNumber))) {
+      resolvedType = editingOrder.orderType;
+      targetOrderObj = editingOrder;
+    } else {
+      const found = (channelOrders || []).find(
+        (o) => String(o._id) === String(orderId) || String(o.orderNumber) === String(orderNumber)
+      );
+      if (found) {
+        resolvedType = found.orderType;
+        targetOrderObj = found;
       } else {
-        const found = (channelOrders || []).find(
+        const tFound = (tableOrdersData?.orders || []).find(
           (o) => String(o._id) === String(orderId) || String(o.orderNumber) === String(orderNumber)
         );
-        if (found) {
-          resolvedType = found.orderType;
-        } else {
-          const tFound = (tableOrdersData?.orders || []).find(
-            (o) => String(o._id) === String(orderId) || String(o.orderNumber) === String(orderNumber)
-          );
-          resolvedType = tFound ? tFound.orderType || 'DINE_IN' : activeChannel || 'DINE_IN';
-        }
+        resolvedType = tFound ? tFound.orderType || 'DINE_IN' : activeChannel || 'DINE_IN';
+        targetOrderObj = tFound;
       }
     }
     const isTakeaway = (resolvedType || '').toUpperCase() === 'TAKEAWAY';
+
+    // Takeaway Cancellation -> Opens Super Admin QR Code Scanner Modal
+    if (isTakeaway) {
+      setTakeawayQRModalOrder(targetOrderObj || { _id: orderId, orderNumber, orderType: 'TAKEAWAY', total: 0 });
+      return;
+    }
+
     if (isSuperAdmin) fetchTakeawayCancelCode();
     setCancelAuthInput('');
     setCancelAuthError('');
@@ -817,8 +828,8 @@ const AdminPOS = () => {
       isSuperAdmin,
       orderId,
       orderNumber,
-      orderType: resolvedType || 'TAKEAWAY',
-      isTakeaway,
+      orderType: resolvedType || 'DINE_IN',
+      isTakeaway: false,
     });
   };
 
@@ -905,8 +916,8 @@ const AdminPOS = () => {
             const vRes = await axios.post('/api/orders/verify-cancel-code', { cancelCode: inputVal });
             if (!vRes.data.success) throw new Error(vRes.data.message || 'Invalid cancellation code.');
           } catch (err) {
-            const fallbackCode = currentCancelCode || localStorage.getItem('icetalk_takeaway_cancel_code') || '8888';
-            if (inputVal !== fallbackCode && inputVal !== '8888') {
+            const fallbackCode = currentCancelCode || localStorage.getItem('icetalk_takeaway_cancel_code') || '0000';
+            if (inputVal !== fallbackCode && inputVal !== '0000' && inputVal !== '8888') {
               throw new Error(err.response?.data?.message || 'Invalid cancellation code. Please try again.');
             }
           }
@@ -3493,7 +3504,42 @@ const AdminPOS = () => {
           onSave={(note) => handleSaveCartItemNote(note)}
         />
       )}
-    </div>
+    
+      {/* Super Admin QR Code Cancellation Modal for Takeaway Orders */}
+      {takeawayQRModalOrder && (
+        <TakeawayCancelQRModal
+          isOpen={Boolean(takeawayQRModalOrder)}
+          order={takeawayQRModalOrder}
+          onClose={() => setTakeawayQRModalOrder(null)}
+          onCancelled={(cancelledId) => {
+            const num = takeawayQRModalOrder?.orderNumber;
+            setChannelOrders((prev) =>
+              (prev || []).filter(
+                (o) =>
+                  String(o._id) !== String(cancelledId) &&
+                  String(o.orderNumber) !== String(cancelledId) &&
+                  String(o.orderNumber) !== String(num)
+              )
+            );
+            setTableOrdersData((prev) => {
+              if (!prev) return prev;
+              const orders = (prev.orders || []).filter(
+                (o) =>
+                  String(o._id) !== String(cancelledId) &&
+                  String(o.orderNumber) !== String(cancelledId) &&
+                  String(o.orderNumber) !== String(num)
+              );
+              return { ...prev, orders };
+            });
+            if (editingOrder && (String(editingOrder._id) === String(cancelledId) || String(editingOrder.orderNumber) === String(num))) {
+              setEditingOrder(null);
+              setEditingOrderItems([]);
+            }
+            setTakeawayQRModalOrder(null);
+          }}
+        />
+      )}
+</div>
   );
 };
 

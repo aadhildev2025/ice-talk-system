@@ -21,6 +21,7 @@ import {
   Menu,
   X,
   Printer,
+  QrCode,
 } from 'lucide-react';
 import { usePrinter } from '../../context/PrinterContext';
 import { useAuth } from '../../context/AuthContext';
@@ -125,6 +126,7 @@ const AdminLayout = () => {
     { to: '/admin/staff', label: 'Staff Management', icon: UserCheck, hideForStaff: true },
     { to: '/admin/expenses', label: 'Expenses & Salaries', icon: Wallet, superAdminOnly: true, hideForDsuper: true },
     { to: '/admin/reports', label: 'Sales & Reports', icon: BarChart3, superAdminOnly: true, hideForDsuper: true },
+    { to: '/superadmin/scanner', label: 'QR Cancel Scanner', icon: QrCode, superAdminOnly: true },
   ];
 
   const navLinks = allNavLinks.filter((item) => {

@@ -997,19 +997,19 @@ export const handleDsuperRequest = async (config) => {
   // Takeaway cancellation code endpoints
   if (url === '/api/orders/takeaway-cancel-code' || url.endsWith('/takeaway-cancel-code')) {
     if (method === 'GET') {
-      return { success: true, cancelCode: localStorage.getItem('icetalk_takeaway_cancel_code') || '8888' };
+      return { success: true, cancelCode: localStorage.getItem('icetalk_takeaway_cancel_code') || '0000' };
     }
     if (method === 'PUT' || method === 'POST') {
-      const code = String(data?.code || '8888').trim() || '8888';
+      const code = String(data?.code || '0000').trim() || '0000';
       localStorage.setItem('icetalk_takeaway_cancel_code', code);
       return { success: true, message: 'Takeaway cancellation code updated successfully.', cancelCode: code };
     }
   }
 
   if (url === '/api/orders/verify-cancel-code' || url.endsWith('/verify-cancel-code')) {
-    const saved = localStorage.getItem('icetalk_takeaway_cancel_code') || '8888';
+    const saved = localStorage.getItem('icetalk_takeaway_cancel_code') || '0000';
     const code = String(data?.cancelCode || data?.superAdminPassword || '').trim();
-    if (code === saved || code === '8888' || code === 'superadmin123' || code === 'dsuper123') {
+    if (code === saved || code === '0000' || code === '8888' || code === 'superadmin123' || code === 'dsuper123') {
       return { success: true, valid: true };
     }
     return { success: false, valid: false, message: 'Invalid cancellation code.' };

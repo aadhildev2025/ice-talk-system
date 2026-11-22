@@ -1348,13 +1348,13 @@ const deleteGroceryItem = (id) => {
 
 // Settings & Takeaway Cancel Code
 const getTakeawayCancelCode = () => {
-  const settings = readJSON(FILES.SETTINGS, { takeawayCancelCode: '8888' });
-  return (settings && settings.takeawayCancelCode) ? String(settings.takeawayCancelCode).trim() : '8888';
+  const settings = readJSON(FILES.SETTINGS, { takeawayCancelCode: '0000' });
+  return (settings && settings.takeawayCancelCode) ? String(settings.takeawayCancelCode).trim() : '0000';
 };
 
 const setTakeawayCancelCode = (newCode) => {
-  const settings = readJSON(FILES.SETTINGS, { takeawayCancelCode: '8888' });
-  const codeStr = String(newCode || '').trim() || '8888';
+  const settings = readJSON(FILES.SETTINGS, { takeawayCancelCode: '0000' });
+  const codeStr = String(newCode || '').trim() || '0000';
   settings.takeawayCancelCode = codeStr;
   writeJSON(FILES.SETTINGS, settings);
   return codeStr;

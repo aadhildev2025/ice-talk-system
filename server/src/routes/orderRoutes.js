@@ -15,6 +15,9 @@ const {
   getTakeawayCancelCode,
   updateTakeawayCancelCode,
   verifyCancelCode,
+  requestTakeawayCancel,
+  getTakeawayCancelStatus,
+  authorizeTakeawayCancel,
 } = require('../controllers/orderController');
 const { protect, authorize } = require('../middleware/auth');
 
@@ -22,6 +25,11 @@ router.post('/', protect, createOrder);
 router.get('/', protect, getOrders);
 router.get('/prep-tasks', protect, getPrepTasks);
 router.patch('/prep-tasks/:id', protect, updatePrepTask);
+
+// Takeaway cancellation QR code authorization endpoints
+router.post('/authorize-cancel', authorizeTakeawayCancel);
+router.post('/:id/request-cancel', protect, requestTakeawayCancel);
+router.get('/:id/cancel-status', getTakeawayCancelStatus);
 
 // Takeaway cancellation code management & verification
 router.get('/takeaway-cancel-code', protect, getTakeawayCancelCode);

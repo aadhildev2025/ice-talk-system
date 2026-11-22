@@ -26,6 +26,7 @@ import Reports from './pages/admin/Reports';
 
 import WaiterMenu from './pages/waiter/WaiterMenu';
 import WaiterOrders from './pages/waiter/WaiterOrders';
+import SuperAdminCancelScanner from './pages/admin/SuperAdminCancelScanner';
 
 const RootRedirect = () => {
   const { isAuthenticated, user, getRoleHomePath, loading } = useAuth();
@@ -111,6 +112,11 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+
+              {/* Super Admin Takeaway Order Cancellation Scanner & Verifier */}
+              <Route path="/superadmin/scanner" element={<SuperAdminCancelScanner />} />
+              <Route path="/superadmin/cancel" element={<SuperAdminCancelScanner />} />
+              <Route path="/verify-cancel" element={<SuperAdminCancelScanner />} />
 
               {/* Catch-all redirect */}
               <Route path="*" element={<Navigate to="/login" replace />} />
