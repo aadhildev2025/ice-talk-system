@@ -2139,6 +2139,14 @@ const AdminPOS = () => {
                       {(tableOrdersData.orders || []).map((o) => (
                         <div key={o._id} className="flex items-center gap-1.5 bg-[#141418] px-2.5 py-0.5 rounded-lg border border-[#2B2B38] text-[11px]">
                           <span className="font-bold text-white">#{o.orderNumber}</span>
+                          <button
+                            type="button"
+                            onClick={() => handlePromptCancelOrder(o._id, o.orderNumber, o.orderType || 'DINE_IN')}
+                            title={`Cancel Order #${o.orderNumber}`}
+                            className="text-neutral-500 hover:text-rose-400 transition-colors p-0.5"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
                         </div>
                       ))}
                     </div>
@@ -2986,6 +2994,16 @@ const AdminPOS = () => {
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
+                        onClick={() => handlePromptCancelOrder(ord._id, ord.orderNumber, ord.orderType || activeChannel)}
+                        className="px-3 py-2 bg-rose-500/15 hover:bg-rose-500/25 text-rose-400 hover:text-rose-300 border border-rose-500/30 text-xs font-bold rounded-lg flex items-center gap-1.5 transition-all shadow-sm"
+                        title={`Cancel Order #${ord.orderNumber}`}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Cancel</span>
+                      </button>
+
+                      <button
+                        type="button"
                         onClick={() => openCheckout('CHANNEL_ORDER', ord)}
                         className="px-4 py-2 bg-gradient-to-r from-[#FF6B00] to-[#FF8A33] hover:from-[#E55A00] hover:to-[#FF6B00] text-white text-xs font-bold rounded-lg shadow flex items-center gap-1.5 transition-all"
                       >
@@ -3017,13 +3035,30 @@ const AdminPOS = () => {
                 <CreditCard className="w-5 h-5 text-[#FF6B00]" />
                 <h3 className="font-bold text-base sm:text-lg text-white">Complete POS Sale & Print</h3>
               </div>
-              <button
-                type="button"
-                onClick={() => setShowCheckoutModal(false)}
-                className="p-1 rounded-lg text-neutral-400 hover:text-white transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              <div className="flex items-center gap-2">
+                {checkoutTarget === 'CHANNEL_ORDER' && selectedChannelOrder && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const ord = selectedChannelOrder;
+                      setShowCheckoutModal(false);
+                      handlePromptCancelOrder(ord._id, ord.orderNumber, ord.orderType || activeChannel);
+                    }}
+                    className="px-3 py-1.5 bg-rose-500/15 hover:bg-rose-500/25 text-rose-400 border border-rose-500/30 text-xs font-bold rounded-lg flex items-center gap-1.5 transition-all"
+                    title={`Cancel Order #${selectedChannelOrder.orderNumber}`}
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Cancel Order</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setShowCheckoutModal(false)}
+                  className="p-1 rounded-lg text-neutral-400 hover:text-white transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
             {/* Main Content Grid: 2 Columns on desktop/tablet, 1 Column on mobile */}

@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useSearchParams } from 'react-router-dom';
 import { useSocket } from '../../context/SocketContext';
 import { usePrinter } from '../../context/PrinterContext';
+import TakeawayCancelQRModal from '../../components/TakeawayCancelQRModal';
 import {
   ClipboardList,
   Search,
@@ -13,6 +14,7 @@ import {
   Flame,
   ChevronRight,
   Filter,
+  Trash2,
 } from 'lucide-react';
 
 const AdminOrders = () => {
@@ -24,6 +26,7 @@ const AdminOrders = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [cancelQRModalOrder, setCancelQRModalOrder] = useState(null);
 
   const { socket } = useSocket();
   const { printPreparationSlip } = usePrinter();
@@ -354,6 +357,38 @@ const AdminOrders = () => {
                   <Printer className="w-4 h-4 text-orange-400" />
                   Print Slip
                 </button>
+
+                {selectedOrder.status !== 'CANCELLED' && selectedOrder.status !== 'COMPLETED' && (
+                  <button
+                    onClick={async () => {
+                      const isTakeaway = (selectedOrder.orderType || '').toUpperCase() === 'TAKEAWAY';
+                      if (isTakeaway) {
+                        setCancelQRModalOrder(selectedOrder);
+                      } else {
+                        const reason = window.prompt('Enter cancellation reason:', 'Cancelled by Admin');
+                        if (reason === null) return;
+                        try {
+                          const res = await axios.post(`/api/orders/${selectedOrder._id}/cancel`, {
+                            reason: reason || 'Cancelled by Admin',
+                            superAdminPassword: '0000',
+                          });
+                          if (res.data?.success) {
+                            setSelectedOrder(null);
+                            fetchOrders();
+                          } else {
+                            alert(res.data?.message || 'Failed to cancel order.');
+                          }
+                        } catch (err) {
+                          alert(err.response?.data?.message || err.message || 'Cancellation failed.');
+                        }
+                      }
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-400 border border-rose-500/30 text-xs font-bold transition-all"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    <span>Cancel Order</span>
+                  </button>
+                )}
               </div>
 
               <button
@@ -365,6 +400,20 @@ const AdminOrders = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Super Admin QR Cancellation Modal for Takeaway Orders */}
+      {cancelQRModalOrder && (
+        <TakeawayCancelQRModal
+          isOpen={Boolean(cancelQRModalOrder)}
+          order={cancelQRModalOrder}
+          onClose={() => setCancelQRModalOrder(null)}
+          onCancelled={() => {
+            setCancelQRModalOrder(null);
+            setSelectedOrder(null);
+            fetchOrders();
+          }}
+        />
       )}
     </div>
   );
