@@ -1,6 +1,7 @@
 import React from 'react';
 import { usePrinter } from '../context/PrinterContext';
 import { useAuth } from '../context/AuthContext';
+import { isVirtualPrinter } from '../utils/kotRouting';
 import {
   Printer,
   X,
@@ -77,13 +78,29 @@ const PrinterSettingsModal = () => {
           {/* Hardware Connection Status */}
           <div className="flex items-center justify-between bg-[#181820] p-3 rounded-xl border border-[#2B2B38]">
             <div>
-              <p className="font-bold text-white text-xs">
-                {isElectron ? `${availablePrinters.length} Printers Detected in Windows` : 'Web Browser Mode'}
-              </p>
-              <p className="text-[11px] text-neutral-400">
+              <div className="flex items-center gap-2">
+                <p className="font-bold text-white text-xs">
+                  {isElectron
+                    ? `${availablePrinters.filter((p) => !isVirtualPrinter(p.name)).length} Physical Thermal Printer(s) Detected`
+                    : 'Web Browser Mode'}
+                </p>
+                {isElectron && availablePrinters.some((p) => !isVirtualPrinter(p.name)) && (
+                  <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">
+                    Ready
+                  </span>
+                )}
+                {isElectron && !availablePrinters.some((p) => !isVirtualPrinter(p.name)) && (
+                  <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-400 border border-amber-500/40">
+                    No Thermal Printer
+                  </span>
+                )}
+              </div>
+              <p className="text-[11px] text-neutral-400 mt-0.5">
                 {isElectron
-                  ? 'Printers installed in Windows Settings are automatically available for routing'
-                  : 'Open the Desktop POS app for direct background silent thermal printing'}
+                  ? availablePrinters.some((p) => !isVirtualPrinter(p.name))
+                    ? 'Physical thermal printers found. KOT and receipts will print silently to paper with zero PDF save popups.'
+                    : 'No physical thermal printer found. Orders will approve silently without triggering any "Save as PDF" prompts. Plug in your USB/LAN POS printer to print paper slips.'
+                  : 'Open the Desktop POS app for direct background silent thermal printing without browser print dialogs.'}
               </p>
             </div>
             {isElectron && (
@@ -201,12 +218,15 @@ const PrinterSettingsModal = () => {
                   }}
                   className="bg-[#141418] border border-[#2D2D3B] text-white text-xs px-3 py-1.5 rounded-lg outline-none focus:border-[#FF6B00] flex-1 sm:w-44 truncate"
                 >
-                  <option value="">Default Windows Printer</option>
-                  {availablePrinters.map((p) => (
-                    <option key={p.name} value={p.name}>
-                      {p.name} {p.isDefault ? '(Default)' : ''}
-                    </option>
-                  ))}
+                  <option value="">Auto-Detect Thermal Printer</option>
+                  {availablePrinters.map((p) => {
+                    const isVirt = isVirtualPrinter(p.name);
+                    return (
+                      <option key={p.name} value={p.name}>
+                        {p.name} {p.isDefault ? '(Default)' : ''} {isVirt ? '— [Virtual PDF]' : '— [Thermal Printer]'}
+                      </option>
+                    );
+                  })}
                 </select>
                 <button
                   onClick={() => testPrintStation('CASHIER BILLING', billPrinter || selectedPrinter)}
@@ -237,11 +257,14 @@ const PrinterSettingsModal = () => {
                   className="bg-[#141418] border border-[#2D2D3B] text-white text-xs px-3 py-1.5 rounded-lg outline-none focus:border-amber-500 flex-1 sm:w-44 truncate"
                 >
                   <option value="">-- Same as Main Printer --</option>
-                  {availablePrinters.map((p) => (
-                    <option key={p.name} value={p.name}>
-                      {p.name} {p.isDefault ? '(Default)' : ''}
-                    </option>
-                  ))}
+                  {availablePrinters.map((p) => {
+                    const isVirt = isVirtualPrinter(p.name);
+                    return (
+                      <option key={p.name} value={p.name}>
+                        {p.name} {p.isDefault ? '(Default)' : ''} {isVirt ? '— [Virtual PDF]' : '— [Thermal Printer]'}
+                      </option>
+                    );
+                  })}
                 </select>
                 <button
                   onClick={() => testPrintStation('RICE & KITCHEN', kitchenPrinter || selectedPrinter)}
@@ -272,11 +295,14 @@ const PrinterSettingsModal = () => {
                   className="bg-[#141418] border border-[#2D2D3B] text-white text-xs px-3 py-1.5 rounded-lg outline-none focus:border-sky-500 flex-1 sm:w-44 truncate"
                 >
                   <option value="">-- Same as Main Printer --</option>
-                  {availablePrinters.map((p) => (
-                    <option key={p.name} value={p.name}>
-                      {p.name} {p.isDefault ? '(Default)' : ''}
-                    </option>
-                  ))}
+                  {availablePrinters.map((p) => {
+                    const isVirt = isVirtualPrinter(p.name);
+                    return (
+                      <option key={p.name} value={p.name}>
+                        {p.name} {p.isDefault ? '(Default)' : ''} {isVirt ? '— [Virtual PDF]' : '— [Thermal Printer]'}
+                      </option>
+                    );
+                  })}
                 </select>
                 <button
                   onClick={() => testPrintStation('JUICE & DESSERTS', juicePrinter || selectedPrinter)}
@@ -307,11 +333,14 @@ const PrinterSettingsModal = () => {
                   className="bg-[#141418] border border-[#2D2D3B] text-white text-xs px-3 py-1.5 rounded-lg outline-none focus:border-purple-500 flex-1 sm:w-44 truncate"
                 >
                   <option value="">-- Same as Main Printer --</option>
-                  {availablePrinters.map((p) => (
-                    <option key={p.name} value={p.name}>
-                      {p.name} {p.isDefault ? '(Default)' : ''}
-                    </option>
-                  ))}
+                  {availablePrinters.map((p) => {
+                    const isVirt = isVirtualPrinter(p.name);
+                    return (
+                      <option key={p.name} value={p.name}>
+                        {p.name} {p.isDefault ? '(Default)' : ''} {isVirt ? '— [Virtual PDF]' : '— [Thermal Printer]'}
+                      </option>
+                    );
+                  })}
                 </select>
                 <button
                   onClick={() => testPrintStation('BUNS & SHORT EATS', bunPrinter || selectedPrinter)}

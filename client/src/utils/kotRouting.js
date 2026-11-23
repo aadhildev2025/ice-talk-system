@@ -119,3 +119,26 @@ export const getStationPrinterKey = (deptCode) => {
       return 'kitchenPrinter';
   }
 };
+
+/**
+ * Checks if a printer is a virtual export pseudo-printer (e.g. Microsoft Print to PDF)
+ * Used to avoid triggering unwanted "Save Print Output As" file dialogs during automated POS operations.
+ */
+export const isVirtualPrinter = (name) => {
+  if (!name || typeof name !== 'string') return true;
+  const lower = name.toLowerCase().trim();
+  return (
+    lower.includes('pdf') ||
+    lower.includes('xps') ||
+    lower.includes('onenote') ||
+    lower.includes('fax') ||
+    lower.includes('document writer') ||
+    lower.includes('save as') ||
+    lower.includes('cute') ||
+    lower.includes('foxit') ||
+    lower.includes('bullzip') ||
+    lower.includes('nitro') ||
+    lower.includes('creator') ||
+    lower.includes('dopdf')
+  );
+};

@@ -112,7 +112,15 @@ export const PrinterProvider = ({ children }) => {
             printerName: printerToUse,
             paperWidth: widthToUse,
           });
-          if (res?.success) return;
+          if (res?.success) {
+            setTimeout(() => setPrintData(null), 500);
+            return;
+          }
+          if (res?.reason === 'NO_PHYSICAL_PRINTER') {
+            console.log('[Printer] No physical thermal printer connected. Skipped PDF save prompt.');
+            setTimeout(() => setPrintData(null), 500);
+            return;
+          }
         } catch (err) {
           console.warn('[Printer] printHtml failed, trying fallback:', err);
         }
@@ -120,27 +128,41 @@ export const PrinterProvider = ({ children }) => {
 
       if (window.electronAPI?.printSilent) {
         try {
-          await window.electronAPI.printSilent({ printerName: printerToUse });
-          return;
+          const res = await window.electronAPI.printSilent({ printerName: printerToUse });
+          if (res?.success) {
+            setTimeout(() => setPrintData(null), 500);
+            return;
+          }
         } catch (err) {
           console.error('[Printer] Electron printSilent error:', err);
         }
       }
+
+      // IN ELECTRON: NEVER fall back to window.print()!
+      // In Electron, calling window.print() opens the system PDF save dialog!
+      setTimeout(() => setPrintData(null), 500);
+      return;
     }
 
-    try {
-      window.print();
-    } catch (e) {
-      console.error('[Printer] Browser print error:', e);
+    // IN BROWSER (non-Electron web environment):
+    // Only invoke window.print() if force is true (explicit manual click on a print button)
+    // Automated background events (such as approving an order from waiter) must NOT trigger window.print() in a regular browser!
+    if (force) {
+      try {
+        window.print();
+      } catch (e) {
+        console.error('[Printer] Browser print error:', e);
+      }
     }
+    setTimeout(() => setPrintData(null), 500);
   };
 
   // Trigger preparation slip
   // Supports multi-printer split routing:
   // If multiPrinterMode is ON and department is not passed, it can print separate slips to station printers!
-  const printPreparationSlip = async (order, isAutoTrigger = false, department = null) => {
+  const printPreparationSlip = async (order, isAutoTrigger = false, department = null, force = false) => {
     const isDemoDsuper = isDsuperUser();
-    if (isDemoDsuper && !dsuperPrintEnabled) {
+    if (!force && isDemoDsuper && !dsuperPrintEnabled) {
       setPrintData({
         type: 'PREPARATION_SLIP',
         data: order,
@@ -173,7 +195,7 @@ export const PrinterProvider = ({ children }) => {
           });
 
           await new Promise((r) => setTimeout(r, 200));
-          await executeSilentPrintTo(targetPrinter);
+          await executeSilentPrintTo(targetPrinter, null, force);
           await new Promise((r) => setTimeout(r, 300));
         }
       } else {
@@ -190,7 +212,7 @@ export const PrinterProvider = ({ children }) => {
         });
 
         setTimeout(() => {
-          executeSilentPrintTo(targetPrinter);
+          executeSilentPrintTo(targetPrinter, null, force);
         }, 100);
       }
     } else {
@@ -203,21 +225,21 @@ export const PrinterProvider = ({ children }) => {
   };
 
   // Print customer tax receipt
-  const printCustomerReceipt = (sale, isAutoTrigger = false) => {
+  const printCustomerReceipt = (sale, isAutoTrigger = false, force = false) => {
     setPrintData({
       type: 'CUSTOMER_RECEIPT',
       data: sale,
     });
 
     const isDemoDsuper = isDsuperUser();
-    if (isDemoDsuper && !dsuperPrintEnabled) {
+    if (!force && isDemoDsuper && !dsuperPrintEnabled) {
       return;
     }
 
     const targetPrinter = billPrinter || selectedPrinter;
     if (!isAutoTrigger || autoPrintEnabled) {
       setTimeout(() => {
-        executeSilentPrintTo(targetPrinter);
+        executeSilentPrintTo(targetPrinter, null, force);
       }, 100);
     }
   };

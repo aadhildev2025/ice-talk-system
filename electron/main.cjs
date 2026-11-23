@@ -281,6 +281,26 @@ app.on('second-instance', () => {
   }
 });
 
+// Helper to identify virtual/PDF/export pseudo-printers (avoids triggering "Save Print Output As" file dialogs)
+const isVirtualPrinter = (name) => {
+  if (!name || typeof name !== 'string') return true;
+  const lower = name.toLowerCase().trim();
+  return (
+    lower.includes('pdf') ||
+    lower.includes('xps') ||
+    lower.includes('onenote') ||
+    lower.includes('fax') ||
+    lower.includes('document writer') ||
+    lower.includes('save as') ||
+    lower.includes('cute') ||
+    lower.includes('foxit') ||
+    lower.includes('bullzip') ||
+    lower.includes('nitro') ||
+    lower.includes('creator') ||
+    lower.includes('dopdf')
+  );
+};
+
 // IPC: Get all available printers connected to the machine
 ipcMain.handle('printer:get-list', async () => {
   try {
@@ -310,23 +330,44 @@ ipcMain.handle('printer:print-html', async (event, { html, options = {} }) => {
         },
       });
 
-      // Determine target printer: use specified printer or auto-detect system default printer
+      // Determine target printer: use specified printer or auto-detect physical thermal printer
       let targetPrinterName = (options.printerName || '').trim();
+      let printers = [];
       try {
-        const printers = await printWin.webContents.getPrintersAsync();
+        printers = await printWin.webContents.getPrintersAsync();
         if (printers && printers.length > 0) {
           if (targetPrinterName) {
             const matched = printers.find(p => p.name.toLowerCase() === targetPrinterName.toLowerCase())
               || printers.find(p => p.name.toLowerCase().includes(targetPrinterName.toLowerCase()));
             if (matched) targetPrinterName = matched.name;
           }
-          if (!targetPrinterName) {
-            const defaultPrinter = printers.find((p) => p.isDefault) || printers[0];
-            if (defaultPrinter) targetPrinterName = defaultPrinter.name;
+          // If no printer specified, or specified printer is a virtual PDF printer,
+          // find the first real physical printer (e.g. POS-80, XP-80, Epson, etc.)
+          if (!targetPrinterName || isVirtualPrinter(targetPrinterName)) {
+            const physicalDefault = printers.find((p) => p.isDefault && !isVirtualPrinter(p.name));
+            const physicalPrinter = physicalDefault || printers.find((p) => !isVirtualPrinter(p.name));
+            if (physicalPrinter) {
+              targetPrinterName = physicalPrinter.name;
+            } else {
+              targetPrinterName = '';
+            }
           }
         }
       } catch (pErr) {
         console.warn('Could not query system printers:', pErr);
+      }
+
+      // CRITICAL: If no physical hardware thermal printer exists, DO NOT send a silent print job to a virtual PDF printer!
+      // Printing to "Microsoft Print to PDF" or virtual printers with silent: true forces Windows to pop up "Save Print Output As" file dialog!
+      if (!targetPrinterName || isVirtualPrinter(targetPrinterName)) {
+        try { if (printWin) printWin.destroy(); } catch (_) {}
+        restoreMainWindowFocus();
+        console.log('[Printer] No physical thermal printer found. Skipping silent print to prevent PDF save dialog.');
+        return resolve({
+          success: false,
+          reason: 'NO_PHYSICAL_PRINTER',
+          message: 'No physical thermal printer detected. Please connect or install a thermal printer.',
+        });
       }
 
       const paperWidth = options.paperWidth || '78mm';
@@ -446,19 +487,22 @@ ipcMain.handle('printer:print-html', async (event, { html, options = {} }) => {
 
           printWin.webContents.print(printOptions, (success, failureReason) => {
             if (!success && targetPrinterName) {
-              console.warn(`[Printer] Direct print to "${targetPrinterName}" failed (${failureReason}). Retrying with default system printer silently...`);
-              printWin.webContents.print({ silent: true, printBackground: true, margins: { marginType: 'none' } }, (defSuccess, defReason) => {
-                try { printWin.destroy(); } catch (e) {}
-                restoreMainWindowFocus();
-                if (!defSuccess) {
-                  console.error('Silent print with default printer also failed:', defReason);
-                  resolve({ success: false, error: defReason });
-                } else {
-                  console.log('Silent receipt printed successfully via default printer fallback');
-                  resolve({ success: true, printer: 'Default Printer (Fallback)' });
-                }
-              });
-              return;
+              const physicalDefault = (printers || []).find((p) => p.isDefault && !isVirtualPrinter(p.name));
+              if (physicalDefault && physicalDefault.name !== targetPrinterName) {
+                console.warn(`[Printer] Direct print to "${targetPrinterName}" failed (${failureReason}). Retrying with physical default "${physicalDefault.name}" silently...`);
+                printWin.webContents.print({ silent: true, deviceName: physicalDefault.name, printBackground: true, margins: { marginType: 'none' } }, (defSuccess, defReason) => {
+                  try { printWin.destroy(); } catch (e) {}
+                  restoreMainWindowFocus();
+                  if (!defSuccess) {
+                    console.error('Silent print with default printer also failed:', defReason);
+                    resolve({ success: false, error: defReason });
+                  } else {
+                    console.log('Silent receipt printed successfully via default printer fallback');
+                    resolve({ success: true, printer: physicalDefault.name });
+                  }
+                });
+                return;
+              }
             }
 
             try {
@@ -470,8 +514,8 @@ ipcMain.handle('printer:print-html', async (event, { html, options = {} }) => {
               console.error('Silent HTML print failed:', failureReason);
               resolve({ success: false, error: failureReason });
             } else {
-              console.log('Silent receipt printed successfully to:', targetPrinterName || 'Default Printer');
-              resolve({ success: true, printer: targetPrinterName || 'Default Printer' });
+              console.log('Silent receipt printed successfully to:', targetPrinterName);
+              resolve({ success: true, printer: targetPrinterName });
             }
           });
         }, 120);
@@ -496,23 +540,38 @@ ipcMain.handle('printer:print-silent', async (event, options = {}) => {
 
     try {
       let targetPrinterName = (options.printerName || '').trim();
-      if (!targetPrinterName) {
-        const printers = await mainWindow.webContents.getPrintersAsync();
-        const defaultPrinter = printers.find((p) => p.isDefault) || printers[0];
-        if (defaultPrinter) targetPrinterName = defaultPrinter.name;
+      const printers = await mainWindow.webContents.getPrintersAsync();
+
+      if (printers && printers.length > 0) {
+        if (targetPrinterName) {
+          const matched = printers.find(p => p.name.toLowerCase() === targetPrinterName.toLowerCase())
+            || printers.find(p => p.name.toLowerCase().includes(targetPrinterName.toLowerCase()));
+          if (matched) targetPrinterName = matched.name;
+        }
+        if (!targetPrinterName || isVirtualPrinter(targetPrinterName)) {
+          const physicalDefault = printers.find((p) => p.isDefault && !isVirtualPrinter(p.name));
+          const physicalPrinter = physicalDefault || printers.find((p) => !isVirtualPrinter(p.name));
+          if (physicalPrinter) {
+            targetPrinterName = physicalPrinter.name;
+          } else {
+            targetPrinterName = '';
+          }
+        }
+      }
+
+      if (!targetPrinterName || isVirtualPrinter(targetPrinterName)) {
+        console.log('[Printer] No physical thermal printer found for print-silent. Skipping to avoid PDF prompt.');
+        return resolve({ success: false, reason: 'NO_PHYSICAL_PRINTER' });
       }
 
       const printOptions = {
         silent: true,
         printBackground: true,
+        deviceName: targetPrinterName,
         margins: {
           marginType: 'none',
         },
       };
-
-      if (targetPrinterName) {
-        printOptions.deviceName = targetPrinterName;
-      }
 
       mainWindow.webContents.print(printOptions, (success, failureReason) => {
         restoreMainWindowFocus();
@@ -520,8 +579,8 @@ ipcMain.handle('printer:print-silent', async (event, options = {}) => {
           console.error('Silent print failed:', failureReason);
           resolve({ success: false, error: failureReason });
         } else {
-          console.log('Silent print completed successfully.');
-          resolve({ success: true });
+          console.log('Silent print completed successfully to:', targetPrinterName);
+          resolve({ success: true, printer: targetPrinterName });
         }
       });
     } catch (err) {
